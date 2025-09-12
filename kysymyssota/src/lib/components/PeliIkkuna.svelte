@@ -3,6 +3,14 @@
   import { getDB } from "../database/database.js";
   import type { Kayttaja, Kysymys } from "../database/schema.js";
   import { peliPalvelu } from "../database/gameService.js";
+  import { 
+    GLASS_STYLES, 
+    GLASS_COLORS, 
+    GLASS_ANIMATIONS,
+    GLASS_BACKGROUNDS,
+    GLASS_LAYOUT,
+    glassUtils 
+  } from '../styles/glass-morphism.js';
 
   // ===============================================
   // PROPS & TILAN HALLINTA (Props & State Management)
@@ -511,38 +519,98 @@
 <!-- PÄÄSISÄLTÖ (Main Content) -->
 <!-- =============================================== -->
 
-<div class="container mx-auto p-6 space-y-8 min-h-screen">
-  <!-- Otsikko ja pelitieto -->
-  <div class="text-center space-y-4">
-    <div class="flex justify-between items-center">
-      <button class="btn variant-soft" on:click={palaaNavigation}>
-        ← Takaisin
-      </button>
-
-      <h1
-        class="text-4xl font-bold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent"
-      >
-        🎯 Kysymyssota
-      </h1>
-
-      <div class="text-right">
-        <div class="text-sm text-surface-600-400">Kysymys</div>
-        <div class="text-xl font-bold">{kysymysNumero}/{maxKysymykset}</div>
-      </div>
-    </div>
+<!-- Glass effect background with floating particles -->
+<div class="{GLASS_BACKGROUNDS.main}">
+  <!-- Floating elements background -->
+  <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+    {@html GLASS_BACKGROUNDS.floatingParticles}
   </div>
 
-  {#if loading}
-    <!-- Latausanimaatio -->
-    <div class="flex justify-center items-center py-12">
-      <div
-        class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"
-      ></div>
-      <span class="ml-3 text-lg">Ladataan kysymystä...</span>
-    </div>
-  {:else if nykyinenKysymys}
-    <!-- Pelinäkymä -->
-    <div class="space-y-8">
+  <!-- Main layout with sidebar structure -->
+  <div class="{GLASS_BACKGROUNDS.contentLayer} min-h-screen">
+    <div class="flex">
+      <!-- Left Sidebar - Defensive Cards -->
+      <div class="w-72 p-4 space-y-4">
+        <h3 class="text-lg font-bold text-center mb-4 {GLASS_COLORS.titleGradient}">🛡️ Puolustuskortit</h3>
+        
+        <!-- Kysymyksen vaihto -->
+        <button 
+          class="{GLASS_STYLES.card} p-4 w-full hover:scale-105 transition-all duration-300 group"
+          title="🎭 Kysymyksen vaihto – jos et halua vastata, vaihda kortti toiseen."
+        >
+          <div class="flex flex-col items-center">
+            <span class="text-3xl mb-2">🎭</span>
+            <span class="text-blue-400 font-medium">Kysymyksen vaihto</span>
+          </div>
+        </button>
+        
+        <!-- Aikalisä -->
+        <button 
+          class="{GLASS_STYLES.card} p-4 w-full hover:scale-105 transition-all duration-300 group"
+          title="🕑 Aikalisä – saat ylimääräisen hetken miettimiseen."
+        >
+          <div class="flex flex-col items-center">
+            <span class="text-3xl mb-2">🕑</span>
+            <span class="text-cyan-400 font-medium">Aikalisä</span>
+        </button>
+        
+        <!-- Tuplapisteet -->
+        <button 
+          class="{GLASS_STYLES.card} p-4 w-full hover:scale-105 transition-all duration-300 group"
+          title="🎯 Tuplapisteet – seuraava oikea vastaus antaa 2× pisteet."
+        >
+          <div class="flex flex-col items-center">
+            <span class="text-3xl mb-2">🎯</span>
+            <span class="text-teal-400 font-medium">Tuplapisteet</span>
+          </div>
+        </button>
+        
+        <!-- Puolitus (50/50) -->
+        <button 
+          class="{GLASS_STYLES.card} p-4 w-full hover:scale-105 transition-all duration-300 group"
+          title="🪄 Puolitus – poistaa kaksi väärää vastausta (50/50)."
+        >
+          <div class="flex flex-col items-center">
+            <span class="text-3xl mb-2">🪄</span>
+            <span class="text-indigo-400 font-medium">Puolitus</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Main Game Area -->
+      <div class="flex-1 max-w-5xl mx-auto p-4 space-y-4">
+        <!-- Header Card -->
+        <div class="{GLASS_STYLES.card} p-4">
+          <div class="flex justify-between items-center">
+            <button 
+              class="{glassUtils.button('ghost')}"
+              on:click={palaaNavigation}
+            >
+              ← Takaisin
+            </button>
+
+            <h1 class="text-4xl font-bold {GLASS_COLORS.titleGradient}">
+              🎯 Kysymyssota
+            </h1>
+
+            <div class="text-right">
+              <div class="text-sm {GLASS_COLORS.textSecondary}">Kysymys</div>
+              <div class="text-xl font-bold">{kysymysNumero}/{maxKysymykset}</div>
+            </div>
+          </div>
+        </div>
+
+        {#if loading}
+          <!-- Loading Animation -->
+          <div class="{GLASS_STYLES.card} p-12">
+            <div class="{GLASS_LAYOUT.flexCenter} space-y-4">
+              <div class="{GLASS_ANIMATIONS.spinner}"></div>
+              <span class="text-lg">Ladataan kysymystä...</span>
+            </div>
+          </div>
+        {:else if nykyinenKysymys}
+          <!-- Game View -->
+          <div class="space-y-4">
       <!-- Nykyinen pelaaja, pelaajajärjestys ja ajastin -->
       <div class="flex justify-between items-center">
         <!-- Nykyinen pelaaja (vasen) -->
@@ -857,6 +925,58 @@
       </div>
     </div>
   {/if}
+  </div>
+
+      <!-- Right Sidebar - Battle Cards -->
+      <div class="w-72 p-4 space-y-4">
+        <h3 class="text-lg font-bold text-center mb-4 {GLASS_COLORS.titleGradient}">⚔️ Taistelukortit</h3>
+        
+        <!-- Pakota vaihto -->
+        <button 
+          class="{GLASS_STYLES.card} p-4 w-full hover:scale-105 transition-all duration-300 group"
+          title="📦 Pakota vaihto – anna oma kysymyksesi jollekin toiselle ja ota hänen kysymyksensä."
+        >
+          <div class="flex flex-col items-center">
+            <span class="text-3xl mb-2">📦</span>
+            <span class="text-primary-400 font-medium">Pakota vaihto</span>
+          </div>
+        </button>
+        
+        <!-- Nollaus -->
+        <button 
+          class="{GLASS_STYLES.card} p-4 w-full hover:scale-105 transition-all duration-300 group"
+          title="🌀 Nollaus – valitse pelaaja, jonka edellinen pistelisäys mitätöidään."
+        >
+          <div class="flex flex-col items-center">
+            <span class="text-3xl mb-2">🌀</span>
+            <span class="text-purple-400 font-medium">Nollaus</span>
+          </div>
+        </button>
+        
+        <!-- Sekoitus -->
+        <button 
+          class="{GLASS_STYLES.card} p-4 w-full hover:scale-105 transition-all duration-300 group"
+          title="🌪️ Sekoitus – kaikkien pelaajien seuraavat kysymykset sekoitetaan satunnaisesti."
+        >
+          <div class="flex flex-col items-center">
+            <span class="text-3xl mb-2">🌪️</span>
+            <span class="text-emerald-400 font-medium">Sekoitus</span>
+          </div>
+        </button>
+        
+        <!-- Bonus -->
+        <button 
+          class="{GLASS_STYLES.card} p-4 w-full hover:scale-105 transition-all duration-300 group"
+          title="⭐ Bonus – jos vastaat oikein, saat heti toisen kysymyksen."
+        >
+          <div class="flex flex-col items-center">
+            <span class="text-3xl mb-2">⭐</span>
+            <span class="text-orange-400 font-medium">Bonus</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <style>

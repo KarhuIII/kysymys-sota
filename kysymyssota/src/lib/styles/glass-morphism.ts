@@ -114,6 +114,7 @@ export const GLASS_LAYOUT = {
   flexBetween: "flex justify-between items-center",
   flexCenter: "flex items-center justify-center",
   flexWrap: "flex flex-wrap gap-3",
+  flexRow: "flex flex-row",
   
   // Spacing
   padding: {
