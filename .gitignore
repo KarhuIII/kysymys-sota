@@ -82,7 +82,6 @@ tmp/
 temp/
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo

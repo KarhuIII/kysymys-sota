@@ -1,0 +1,314 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "🚀 Start Dev Server",
+      "type": "shell",
+      "command": "npm run dev",
+      "group": "build",
+      "isBackground": true,
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}/kysymyssota"
+      }
+    },
+    {
+      "label": "🔨 Build Project",
+      "type": "shell",
+      "command": "npm run build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$tsc"],
+      "options": {
+        "cwd": "${workspaceFolder}/kysymyssota"
+      }
+    },
+    {
+      "label": "🔍 TypeScript Check",
+      "type": "shell",
+      "command": "npm run check",
+      "group": "test",
+      "problemMatcher": ["$tsc"],
+      "options": {
+        "cwd": "${workspaceFolder}/kysymyssota"
+      }
+    },
+    {
+      "label": "📊 Count All Questions",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "$files = @('src/lib/data/kysymykset-oppipoika.json', 'src/lib/data/kysymykset-taitaja.json', 'src/lib/data/kysymykset-kuningas.json', 'src/lib/data/kysymykset-mestari.json', 'src/lib/data/kysymykset-suurmestari.json'); $total = 0; foreach($file in $files) { if (Test-Path $file) { $json = Get-Content $file -Raw | ConvertFrom-Json; $count = $json.Count; $total += $count; Write-Host \"$file: $count questions\" -ForegroundColor Green } }; Write-Host \"Total: $total questions\" -ForegroundColor Cyan"
+      ],
+      "group": "test",
+      "options": {
+        "cwd": "${workspaceFolder}/kysymyssota"
+      }
+    },
+    {
+      "label": "✅ Validate JSON Files",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "$files = @('src/lib/data/kysymykset-oppipoika.json', 'src/lib/data/kysymykset-taitaja.json', 'src/lib/data/kysymykset-kuningas.json', 'src/lib/data/kysymykset-mestari.json', 'src/lib/data/kysymykset-suurmestari.json'); foreach($file in $files) { Write-Host \"Checking: $file\" -ForegroundColor Yellow; try { $json = Get-Content $file -Raw | ConvertFrom-Json; Write-Host \"✓ $file is valid JSON with $($json.Count) questions\" -ForegroundColor Green } catch { Write-Host \"✗ $file has errors: $($_.Exception.Message)\" -ForegroundColor Red } }"
+      ],
+      "group": "test",
+      "options": {
+        "cwd": "${workspaceFolder}/kysymyssota"
+      }
+    },
+    {
+      "label": "🗄️ Backup Database",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "$timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'; if (-not (Test-Path 'backups')) { New-Item -ItemType Directory -Path 'backups' }; Copy-Item 'kysymyssota.db' \"backups/kysymyssota_backup_$timestamp.db\" -ErrorAction SilentlyContinue; Write-Host \"Database backed up: backups/kysymyssota_backup_$timestamp.db\" -ForegroundColor Green"
+      ],
+      "group": "build"
+    },
+    {
+      "label": "🌐 Open in Browser",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-Command", "Start-Process 'http://localhost:5173'"],
+      "group": "build"
+    },
+    {
+      "label": "✨ Format Code (Prettier)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "if (Get-Command prettier -ErrorAction SilentlyContinue) { prettier --write 'src/**/*.{js,ts,svelte,json,css,md}'; Write-Host 'Code formatted!' -ForegroundColor Green } else { Write-Host 'Prettier not installed. Install with: npm install -g prettier' -ForegroundColor Red }"
+      ],
+      "group": "build"
+    },
+    {
+      "label": "📦 Install Dependencies",
+      "type": "shell",
+      "command": "npm install",
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}/kysymyssota"
+      }
+    },
+    {
+      "label": "🔄 Update Dependencies",
+      "type": "shell",
+      "command": "npm update",
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}/kysymyssota"
+      }
+    },
+    {
+      "label": "🛡️ Security Audit",
+      "type": "shell",
+      "command": "npm audit",
+      "group": "test",
+      "options": {
+        "cwd": "${workspaceFolder}/kysymyssota"
+      }
+    },
+    {
+      "label": "🧹 Clean Build",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "if (Test-Path 'dist') { Remove-Item -Recurse -Force 'dist'; Write-Host 'Removed dist folder' -ForegroundColor Yellow }; if (Test-Path 'node_modules/.vite') { Remove-Item -Recurse -Force 'node_modules/.vite'; Write-Host 'Cleared Vite cache' -ForegroundColor Yellow }; npm run build"
+      ],
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}/kysymyssota"
+      }
+    },
+    {
+      "label": "🏥 Project Health Check",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "Write-Host '=== PROJECT HEALTH CHECK ===' -ForegroundColor Cyan; Write-Host 'Checking TypeScript...' -ForegroundColor Yellow; npm run check; Write-Host 'Checking JSON files...' -ForegroundColor Yellow; $files = @('src/lib/data/kysymykset-oppipoika.json', 'src/lib/data/kysymykset-taitaja.json', 'src/lib/data/kysymykset-kuningas.json', 'src/lib/data/kysymykset-mestari.json', 'src/lib/data/kysymykset-suurmestari.json'); foreach($file in $files) { try { $json = Get-Content $file -Raw | ConvertFrom-Json; Write-Host \"✓ $file: $($json.Count) questions\" -ForegroundColor Green } catch { Write-Host \"✗ $file: ERROR\" -ForegroundColor Red } }; Write-Host 'Health check complete!' -ForegroundColor Cyan"
+      ],
+      "group": "test",
+      "options": {
+        "cwd": "${workspaceFolder}/kysymyssota"
+      }
+    },
+    {
+      "label": "📊 Git Status",
+      "type": "shell",
+      "command": "git",
+      "args": ["status", "--porcelain"],
+      "group": "test",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "📝 Git Status (Detailed)",
+      "type": "shell",
+      "command": "git",
+      "args": ["status"],
+      "group": "test",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "📋 Git Log (Recent)",
+      "type": "shell",
+      "command": "git",
+      "args": ["log", "--oneline", "-10"],
+      "group": "test",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "🌿 Git Branch Info",
+      "type": "shell",
+      "command": "git",
+      "args": ["branch", "-v"],
+      "group": "test",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "📤 Git Add All",
+      "type": "shell",
+      "command": "git",
+      "args": ["add", "."],
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "💾 Git Commit (Interactive)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "$message = Read-Host -Prompt 'Enter commit message'; if ($message) { git commit -m \"'$message'\"; Write-Host 'Committed successfully!' -ForegroundColor Green } else { Write-Host 'Commit cancelled - no message provided' -ForegroundColor Yellow }"
+      ],
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "🚀 Git Push",
+      "type": "shell", 
+      "command": "git",
+      "args": ["push"],
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "📥 Git Pull",
+      "type": "shell",
+      "command": "git", 
+      "args": ["pull"],
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "🔄 Git Sync (Pull & Push)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "Write-Host 'Pulling latest changes...' -ForegroundColor Cyan; git pull; if ($LASTEXITCODE -eq 0) { Write-Host 'Pushing local changes...' -ForegroundColor Cyan; git push; if ($LASTEXITCODE -eq 0) { Write-Host 'Sync completed successfully!' -ForegroundColor Green } else { Write-Host 'Push failed!' -ForegroundColor Red } } else { Write-Host 'Pull failed!' -ForegroundColor Red }"
+      ],
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "🔍 Git Diff",
+      "type": "shell",
+      "command": "git",
+      "args": ["diff"],
+      "group": "test",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "📋 Git Diff (Staged)",
+      "type": "shell",
+      "command": "git",
+      "args": ["diff", "--cached"],
+      "group": "test",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "↩️ Git Reset (Soft)",
+      "type": "shell",
+      "command": "git",
+      "args": ["reset", "--soft", "HEAD~1"],
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "🗑️ Git Clean (Dry Run)",
+      "type": "shell",
+      "command": "git",
+      "args": ["clean", "-n"],
+      "group": "test",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "🧹 Git Stash Save",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command", 
+        "$message = Read-Host -Prompt 'Enter stash message (optional)'; if ($message) { git stash save \"$message\" } else { git stash }; Write-Host 'Changes stashed!' -ForegroundColor Green"
+      ],
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "📦 Git Stash Pop",
+      "type": "shell",
+      "command": "git",
+      "args": ["stash", "pop"],
+      "group": "build", 
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "📚 Git Stash List",
+      "type": "shell",
+      "command": "git",
+      "args": ["stash", "list"],
+      "group": "test",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    }
+  ]
+}
