@@ -535,7 +535,7 @@
         
         <!-- Kysymyksen vaihto -->
         <button 
-          class="{GLASS_STYLES.card} p-4 w-full hover:scale-105 transition-all duration-300 group"
+          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
           title="🎭 Kysymyksen vaihto – jos et halua vastata, vaihda kortti toiseen."
         >
           <div class="flex flex-col items-center">
@@ -546,7 +546,7 @@
         
         <!-- Aikalisä -->
         <button 
-          class="{GLASS_STYLES.card} p-4 w-full hover:scale-105 transition-all duration-300 group"
+          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
           title="🕑 Aikalisä – saat ylimääräisen hetken miettimiseen."
         >
           <div class="flex flex-col items-center">
@@ -557,7 +557,7 @@
         
         <!-- Tuplapisteet -->
         <button 
-          class="{GLASS_STYLES.card} p-4 w-full hover:scale-105 transition-all duration-300 group"
+          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
           title="🎯 Tuplapisteet – seuraava oikea vastaus antaa 2× pisteet."
         >
           <div class="flex flex-col items-center">
@@ -568,7 +568,7 @@
         
         <!-- Puolitus (50/50) -->
         <button 
-          class="{GLASS_STYLES.card} p-4 w-full hover:scale-105 transition-all duration-300 group"
+          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
           title="🪄 Puolitus – poistaa kaksi väärää vastausta (50/50)."
         >
           <div class="flex flex-col items-center">
@@ -634,7 +634,7 @@
               {sekoitetutPelaajat[pelaajaIndex].nimi}
             </div>
             <div
-              class="text-sm text-surface-600-400 transition-all duration-500"
+              class="text-sm {GLASS_COLORS.textSecondary} transition-all duration-500"
               class:text-green-400={pisteytys && saatuPisteet > 0}
               class:font-bold={pisteytys && saatuPisteet > 0}
               class:animate-pulse={pisteytys && saatuPisteet > 0}
@@ -646,11 +646,8 @@
 
         <!-- Pelaajajärjestys (keskellä) -->
         <div class="flex-1 flex justify-center">
-          <div
-            class="card p-3 shadow-lg backdrop-blur-md bg-white/10 dark:bg-black/10 border border-primary-500/20"
-            style="backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);"
-          >
-            <div class="text-xs text-surface-600-400 text-center mb-2">
+          <div class="{GLASS_STYLES.cardLight} p-3">
+            <div class="text-xs {GLASS_COLORS.textSecondary} text-center mb-2">
               Pelijärjestys
             </div>
             <div class="flex items-center space-x-2">
@@ -668,7 +665,7 @@
                     {pelaaja.nimi.charAt(0).toUpperCase()}
                   </div>
                   {#if index < sekoitetutPelaajat.length - 1}
-                    <div class="text-surface-400 text-xs mx-1">→</div>
+                    <div class="{GLASS_COLORS.textSecondary} text-xs mx-1">→</div>
                   {/if}
                 </div>
               {/each}
@@ -704,7 +701,7 @@
                 {formatoiAika(aika)}
               {/if}
             </button>
-            <div class="text-xs text-surface-600-400 mt-1">
+            <div class="text-xs {GLASS_COLORS.textSecondary} mt-1">
               {peliPysaytetty ? "Pysäytetty" : "sekuntia"}
             </div>
           </div>
@@ -712,18 +709,15 @@
       </div>
 
       <!-- Kysymys -->
-      <div
-        class="card p-8 shadow-xl backdrop-blur-md bg-white/10 dark:bg-black/10 border-2 relative"
-        class:border-primary-300={!nykyinenKysymys.virhe}
-        class:border-red-500={nykyinenKysymys.virhe}
+      <div class="{GLASS_STYLES.card} p-8 relative"
+        class:border-red-400={nykyinenKysymys.virhe}
         class:bg-red-100={nykyinenKysymys.virhe}
-        style="backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);"
       >
         <!-- Pistemäärä ja vaikeustaso yläkulmissa -->
         <div class="flex justify-between items-start mb-4">
           <div class="flex items-center space-x-2">
             <div
-              class="card p-2 px-3 bg-primary-500/20 border border-primary-500/30 transition-all duration-500"
+              class="{GLASS_STYLES.cardLight} p-2 px-3 transition-all duration-500"
               class:animate-pulse={pisteytys && saatuPisteet > 0}
               class:scale-110={pisteytys && saatuPisteet > 0}
               class:border-green-400={pisteytys && saatuPisteet > 0}
@@ -761,7 +755,7 @@
 
         <!-- Virheilmoitusnappi oikeassa alakulmassa -->
         <button
-          class="absolute bottom-4 right-4 p-2 rounded-full bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 hover:text-red-300 transition-all duration-200 text-xs"
+          class="absolute bottom-4 right-4 p-2 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300 transition-all duration-200 text-xs"
           on:click={ilmoitaVirhe}
           title="Ilmoita virhe kysymyksessä"
         >
@@ -781,7 +775,7 @@
               <div class="text-xl font-bold text-white mb-2">
                 Peli pysäytetty
               </div>
-              <div class="text-sm text-surface-300">
+              <div class="text-sm {GLASS_COLORS.textSecondary}">
                 Klikkaa kelloa jatkaaksesi peliä
               </div>
             </div>
@@ -791,15 +785,15 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           {#each vastausVaihtoehdot as vastaus, index}
             {@const kirjain = String.fromCharCode(65 + index)}
-            {@const vastausVarit = ['#3b82f6', '#10b981', '#8b5cf6', '#ec4899']} <!-- Sininen, Vihreä, Violetti, Pinkki -->
+            {@const vastausVarit = ['#3b82f6', '#10b981', '#14b8a6', '#facc15']} <!-- Sininen, Vihreä, Turkoosi, Keltainen -->
             {@const vastausVari = vastausVarit[index]}
             <!-- A, B, C, D -->
             <button
-              class="{GLASS_STYLES.card} p-6 text-left transition-all duration-300 hover:scale-105 border-2"
+              class="{GLASS_STYLES.card} p-6 text-left transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
               class:border-green-400={pisteytys && vastaus === nykyinenKysymys?.oikea_vastaus}
               class:border-red-400={pisteytys && vastaus === valittuVastaus && vastaus !== nykyinenKysymys?.oikea_vastaus}
-              class:border-white={!pisteytys}
               class:opacity-50={pisteytys && vastaus !== nykyinenKysymys?.oikea_vastaus && vastaus !== valittuVastaus}
+              class:scale-[1.02]={valittuVastaus === vastaus}
               disabled={peliPysaytetty || valittuVastaus !== null || pisteytys}
               on:click={() => valitseVastaus(vastaus)}
             >
@@ -879,10 +873,8 @@
             )}
             {#if pelaaja}
               <div
-                class="card p-6 shadow-xl backdrop-blur-md bg-white/10 dark:bg-black/10 border-2 transition-all duration-300"
-                style="border-color: {haePelaajanVari(
-                  pelaaja
-                )}; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);"
+                class="{GLASS_STYLES.card} p-6 transition-all duration-300"
+                style="border-color: {haePelaajanVari(pelaaja)};"
               >
                 <div class="text-center space-y-4">
                   <div class="text-2xl">
@@ -915,7 +907,7 @@
 
         <div class="text-center mt-8">
           <button
-            class="btn variant-filled-primary text-xl px-8 py-3"
+            class="{glassUtils.button('primary')} text-xl px-8 py-3"
             on:click={palaaNavigation}
           >
             🏠 Takaisin päävalikkoon
@@ -932,7 +924,7 @@
         
         <!-- Pakota vaihto -->
         <button 
-          class="{GLASS_STYLES.card} p-4 w-full hover:scale-105 transition-all duration-300 group"
+          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
           title="📦 Pakota vaihto – anna oma kysymyksesi jollekin toiselle ja ota hänen kysymyksensä."
         >
           <div class="flex flex-col items-center">
@@ -943,7 +935,7 @@
         
         <!-- Nollaus -->
         <button 
-          class="{GLASS_STYLES.card} p-4 w-full hover:scale-105 transition-all duration-300 group"
+          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
           title="🌀 Nollaus – valitse pelaaja, jonka edellinen pistelisäys mitätöidään."
         >
           <div class="flex flex-col items-center">
@@ -954,7 +946,7 @@
         
         <!-- Sekoitus -->
         <button 
-          class="{GLASS_STYLES.card} p-4 w-full hover:scale-105 transition-all duration-300 group"
+          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
           title="🌪️ Sekoitus – kaikkien pelaajien seuraavat kysymykset sekoitetaan satunnaisesti."
         >
           <div class="flex flex-col items-center">
@@ -965,7 +957,7 @@
         
         <!-- Bonus -->
         <button 
-          class="{GLASS_STYLES.card} p-4 w-full hover:scale-105 transition-all duration-300 group"
+          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
           title="⭐ Bonus – jos vastaat oikein, saat heti toisen kysymyksen."
         >
           <div class="flex flex-col items-center">
@@ -979,24 +971,12 @@
 </div>
 
 <style>
-  /* Sujuvat siirtymät */
-  .card {
+  /* Glass morphism yhteensopivat siirtymät */
+  .hover-scale {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Hover-efektit vastauskorteille */
-  .card:hover:not(:disabled) {
-    transform: translateY(-2px);
-  }
-
-  /* Ajastimen animaatio */
-  @keyframes pulse {
-    0%,
-    100% {
-      transform: scale(1);
-    }
-    50% {
-      transform: scale(1.05);
-    }
+  .hover-scale:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.02);
   }
 </style>
