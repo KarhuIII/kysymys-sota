@@ -351,13 +351,13 @@
           <!-- Main Content -->
           <main class="col-span-1 space-y-6">
             <!-- Hero Card -->
-            <div class="card p-8 text-center shadow-xl relative overflow-hidden bg-white/70 dark:bg-surface-900/70 backdrop-blur-lg border border-white/20 dark:border-surface-700/30">
+            <div class="card p-8 text-center shadow-xl relative overflow-hidden bg-white/33 dark:bg-surface-900/33 backdrop-blur-lg border border-white/20 dark:border-surface-700/30">
               <!-- Leijuvat elementit taustalla -->
-              <div class="absolute inset-0 opacity-60">
+              <div class="absolute inset-0 opacity-70">
                 {#if nakyvatElementit && nakyvatElementit.length > 0}
                   {#each nakyvatElementit as elementti (elementti.id)}
                     <div 
-                      class="floating-item-custom absolute pointer-events-none select-none text-primary-500/60 dark:text-primary-400/60 transition-opacity duration-200"
+                      class="floating-item-custom absolute pointer-events-none select-none text-primary dark:text-primary transition-opacity duration-200"
                       style="
                         top: {elementti.sijainti.top}; 
                         left: {elementti.sijainti.left}; 
@@ -377,18 +377,21 @@
               </div>
               
               <!-- Varsinainen sisältö -->
-              <div class="relative z-10 space-y-4">
-                <div class="mx-auto w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center shadow-lg">
-                  <span class="text-2xl">🧠</span>
+              <div class="relative z-10">
+                <!-- Koko sisältö kortti lasiefektillä -->
+                <div class="p-8 rounded-lg shadow-xl bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg border border-white/30 dark:border-surface-600/30 space-y-4 max-w-md mx-auto">
+                  <div class="w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center shadow-lg mx-auto">
+                    <span class="text-2xl">🧠</span>
+                  </div>
+                  <h2 class="text-3xl font-bold">Tervetuloa Kysymys-sotaan!</h2>
+                  <p class="text-lg opacity-80">Hauska tietokilpailu koko perheelle</p>
+                  <div class="flex gap-3 justify-center items-center">
+                    <button class="btn variant-filled-secondary shadow-xl text-lg px-8 py-3 bg-opacity-100" on:click={aloitaPeli}>
+                      🚀 Pelaa!
+                    </button>
+                  </div>
+                  <span class="text-sm opacity-70">Pelattu {pelatutKierrokset} kierrosta</span>
                 </div>
-                <h2 class="text-3xl font-bold">Tervetuloa Kysymys-sotaan!</h2>
-                <p class="text-lg opacity-80">Hauska tietokilpailu koko perheelle</p>
-                <div class="flex gap-3 justify-center items-center">
-                  <button class="btn variant-filled-secondary shadow-lg text-lg px-8 py-3" on:click={aloitaPeli}>
-                    � Pelaa!
-                  </button>
-                </div>
-                <span class="text-sm opacity-70">Pelattu {pelatutKierrokset} kierrosta</span>
               </div>
             </div>
             
@@ -473,30 +476,8 @@
                 </div>
               </div>
               
-              <div class="card p-6 shadow-lg bg-surface-100-900/90 backdrop-blur-sm border border-surface-200-800 relative overflow-hidden min-h-[400px]">
-                <div class="absolute inset-0">
-                  {#if nakyvatElementit && nakyvatElementit.length > 0}
-                    {#each nakyvatElementit as elementti (elementti.id)}
-                      <div 
-                        class="floating-item absolute pointer-events-none select-none"
-                        style="
-                          top: {elementti.sijainti.top}; 
-                          left: {elementti.sijainti.left}; 
-                          font-size: {elementti.koko === 'xl' ? '1.5rem' : elementti.koko === 'lg' ? '1.2rem' : '1rem'}; 
-                          opacity: {elementti.opacity || 0.7};
-                          animation-delay: {elementti.sijainti.animationDelay};
-                          animation-duration: {elementti.sijainti.animationDuration};
-                        "
-                      >
-                        {elementti.teksti}
-                      </div>
-                    {/each}
-                  {:else if leijuvatElementit}
-                    <div class="absolute inset-0 flex items-center justify-center text-surface-400 text-sm">
-                      Alustetaan leijuvia elementtejä...
-                    </div>
-                  {/if}
-                </div>
+              <div class="card p-6 shadow-lg bg-surface-100-900/90 backdrop-blur-sm border border-surface-200-800">
+                <h3 class="text-lg font-medium">🏆 Ennätykset</h3>
               </div>
             </div>
           </aside>
