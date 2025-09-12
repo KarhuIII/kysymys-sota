@@ -316,92 +316,149 @@
   };
 </script>
 
-<!-- Admin Container - Keskitetty ja rajoitettu leveys -->
-<div class="max-w-7xl mx-auto px-4 py-6">
-  <!-- Admin navigation -->
-  <div class="card p-4 mb-6">
-  <nav class="flex flex-wrap gap-2">
-    <button 
-      class="btn {aktiivnenValkka === 'overview' ? 'variant-filled-primary' : 'variant-ghost'}"
-      on:click={() => aktiivnenValkka = 'overview'}
-    >
-      📊 Yleiskatsaus
-    </button>
-    <button 
-      class="btn {aktiivnenValkka === 'questions' ? 'variant-filled-primary' : 'variant-ghost'}"
-      on:click={() => aktiivnenValkka = 'questions'}
-    >
-      ❓ Kysymykset
-    </button>
-    <button 
-      class="btn {aktiivnenValkka === 'players' ? 'variant-filled-primary' : 'variant-ghost'}"
-      on:click={() => aktiivnenValkka = 'players'}
-    >
-      👥 Pelaajat
-    </button>
-    <button 
-      class="btn {aktiivnenValkka === 'games' ? 'variant-filled-primary' : 'variant-ghost'}"
-      on:click={() => aktiivnenValkka = 'games'}
-    >
-      🎮 Pelit
-    </button>
-    <button 
-      class="btn {aktiivnenValkka === 'stats' ? 'variant-filled-primary' : 'variant-ghost'}"
-      on:click={() => aktiivnenValkka = 'stats'}
-    >
-      📈 Tilastot
-    </button>
-    <button class="btn variant-ghost ml-auto" on:click={takaisinCallback}>
-      ← Takaisin
-    </button>
-  </nav>
-</div>
+<!-- Glass effect background with floating particles -->
+<div class="relative min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-blue-900">
+  <!-- Floating elements background -->
+  <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+    <div class="absolute top-20 left-20 w-32 h-32 bg-blue-400/20 rounded-full blur-xl animate-pulse"></div>
+    <div class="absolute top-40 right-32 w-24 h-24 bg-purple-400/20 rounded-full blur-lg animate-bounce"></div>
+    <div class="absolute bottom-40 left-16 w-40 h-40 bg-pink-400/20 rounded-full blur-xl animate-pulse"></div>
+    <div class="absolute bottom-20 right-20 w-28 h-28 bg-green-400/20 rounded-full blur-lg animate-bounce"></div>
+    <div class="absolute top-1/2 left-1/3 w-20 h-20 bg-yellow-400/20 rounded-full blur-md animate-pulse"></div>
+  </div>
+
+  <!-- Main content container -->
+  <div class="relative z-10 max-w-7xl mx-auto px-4 py-6">
+    
+    <!-- Navigation Card -->
+    <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6 mb-6">
+      <div class="flex items-center justify-between">
+        <h1 class="text-3xl font-bold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
+          🛠️ Admin Dashboard
+        </h1>
+        <button 
+          class="px-6 py-3 bg-white/20 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 
+                 hover:bg-white/30 dark:hover:bg-surface-700/60 transition-all duration-300 
+                 hover:scale-[1.02] hover:shadow-lg"
+          on:click={takaisinCallback}
+        >
+          ← Takaisin päävalikkoon
+        </button>
+      </div>
+      
+      <!-- Tab Navigation -->
+      <nav class="flex flex-wrap gap-3 mt-6">
+        <button 
+          class="px-6 py-3 rounded-xl border border-white/30 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02]
+                 {aktiivnenValkka === 'overview' 
+                   ? 'bg-primary-500/80 text-white shadow-lg' 
+                   : 'bg-white/20 dark:bg-surface-800/50 hover:bg-white/30 dark:hover:bg-surface-700/60'}"
+          on:click={() => aktiivnenValkka = 'overview'}
+        >
+          📊 Yleiskatsaus
+        </button>
+        <button 
+          class="px-6 py-3 rounded-xl border border-white/30 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02]
+                 {aktiivnenValkka === 'questions' 
+                   ? 'bg-primary-500/80 text-white shadow-lg' 
+                   : 'bg-white/20 dark:bg-surface-800/50 hover:bg-white/30 dark:hover:bg-surface-700/60'}"
+          on:click={() => aktiivnenValkka = 'questions'}
+        >
+          ❓ Kysymykset
+        </button>
+        <button 
+          class="px-6 py-3 rounded-xl border border-white/30 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02]
+                 {aktiivnenValkka === 'players' 
+                   ? 'bg-primary-500/80 text-white shadow-lg' 
+                   : 'bg-white/20 dark:bg-surface-800/50 hover:bg-white/30 dark:hover:bg-surface-700/60'}"
+          on:click={() => aktiivnenValkka = 'players'}
+        >
+          👥 Pelaajat
+        </button>
+        <button 
+          class="px-6 py-3 rounded-xl border border-white/30 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02]
+                 {aktiivnenValkka === 'games' 
+                   ? 'bg-primary-500/80 text-white shadow-lg' 
+                   : 'bg-white/20 dark:bg-surface-800/50 hover:bg-white/30 dark:hover:bg-surface-700/60'}"
+          on:click={() => aktiivnenValkka = 'games'}
+        >
+          🎮 Pelit
+        </button>
+        <button 
+          class="px-6 py-3 rounded-xl border border-white/30 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02]
+                 {aktiivnenValkka === 'stats' 
+                   ? 'bg-primary-500/80 text-white shadow-lg' 
+                   : 'bg-white/20 dark:bg-surface-800/50 hover:bg-white/30 dark:hover:bg-surface-700/60'}"
+          on:click={() => aktiivnenValkka = 'stats'}
+        >
+          📈 Tilastot
+        </button>
+      </nav>
+    </div>
 
 {#if loading}
-  <div class="flex justify-center p-8">
-    <div class="text-lg">Ladataan...</div>
+  <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-12">
+    <div class="flex flex-col items-center justify-center space-y-4">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+      <div class="text-xl">Ladataan admin-paneelia...</div>
+    </div>
   </div>
+
 {:else if aktiivnenValkka === 'overview'}
   <!-- Overview Dashboard -->
   <div class="space-y-6">
     <!-- Stats Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="card p-6 text-center backdrop-blur-md bg-white/10 dark:bg-black/10">
-        <div class="text-3xl mb-2">❓</div>
-        <div class="text-2xl font-bold text-primary-500">{tilastoData.yhteensaKysymyksia}</div>
-        <div class="text-sm text-surface-600-400">Kysymystä</div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6 text-center">
+        <div class="text-4xl mb-3">❓</div>
+        <div class="text-3xl font-bold text-primary-500 mb-1">{tilastoData.yhteensaKysymyksia}</div>
+        <div class="text-sm text-surface-600 dark:text-surface-400">Kysymystä</div>
       </div>
       
-      <div class="card p-6 text-center backdrop-blur-md bg-white/10 dark:bg-black/10">
-        <div class="text-3xl mb-2">👥</div>
-        <div class="text-2xl font-bold text-secondary-500">{tilastoData.yhteensaPelaajia}</div>
-        <div class="text-sm text-surface-600-400">Pelaajaa</div>
+      <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6 text-center">
+        <div class="text-4xl mb-3">👥</div>
+        <div class="text-3xl font-bold text-secondary-500 mb-1">{tilastoData.yhteensaPelaajia}</div>
+        <div class="text-sm text-surface-600 dark:text-surface-400">Pelaajaa</div>
       </div>
       
-      <div class="card p-6 text-center backdrop-blur-md bg-white/10 dark:bg-black/10">
-        <div class="text-3xl mb-2">🎮</div>
-        <div class="text-2xl font-bold text-tertiary-500">{tilastoData.yhteensaPeleja}</div>
-        <div class="text-sm text-surface-600-400">Peliä pelattu</div>
+      <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6 text-center">
+        <div class="text-4xl mb-3">🎮</div>
+        <div class="text-3xl font-bold text-tertiary-500 mb-1">{tilastoData.yhteensaPeleja}</div>
+        <div class="text-sm text-surface-600 dark:text-surface-400">Peliä pelattu</div>
       </div>
       
-      <div class="card p-6 text-center backdrop-blur-md bg-white/10 dark:bg-black/10">
-        <div class="text-3xl mb-2">🏆</div>
-        <div class="text-2xl font-bold text-warning-500">{tilastoData.keskiarvokinePisteet}</div>
-        <div class="text-sm text-surface-600-400">Keskiarvo pisteet</div>
+      <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6 text-center">
+        <div class="text-4xl mb-3">🏆</div>
+        <div class="text-3xl font-bold text-warning-500 mb-1">{tilastoData.keskiarvokinePisteet}</div>
+        <div class="text-sm text-surface-600 dark:text-surface-400">Keskiarvo pisteet</div>
       </div>
     </div>
 
     <!-- Quick Actions -->
-    <div class="card p-6">
-      <h3 class="text-xl font-bold mb-4">🚀 Pikavalinnat</h3>
+    <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6">
+      <h3 class="text-2xl font-bold mb-6 bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
+        🚀 Pikavalinnat
+      </h3>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <button class="btn variant-filled-secondary" on:click={() => avaPelaajaModal()}>
+        <button 
+          class="px-6 py-4 bg-secondary-500/80 text-white rounded-xl backdrop-blur-sm transition-all duration-300 
+                 hover:scale-[1.02] hover:shadow-lg border border-white/30"
+          on:click={() => avaPelaajaModal()}
+        >
           👤 Lisää pelaaja
         </button>
-        <button class="btn variant-filled-warning" on:click={paivitaKysymyksetUI}>
+        <button 
+          class="px-6 py-4 bg-warning-500/80 text-white rounded-xl backdrop-blur-sm transition-all duration-300 
+                 hover:scale-[1.02] hover:shadow-lg border border-white/30"
+          on:click={paivitaKysymyksetUI}
+        >
           🔄 Päivitä kysymykset
         </button>
-        <button class="btn variant-filled-tertiary" on:click={() => aktiivnenValkka = 'stats'}>
+        <button 
+          class="px-6 py-4 bg-tertiary-500/80 text-white rounded-xl backdrop-blur-sm transition-all duration-300 
+                 hover:scale-[1.02] hover:shadow-lg border border-white/30"
+          on:click={() => aktiivnenValkka = 'stats'}
+        >
           📊 Näytä tilastot
         </button>
       </div>
@@ -412,23 +469,33 @@
   <!-- Questions Management -->
   <div class="space-y-6">
     <!-- Filters and Search -->
-    <div class="card p-4">
+    <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6">
+      <h3 class="text-xl font-bold mb-4">🔍 Haku ja suodattimet</h3>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <input 
-          class="input"
+          class="px-4 py-3 bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 
+                 focus:ring-2 focus:ring-primary-500 focus:outline-none transition-all duration-300"
           type="text"
           placeholder="🔍 Hae kysymyksiä..."
           bind:value={hakuTermi}
         />
         
-        <select class="select" bind:value={valittuKategoria}>
+        <select 
+          class="px-4 py-3 bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 
+                 focus:ring-2 focus:ring-primary-500 focus:outline-none transition-all duration-300"
+          bind:value={valittuKategoria}
+        >
           <option value="">Kaikki kategoriat</option>
           {#each kategoriat as kategoria}
             <option value={kategoria}>{kategoria}</option>
           {/each}
         </select>
         
-        <select class="select" bind:value={valittuVaikeustaso}>
+        <select 
+          class="px-4 py-3 bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 
+                 focus:ring-2 focus:ring-primary-500 focus:outline-none transition-all duration-300"
+          bind:value={valittuVaikeustaso}
+        >
           <option value="">Kaikki vaikeudet</option>
           <option value="oppipoika">🪵 Oppipoika</option>
           <option value="taitaja">🎨 Taitaja</option>
@@ -440,39 +507,46 @@
     </div>
 
     <!-- Questions List -->
-    <div class="grid grid-cols-1 gap-3">
+    <div class="space-y-4">
       {#each filteredKysymykset as kysymys (kysymys.id)}
         <div 
-          class="card p-3 backdrop-blur-md bg-white/10 dark:bg-black/10 border border-white/20 dark:border-white/10"
-          class:border-red-400={kysymys.virhe}
-          style={kysymys.virhe ? "box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);" : ""}
+          class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6
+                 {kysymys.virhe ? 'border-red-400/50 shadow-red-400/20' : ''}"
         >
           <!-- Header row with badges and question -->
-          <div class="flex items-start justify-between gap-3 mb-2">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-base">{vaikeustasoIcon(kysymys.vaikeustaso)}</span>
+          <div class="flex items-start justify-between gap-4 mb-4">
+            <div class="flex items-center gap-3 flex-wrap">
+              <span class="text-2xl">{vaikeustasoIcon(kysymys.vaikeustaso)}</span>
               {#if kysymys.virhe}
-                <span class="text-red-500" title="Kysymyksessä on ilmoitettu virhe">🚨</span>
+                <span class="text-red-500 text-xl" title="Kysymyksessä on ilmoitettu virhe">🚨</span>
+                <button 
+                  class="px-3 py-1 bg-red-500/80 text-white text-sm rounded-lg hover:bg-red-600/80 transition-colors"
+                  on:click={() => poistaVirhemerkinta(kysymys.id!)}
+                >
+                  Poista virhemerkintä
+                </button>
               {/if}
               {#if kysymys.kategoria}
-                <span class="badge variant-filled-secondary text-xs">{kysymys.kategoria}</span>
+                <span class="px-3 py-1 bg-secondary-500/80 text-white text-sm rounded-lg">{kysymys.kategoria}</span>
               {/if}
-              <span class="badge variant-filled-primary text-xs">{kysymys.pistemaara_perus}p</span>
+              <span class="px-3 py-1 bg-primary-500/80 text-white text-sm rounded-lg">{kysymys.pistemaara_perus}p</span>
               {#if kysymys.lahde === 'admin'}
-                <span class="badge variant-filled-warning text-xs">Admin</span>
+                <span class="px-3 py-1 bg-warning-500/80 text-white text-sm rounded-lg">Admin</span>
               {/if}
             </div>
           </div>
           
           <!-- Question text -->
+          <h4 class="text-lg font-semibold mb-4 leading-tight">{kysymys.kysymys}</h4>
 
           <!-- Answers in compact format -->
-          <div class="text-sm space-y-1">
-            <div class="flex flex-wrap items-center gap-1">
-                <h4 class="text-base font-semibold mb-2 leading-tight">{kysymys.kysymys}</h4>
-              <span class="text-green-500 font-semibold text-xs">✓</span>
-              <span class="text-green-400">{kysymys.oikea_vastaus}</span>
-              <span class="text-red-400 font-semibold text-xs">✗</span>
+          <div class="space-y-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-green-500 font-semibold">✓ Oikea vastaus:</span>
+              <span class="text-green-400 font-medium">{kysymys.oikea_vastaus}</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-red-500 font-semibold">✗ Väärät vastaukset:</span>
               <span class="text-red-300">
                 {JSON.parse(kysymys.vaarat_vastaukset || '[]').join(' • ')}
               </span>
@@ -486,47 +560,67 @@
 {:else if aktiivnenValkka === 'players'}
   <!-- Players Management -->
   <div class="space-y-6">
-    <div class="flex justify-between items-center">
-      <h2 class="text-2xl font-bold">Pelaajien hallinta</h2>
-      <button class="btn variant-filled-primary" on:click={() => avaPelaajaModal()}>
-        ➕ Uusi pelaaja
-      </button>
+    <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6">
+      <div class="flex justify-between items-center">
+        <h2 class="text-2xl font-bold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
+          👥 Pelaajien hallinta
+        </h2>
+        <button 
+          class="px-6 py-3 bg-primary-500/80 text-white rounded-xl backdrop-blur-sm transition-all duration-300 
+                 hover:scale-[1.02] hover:shadow-lg border border-white/30"
+          on:click={() => avaPelaajaModal()}
+        >
+          ➕ Uusi pelaaja
+        </button>
+      </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {#each pelaajat as pelaaja (pelaaja.id)}
-        <div class="card p-4">
+        <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6">
           <div class="flex items-center space-x-4 mb-4">
             <div 
-              class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
+              class="w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg"
               style="background: {pelaaja.pelaajan_vari || '#3b82f6'}"
             >
               {pelaaja.nimi.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h4 class="font-semibold">{pelaaja.nimi}</h4>
-              <div class="text-sm text-surface-600-400">Ikä: {pelaaja.ika || 'Ei määritelty'}</div>
+              <h4 class="font-semibold text-lg">{pelaaja.nimi}</h4>
+              <div class="text-sm text-surface-600 dark:text-surface-400">
+                Ikä: {pelaaja.ika || 'Ei määritelty'}
+              </div>
             </div>
           </div>
           
-          <div class="space-y-2 text-sm">
-            <div>Vaikeustaso: {vaikeustasoIcon(pelaaja.vaikeustaso_min || 'oppipoika')} - {vaikeustasoIcon(pelaaja.vaikeustaso_max || 'taitaja')}</div>
+          <div class="space-y-3 mb-6">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-medium">Vaikeustaso:</span>
+              <span class="text-lg">{vaikeustasoIcon(pelaaja.vaikeustaso_min || 'oppipoika')}</span>
+              <span class="text-sm">-</span>
+              <span class="text-lg">{vaikeustasoIcon(pelaaja.vaikeustaso_max || 'taitaja')}</span>
+            </div>
+            <div class="text-sm text-surface-600 dark:text-surface-400">
+              {pelaaja.vaikeustaso_min || 'oppipoika'} → {pelaaja.vaikeustaso_max || 'taitaja'}
+            </div>
           </div>
           
-          <div class="flex justify-end space-x-2 mt-4">
+          <div class="flex justify-end space-x-3">
             <button 
-              class="btn-icon variant-filled-secondary"
+              class="px-4 py-2 bg-secondary-500/80 text-white rounded-lg backdrop-blur-sm transition-all duration-300 
+                     hover:scale-[1.02] hover:shadow-lg border border-white/30"
               on:click={() => avaPelaajaModal(pelaaja)}
               title="Muokkaa"
             >
-              ✏️
+              ✏️ Muokkaa
             </button>
             <button 
-              class="btn-icon variant-filled-error"
+              class="px-4 py-2 bg-error-500/80 text-white rounded-lg backdrop-blur-sm transition-all duration-300 
+                     hover:scale-[1.02] hover:shadow-lg border border-white/30"
               on:click={() => poistaPelaaja(pelaaja.id!)}
               title="Poista"
             >
-              🗑️
+              🗑️ Poista
             </button>
           </div>
         </div>
@@ -537,26 +631,35 @@
 {:else if aktiivnenValkka === 'games'}
   <!-- Games History -->
   <div class="space-y-6">
-    <div class="flex justify-between items-center">
-      <h2 class="text-2xl font-bold">Pelien historia</h2>
-      <button class="btn variant-filled-tertiary" on:click={lataaPelit}>
-        🔄 Päivitä
-      </button>
+    <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6">
+      <div class="flex justify-between items-center">
+        <h2 class="text-2xl font-bold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
+          🎮 Pelien historia
+        </h2>
+        <button 
+          class="px-6 py-3 bg-tertiary-500/80 text-white rounded-xl backdrop-blur-sm transition-all duration-300 
+                 hover:scale-[1.02] hover:shadow-lg border border-white/30"
+          on:click={lataaPelit}
+        >
+          🔄 Päivitä
+        </button>
+      </div>
     </div>
 
     <div class="space-y-4">
       {#each pelit as peli (peli.id)}
-        <div class="card p-4">
+        <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6">
           <div class="flex justify-between items-start">
             <div>
-              <h4 class="font-semibold">Peli #{peli.id}</h4>
-              <div class="text-sm text-surface-600-400">
-                {formatDate(peli.aloitettu)}
+              <h4 class="font-semibold text-lg mb-2">🎮 Peli #{peli.id}</h4>
+              <div class="text-sm text-surface-600 dark:text-surface-400">
+                📅 {formatDate(peli.aloitettu)}
               </div>
             </div>
             <div class="text-right">
-              <div class="text-lg font-bold">{peli.kysymysten_maara} kysymystä</div>
-              <div class="text-sm">Pisteet: {peli.pisteet}</div>
+              <div class="text-2xl font-bold text-primary-500">{peli.kysymysten_maara}</div>
+              <div class="text-sm text-surface-600 dark:text-surface-400">kysymystä</div>
+              <div class="text-lg font-semibold text-warning-500 mt-1">{peli.pisteet}p</div>
             </div>
           </div>
         </div>
@@ -567,34 +670,51 @@
 {:else if aktiivnenValkka === 'stats'}
   <!-- Statistics -->
   <div class="space-y-6">
-    <h2 class="text-2xl font-bold">Tilastot</h2>
+    <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6">
+      <h2 class="text-2xl font-bold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
+        📈 Tilastot
+      </h2>
+    </div>
     
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="card p-6 text-center">
-        <h3 class="text-lg font-semibold mb-2">Kysymykset kategoriansa</h3>
-        {#each kategoriat as kategoria}
-          <div class="flex justify-between py-1">
-            <span>{kategoria}</span>
-            <span>{kysymykset.filter(k => k.kategoria === kategoria).length}</span>
-          </div>
-        {/each}
-      </div>
-      
-      <div class="card p-6 text-center">
-        <h3 class="text-lg font-semibold mb-2">Vaikeustasot</h3>
-        {#each ['oppipoika', 'taitaja', 'mestari', 'kuningas', 'suurmestari'] as taso}
-          <div class="flex justify-between py-1">
-            <span>{vaikeustasoIcon(taso)} {taso}</span>
-            <span>{kysymykset.filter(k => k.vaikeustaso === taso).length}</span>
-          </div>
-        {/each}
-      </div>
-      
-      <div class="card p-6 text-center">
-        <h3 class="text-lg font-semibold mb-2">Pelit</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6">
+        <h3 class="text-lg font-semibold mb-4 text-center">📂 Kysymykset kategoriansa</h3>
         <div class="space-y-2">
-          <div>Pelejä yhteensä: {pelit.length}</div>
-          <div>Pelaajia yhteensä: {pelaajat.length}</div>
+          {#each kategoriat as kategoria}
+            <div class="flex justify-between py-2 px-3 bg-white/50 dark:bg-surface-800/50 rounded-lg">
+              <span class="font-medium">{kategoria}</span>
+              <span class="font-bold text-primary-500">{kysymykset.filter(k => k.kategoria === kategoria).length}</span>
+            </div>
+          {/each}
+        </div>
+      </div>
+      
+      <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6">
+        <h3 class="text-lg font-semibold mb-4 text-center">🎯 Vaikeustasot</h3>
+        <div class="space-y-2">
+          {#each ['oppipoika', 'taitaja', 'mestari', 'kuningas', 'suurmestari'] as taso}
+            <div class="flex justify-between items-center py-2 px-3 bg-white/50 dark:bg-surface-800/50 rounded-lg">
+              <span class="flex items-center gap-2">
+                <span class="text-lg">{vaikeustasoIcon(taso)}</span>
+                <span class="font-medium capitalize">{taso}</span>
+              </span>
+              <span class="font-bold text-primary-500">{kysymykset.filter(k => k.vaikeustaso === taso).length}</span>
+            </div>
+          {/each}
+        </div>
+      </div>
+      
+      <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6">
+        <h3 class="text-lg font-semibold mb-4 text-center">🎮 Yleistä</h3>
+        <div class="space-y-4">
+          <div class="text-center p-3 bg-white/50 dark:bg-surface-800/50 rounded-lg">
+            <div class="text-2xl font-bold text-tertiary-500">{pelit.length}</div>
+            <div class="text-sm text-surface-600 dark:text-surface-400">Pelejä yhteensä</div>
+          </div>
+          <div class="text-center p-3 bg-white/50 dark:bg-surface-800/50 rounded-lg">
+            <div class="text-2xl font-bold text-secondary-500">{pelaajat.length}</div>
+            <div class="text-sm text-surface-600 dark:text-surface-400">Pelaajia yhteensä</div>
+          </div>
         </div>
       </div>
     </div>
@@ -604,7 +724,7 @@
 <!-- Player Modal -->
 {#if pelaajaModalAuki}
   <div 
-    class="modal-backdrop" 
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
     role="dialog" 
     aria-modal="true"
     tabindex="-1"
@@ -616,67 +736,114 @@
     on:keydown={(e) => e.key === 'Escape' && suljePelaajaModal()}
   >
     <div 
-      class="modal backdrop-blur-md bg-white/10 dark:bg-black/10 border border-white/20 dark:border-white/10" 
+      class="bg-white/95 dark:bg-surface-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-white/10 
+             w-full max-w-md max-h-[90vh] overflow-y-auto"
       role="dialog"
       tabindex="-1"
       on:keydown={(e) => e.key === 'Enter' && e.preventDefault()}
     >
-      <header class="modal-header">
-        <h3>{valittuPelaaja ? 'Muokkaa pelaajaa' : 'Uusi pelaaja'}</h3>
-      </header>
-      
-      <section class="modal-body space-y-4">
-        <label class="label">
-          <span>Nimi</span>
-          <input class="input" type="text" bind:value={uusiPelaaja.nimi} placeholder="Pelaajan nimi" />
-        </label>
+      <div class="p-6">
+        <h3 class="text-2xl font-bold mb-6 bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
+          {valittuPelaaja ? '✏️ Muokkaa pelaajaa' : '➕ Uusi pelaaja'}
+        </h3>
         
-        <label class="label">
-          <span>Ikä</span>
-          <input class="input" type="number" bind:value={uusiPelaaja.ika} min="3" max="120" placeholder="Ikä" />
-        </label>
-        
-        <label class="label">
-          <span>Pelaajan väri</span>
-          <input class="input" type="color" bind:value={uusiPelaaja.pelaajan_vari} />
-        </label>
-        
-        <div class="grid grid-cols-2 gap-4">
-          <label class="label">
-            <span>Min vaikeustaso</span>
-            <select class="select" bind:value={uusiPelaaja.vaikeustaso_min}>
-              <option value="oppipoika">🪵 Oppipoika</option>
-              <option value="taitaja">🎨 Taitaja</option>
-              <option value="mestari">⚔️ Mestari</option>
-              <option value="kuningas">👑 Kuningas</option>
-              <option value="suurmestari">🌌 Suurmestari</option>
-            </select>
-          </label>
+        <div class="space-y-4">
+          <div>
+            <label for="pelaaja-nimi" class="block text-sm font-medium mb-2">Nimi</label>
+            <input 
+              id="pelaaja-nimi"
+              class="w-full px-4 py-3 bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 
+                     focus:ring-2 focus:ring-primary-500 focus:outline-none transition-all duration-300"
+              type="text" 
+              bind:value={uusiPelaaja.nimi} 
+              placeholder="Pelaajan nimi" 
+            />
+          </div>
           
-          <label class="label">
-            <span>Max vaikeustaso</span>
-            <select class="select" bind:value={uusiPelaaja.vaikeustaso_max}>
-              <option value="oppipoika">🪵 Oppipoika</option>
-              <option value="taitaja">🎨 Taitaja</option>
-              <option value="mestari">⚔️ Mestari</option>
-              <option value="kuningas">👑 Kuningas</option>
-              <option value="suurmestari">🌌 Suurmestari</option>
-            </select>
-          </label>
+          <div>
+            <label for="pelaaja-ika" class="block text-sm font-medium mb-2">Ikä</label>
+            <input 
+              id="pelaaja-ika"
+              class="w-full px-4 py-3 bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 
+                     focus:ring-2 focus:ring-primary-500 focus:outline-none transition-all duration-300"
+              type="number" 
+              bind:value={uusiPelaaja.ika} 
+              min="3" 
+              max="120" 
+              placeholder="Ikä" 
+            />
+          </div>
+          
+          <div>
+            <label for="pelaaja-vari" class="block text-sm font-medium mb-2">Pelaajan väri</label>
+            <div class="flex items-center gap-3">
+              <input 
+                id="pelaaja-vari"
+                class="w-16 h-12 rounded-lg border border-white/30 cursor-pointer"
+                type="color" 
+                bind:value={uusiPelaaja.pelaajan_vari} 
+              />
+              <span class="text-sm text-surface-600 dark:text-surface-400">
+                Valittu: {uusiPelaaja.pelaajan_vari}
+              </span>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="pelaaja-min-vaikeus" class="block text-sm font-medium mb-2">Min vaikeustaso</label>
+              <select 
+                id="pelaaja-min-vaikeus"
+                class="w-full px-4 py-3 bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 
+                       focus:ring-2 focus:ring-primary-500 focus:outline-none transition-all duration-300"
+                bind:value={uusiPelaaja.vaikeustaso_min}
+              >
+                <option value="oppipoika">🪵 Oppipoika</option>
+                <option value="taitaja">🎨 Taitaja</option>
+                <option value="mestari">⚔️ Mestari</option>
+                <option value="kuningas">👑 Kuningas</option>
+                <option value="suurmestari">🌌 Suurmestari</option>
+              </select>
+            </div>
+            
+            <div>
+              <label for="pelaaja-max-vaikeus" class="block text-sm font-medium mb-2">Max vaikeustaso</label>
+              <select 
+                id="pelaaja-max-vaikeus"
+                class="w-full px-4 py-3 bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 
+                       focus:ring-2 focus:ring-primary-500 focus:outline-none transition-all duration-300"
+                bind:value={uusiPelaaja.vaikeustaso_max}
+              >
+                <option value="oppipoika">🪵 Oppipoika</option>
+                <option value="taitaja">🎨 Taitaja</option>
+                <option value="mestari">⚔️ Mestari</option>
+                <option value="kuningas">👑 Kuningas</option>
+                <option value="suurmestari">🌌 Suurmestari</option>
+              </select>
+            </div>
+          </div>
         </div>
-      </section>
-      
-      <footer class="modal-footer">
-        <button class="btn variant-ghost" on:click={suljePelaajaModal}>
-          Peruuta
-        </button>
-        <button class="btn variant-filled-primary" on:click={tallennaPelaaja}>
-          Tallenna
-        </button>
-      </footer>
+        
+        <div class="flex justify-end space-x-3 mt-8">
+          <button 
+            class="px-6 py-3 bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 
+                   hover:bg-white/70 dark:hover:bg-surface-700/60 transition-all duration-300"
+            on:click={suljePelaajaModal}
+          >
+            Peruuta
+          </button>
+          <button 
+            class="px-6 py-3 bg-primary-500/80 text-white rounded-xl backdrop-blur-sm transition-all duration-300 
+                   hover:scale-[1.02] hover:shadow-lg border border-white/30"
+            on:click={tallennaPelaaja}
+          >
+            💾 Tallenna
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 {/if}
 
-<!-- Sulkeva admin container div -->
+  </div>
 </div>
