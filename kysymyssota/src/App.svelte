@@ -30,6 +30,7 @@
   let peliPelaajat: Kayttaja[] = [];
   let pelinKierrosMaara: number = 10; // Tallennetaan kierrosmäärä
   let pelinKategoria: string | undefined = undefined; // Kategoriasuodatus
+  let kaikkiPelaajat: Kayttaja[] = []; // Kaikki pelaajat näytettäväksi
 
   // ===============================================
   // ELINKAARIFUNKTIOT (Lifecycle Functions)
@@ -41,6 +42,18 @@
       kategoriat = await peliPalvelu.haeKategoriatMaarineen();
       parhaatTulokset = await peliPalvelu.haeParhaatTulokset(5);
       kayttajanTilastot = await peliPalvelu.haeKayttajanTilastot(kayttajaNimi);
+      
+      // Lataa kaikki pelaajat näytettäväksi
+      try {
+        const pelaajat = await peliPalvelu.haeKaikkiKayttajat();
+        if (pelaajat) {
+          kaikkiPelaajat = pelaajat.sort((a: any, b: any) => 
+            new Date(b.luotu).getTime() - new Date(a.luotu).getTime()
+          );
+        }
+      } catch (error) {
+        console.warn('Ei voitu ladata pelaajia:', error);
+      }
       
       // Lataa leijuvat elementit
       try {
@@ -198,7 +211,7 @@
     pelinKierrosMaara = 10; // Reset kierrosmäärä
   }
   /**
-   * Pika-aloitus - käyttää olemassa olevia pelaajia
+   * Pika-aloitus - käyttää kaikkia olemassa olevia pelaajia
    */
   async function aloitaPeli() {
     try {
@@ -206,14 +219,14 @@
       const kayttajat = await peliPalvelu.haeKaikkiKayttajat();
       
       if (kayttajat && kayttajat.length > 0) {
-        // Käytä ensimmäistä pelaajaa tai viimeisintä luotua
-        const valittuPelaaja = kayttajat.sort((a: any, b: any) => 
+        // Käytä kaikkia pelaajia
+        const kaikkiPelaajat = kayttajat.sort((a: any, b: any) => 
           new Date(b.luotu).getTime() - new Date(a.luotu).getTime()
-        )[0];
+        );
         
-        peliPelaajat = [valittuPelaaja];
+        peliPelaajat = kaikkiPelaajat;
         nykyinenSivu = 'peli';
-        console.log(`Aloitettu peli pelaajalla: ${valittuPelaaja.nimi}`);
+        console.log(`Aloitettu peli pelaajilla: ${kaikkiPelaajat.map((p: any) => p.nimi).join(', ')}`);
       } else {
         // Jos ei ole pelaajia, siirry asetuksiin luomaan uusi
         console.log('Ei pelaajia - siirretään asetuksiin');
@@ -227,7 +240,7 @@
   }
   
   /**
-   * Aloita peli tietyllä kategorialla - käyttää olemassa olevia pelaajia
+   * Aloita peli tietyllä kategorialla - käyttää kaikkia olemassa olevia pelaajia
    */
   async function aloitaPeliKategorialla(kategoria: string) {
     try {
@@ -235,16 +248,16 @@
       const kayttajat = await peliPalvelu.haeKaikkiKayttajat();
       
       if (kayttajat && kayttajat.length > 0) {
-        // Käytä viimeisintä luotua pelaajaa
-        const valittuPelaaja = kayttajat.sort((a: any, b: any) => 
+        // Käytä kaikkia pelaajia
+        const kaikkiPelaajat = kayttajat.sort((a: any, b: any) => 
           new Date(b.luotu).getTime() - new Date(a.luotu).getTime()
-        )[0];
+        );
         
-        // Siirry peliin kategorialla
-        peliPelaajat = [valittuPelaaja];
+        // Siirry peliin kategorialla kaikilla pelaajilla
+        peliPelaajat = kaikkiPelaajat;
         pelinKierrosMaara = 5; // Lyhyempi peli kategorioille
         pelinKategoria = kategoria; // Aseta kategoriasuodatus
-        console.log(`Aloitetaan peli kategorialla: ${kategoria}, pelaaja: ${valittuPelaaja.nimi}`);
+        console.log(`Aloitetaan peli kategorialla: ${kategoria}, pelaajat: ${kaikkiPelaajat.map((p: any) => p.nimi).join(', ')}`);
         nykyinenSivu = 'peli';
       } else {
         // Jos ei ole pelaajia, siirry asetuksiin luomaan uusi
@@ -345,6 +358,28 @@
                   <div class="text-sm text-surface-600-400">Ladataan kategorioita...</div>
                 {/if}
               </div>
+              
+              <!-- Pelaajat -->
+              {#if kaikkiPelaajat.length > 0}
+                <div class="border-t border-surface-300-700 pt-4">
+                  <h4 class="text-sm font-medium mb-3 text-surface-600-400">👥 Pelaajat ({kaikkiPelaajat.length})</h4>
+                  <div class="flex flex-wrap gap-1">
+                    {#each kaikkiPelaajat.slice(0, 8) as pelaaja}
+                      <div 
+                        class="flex items-center justify-center rounded px-2 py-1 text-white" 
+                        style="background-color: {pelaaja.pelaajan_vari || '#6366f1'}"
+                      >
+                        <span class="text-xs font-medium truncate max-w-[60px]">{pelaaja.nimi}</span>
+                      </div>
+                    {/each}
+                    {#if kaikkiPelaajat.length > 8}
+                      <div class="flex items-center gap-1 bg-surface-200-800/20 rounded px-2 py-1">
+                        <span class="text-xs text-surface-500-400">+{kaikkiPelaajat.length - 8}</span>
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+              {/if}
             </div>
           </aside>
           
@@ -386,7 +421,7 @@
                   <h2 class="text-3xl font-bold">Tervetuloa Kysymys-sotaan!</h2>
                   <p class="text-lg opacity-80">Hauska tietokilpailu koko perheelle</p>
                   <div class="flex gap-3 justify-center items-center">
-                    <button class="btn variant-filled-secondary shadow-xl text-lg px-8 py-3 bg-opacity-100" on:click={aloitaPeli}>
+                    <button class="btn variant-filled-secondary shadow-xl text-lg px-8 py-3 bg-opacity-100" on:click={() => navigoi('asetukset')}>
                       🚀 Pelaa!
                     </button>
                   </div>
@@ -508,19 +543,13 @@
 </main>
 
 <style>
-  .floating-item {
-    animation: float 7s ease-in-out infinite;
+  .floating-item-custom {
+    animation: floatCustom 5s ease-in-out infinite;
     transition: all 0.3s ease;
     will-change: transform, opacity;
   }
   
-  .floating-item-gentle {
-    animation: gentleFloat 10s ease-in-out infinite;
-    transition: all 0.5s ease;
-    will-change: transform, opacity;
-  }
-  
-  @keyframes float {
+  @keyframes floatCustom {
     0% {
       transform: translateY(0px) translateX(0px) rotate(0deg) scale(0.8);
       opacity: 0;
