@@ -270,6 +270,14 @@
           >
             📊 Tilastot
           </button>
+          <button 
+            class="btn btn-sm"
+            class:variant-filled-primary={nykyinenSivu === 'admin'}
+            class:variant-soft={nykyinenSivu !== 'admin'}
+            on:click={() => navigoi('admin')}
+          >
+            🛠️ Admin
+          </button>
         </nav>
       </div>
     </header>
@@ -309,22 +317,38 @@
           <!-- Main Content -->
           <main class="col-span-1 space-y-6">
             <!-- Hero Card -->
-            <div class="card p-8 text-center shadow-xl bg-gradient-to-br from-primary-100 to-secondary-100 dark:from-primary-900 dark:to-secondary-900 border border-primary-200 dark:border-primary-800">
-              <div class="space-y-4">
+            <div class="card p-8 text-center shadow-xl border border-primary-200 dark:border-primary-800 relative overflow-hidden bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-primary-950 dark:to-secondary-950">
+              <!-- Leijuvat elementit taustalla -->
+              <div class="absolute inset-0 opacity-20">
+                {#if nakyvatElementit && nakyvatElementit.length > 0}
+                  {#each nakyvatElementit.slice(0, 8) as elementti (elementti.id)}
+                    <div 
+                      class="floating-item absolute pointer-events-none select-none text-primary-400 dark:text-primary-600"
+                      style="
+                        top: {Math.random() * 80 + 10}%; 
+                        left: {Math.random() * 80 + 10}%; 
+                        font-size: {elementti.koko === 'xl' ? '2rem' : elementti.koko === 'lg' ? '1.5rem' : '1rem'}; 
+                        opacity: 0.4;
+                        animation-delay: {Math.random() * 3}s;
+                        animation-duration: {20 + Math.random() * 10}s;
+                      "
+                    >
+                      {elementti.teksti}
+                    </div>
+                  {/each}
+                {/if}
+              </div>
+              
+              <!-- Varsinainen sisältö -->
+              <div class="relative z-10 space-y-4">
                 <div class="mx-auto w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center shadow-lg">
                   <span class="text-2xl">🧠</span>
                 </div>
                 <h2 class="text-3xl font-bold">Tervetuloa Kysymys-sotaan!</h2>
                 <p class="text-lg opacity-80">Hauska tietokilpailu koko perheelle</p>
                 <div class="flex gap-3 justify-center items-center">
-                  <button class="btn variant-filled-primary shadow-lg" on:click={() => navigoi('asetukset')}>
-                    ⚙️ Asetukset
-                  </button>
-                  <button class="btn variant-filled-secondary shadow-lg" on:click={aloitaPeli}>
-                    🎯 Pika-aloitus
-                  </button>
-                  <button class="btn variant-filled-tertiary shadow-lg" on:click={() => navigoi('admin')}>
-                    🛠️ Admin
+                  <button class="btn variant-filled-secondary shadow-lg text-lg px-8 py-3" on:click={aloitaPeli}>
+                    � Pelaa!
                   </button>
                 </div>
                 <span class="text-sm opacity-70">Pelattu {pelatutKierrokset} kierrosta</span>

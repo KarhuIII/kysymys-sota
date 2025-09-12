@@ -192,20 +192,7 @@
       }
     },
     {
-      "label": "💾 Git Commit (Interactive)",
-      "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-Command",
-        "$msg = Read-Host 'Enter commit message'; if ($msg) { git commit -m \"$msg\"; Write-Host 'Committed successfully!' -ForegroundColor Green } else { Write-Host 'Commit cancelled' -ForegroundColor Yellow }"
-      ],
-      "group": "build",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      }
-    },
-    {
-      "label": "📝 Git Commit (Simple)",
+      "label": " Git Commit (Simple)",
       "type": "shell",
       "command": "powershell",
       "args": [
