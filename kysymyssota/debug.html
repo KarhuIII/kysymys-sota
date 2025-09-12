@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Database Debug</title>
+</head>
+<body>
+    <h1>IndexedDB Debug</h1>
+    <button onclick="debugDatabase()">Tarkista tietokanta</button>
+    <button onclick="clearDatabase()">Tyhjennä tietokanta</button>
+    <div id="output"></div>
+
+    <script>
+        async function debugDatabase() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<p>Tarkistetaan tietokantaa...</p>';
+            
+            try {
+                // Avaa tietokanta
+                const request = indexedDB.open('KysymysSotaDB', 1);
+                
+                request.onsuccess = function(event) {
+                    const db = event.target.result;
+                    const transaction = db.transaction(['kysymykset'], 'readonly');
+                    const store = transaction.objectStore('kysymykset');
+                    
+                    const getAllRequest = store.getAll();
+                    
+                    getAllRequest.onsuccess = function() {
+                        const kysymykset = getAllRequest.result;
+                        console.log('Kaikki kysymykset:', kysymykset);
+                        
+                        const vaikeustasoLaskuri = {};
+                        kysymykset.forEach(k => {
+                            vaikeustasoLaskuri[k.vaikeustaso] = (vaikeustasoLaskuri[k.vaikeustaso] || 0) + 1;
+                        });
+                        
+                        let html = '<h2>Tietokannan sisältö:</h2>';
+                        html += `<p>Yhteensä kysymyksiä: ${kysymykset.length}</p>`;
+                        html += '<h3>Vaikeustasoittain:</h3><ul>';
+                        Object.entries(vaikeustasoLaskuri).forEach(([taso, maara]) => {
+                            html += `<li>${taso}: ${maara} kysymystä</li>`;
+                        });
+                        html += '</ul>';
+                        
+                        // Näytä muutama esimerkki oppipoika-kysymyksistä
+                        const oppipoikaKysymykset = kysymykset.filter(k => k.vaikeustaso === 'oppipoika');
+                        if (oppipoikaKysymykset.length > 0) {
+                            html += '<h3>Esimerkki oppipoika-kysymyksistä:</h3><ul>';
+                            oppipoikaKysymykset.slice(0, 3).forEach(k => {
+                                html += `<li>${k.kysymys} (pisteet: ${k.pistemaara_perus})</li>`;
+                            });
+                            html += '</ul>';
+                        }
+                        
+                        output.innerHTML = html;
+                    };
+                };
+                
+                request.onerror = function() {
+                    output.innerHTML = '<p>Virhe tietokannan avaamisessa!</p>';
+                };
+                
+            } catch (error) {
+                output.innerHTML = `<p>Virhe: ${error.message}</p>`;
+            }
+        }
+        
+        async function clearDatabase() {
+            if (confirm('Haluatko varmasti tyhjentää tietokannan?')) {
+                indexedDB.deleteDatabase('KysymysSotaDB');
+                document.getElementById('output').innerHTML = '<p>Tietokanta tyhjennetty! Päivitä sovellus ladataksesi kysymykset uudestaan.</p>';
+            }
+        }
+    </script>
+</body>
+</html>

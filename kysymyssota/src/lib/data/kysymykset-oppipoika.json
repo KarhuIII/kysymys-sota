@@ -1,0 +1,187 @@
+[
+  {
+    "kysymys": "Mikä eläin sanoo \"muu\"?",
+    "oikea_vastaus": "Lehmä",
+    "vaarat_vastaukset": ["Hevonen", "Sika", "Lammas"],
+    "kategoria": "Eläimet",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on Suomen pääkaupunki?",
+    "oikea_vastaus": "Helsinki",
+    "vaarat_vastaukset": ["Turku", "Tampere", "Espoo"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mitä väriä saat kun sekoitat sinistä ja keltaista?",
+    "oikea_vastaus": "Vihreä",
+    "vaarat_vastaukset": ["Violetti", "Oranssi", "Harmaa"],
+    "kategoria": "Värit",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Kuinka monta jalkaa hämähäkillä on?",
+    "oikea_vastaus": "8",
+    "vaarat_vastaukset": ["6", "10", "12"],
+    "kategoria": "Eläimet",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on 2 + 3?",
+    "oikea_vastaus": "5",
+    "vaarat_vastaukset": ["4", "6", "7"],
+    "kategoria": "Matematiikka",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on vesimolekyylin kemiallinen kaava?",
+    "oikea_vastaus": "H₂O",
+    "vaarat_vastaukset": ["CO₂", "O₂", "NaCl"],
+    "kategoria": "Kemia",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä vuodenaika tulee talven jälkeen?",
+    "oikea_vastaus": "Kevät",
+    "vaarat_vastaukset": ["Kesä", "Syksy", "Talvi"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on elefantin suuri roikkuva nenä?",
+    "oikea_vastaus": "Kärsä",
+    "vaarat_vastaukset": ["Nenä", "Sarvi", "Torvi"],
+    "kategoria": "Eläimet",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on viikon seitsemäs päivä?",
+    "oikea_vastaus": "Sunnuntai",
+    "vaarat_vastaukset": ["Maanantai", "Lauantai", "Keskiviikko"],
+    "kategoria": "Yleistieto",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on 5 x 5?",
+    "oikea_vastaus": "25",
+    "vaarat_vastaukset": ["10", "15", "20"],
+    "kategoria": "Matematiikka",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on ihmiskehon suurin elin?",
+    "oikea_vastaus": "Iho",
+    "vaarat_vastaukset": ["Maksa", "Aivot", "Keuhkot"],
+    "kategoria": "Ihmiskeho",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Kuka on kuuluisa taidemaalari, joka maalasi \"Mona Lisa\"-teoksen?",
+    "oikea_vastaus": "Leonardo da Vinci",
+    "vaarat_vastaukset": ["Pablo Picasso", "Vincent van Gogh", "Claude Monet"],
+    "kategoria": "Taide",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on Suomen kansalliseläin?",
+    "oikea_vastaus": "Karhu",
+    "vaarat_vastaukset": ["Leijona", "Susi", "Joutsen"],
+    "kategoria": "Eläimet",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Missä maassa sijaitsee Suuri Gizan pyramidi?",
+    "oikea_vastaus": "Egypti",
+    "vaarat_vastaukset": ["Kiina", "Meksiko", "Kreikka"],
+    "kategoria": "Historia",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on Ruotsin pääkaupunki?",
+    "oikea_vastaus": "Tukholma",
+    "vaarat_vastaukset": ["Pariisi", "Oslo", "Tallinna"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on maailman suurin valtameri?",
+    "oikea_vastaus": "Tyynimeri",
+    "vaarat_vastaukset": ["Atlantti", "Intian valtameri", "Jäämeri"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on ihmisen kehon tärkein elin, joka pumppaa verta?",
+    "oikea_vastaus": "Sydän",
+    "vaarat_vastaukset": ["Maks", "Keuhkot", "Aivot"],
+    "kategoria": "Ihmiskeho",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on planeettamme ainoa luonnollinen satelliitti?",
+    "oikea_vastaus": "Kuu",
+    "vaarat_vastaukset": ["Mars", "ISS", "Kepler"],
+    "kategoria": "Avaruus",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on maailman suurin maa pinta-alaltaan?",
+    "oikea_vastaus": "Venäjä",
+    "vaarat_vastaukset": ["Kanada", "Kiina", "Yhdysvallat"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on Ranskan pääkaupunki?",
+    "oikea_vastaus": "Pariisi",
+    "vaarat_vastaukset": ["Lontoo", "Berliini", "Madrid"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on maailman korkein vuori?",
+    "oikea_vastaus": "Mount Everest",
+    "vaarat_vastaukset": ["K2", "Kangchenjunga", "Lhotse"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on planeettamme aurinkokunnan suurin planeetta?",
+    "oikea_vastaus": "Jupiter",
+    "vaarat_vastaukset": ["Saturnus", "Uranus", "Neptunus"],
+    "kategoria": "Avaruus",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Kuka on kirjoittanut 'Romeo ja Julia'?",
+    "oikea_vastaus": "William Shakespeare",
+    "vaarat_vastaukset": ["Kalle Päätalo", "Martti Ahtisaari", "Jane Austen"],
+    "kategoria": "Kirjallisuus",
+    "vaikeustaso": "oppipoika",
+    "pistemaara_perus": 10
+  }
+
+]

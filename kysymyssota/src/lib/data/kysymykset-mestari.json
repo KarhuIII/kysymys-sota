@@ -1,0 +1,421 @@
+[
+  {
+    "kysymys": "Mikä on Suomen pisin joki?",
+    "oikea_vastaus": "Kemijoki",
+    "vaarat_vastaukset": ["Oulujoki", "Tornionjoki", "Kyrönjoki"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Kuka maalasi teoksen \"Tähtiyö\"?",
+    "oikea_vastaus": "Vincent van Gogh",
+    "vaarat_vastaukset": ["Pablo Picasso", "Claude Monet", "Leonardo da Vinci"],
+    "kategoria": "Taide",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä alkuaine on H vesivaavan taulukossa?",
+    "oikea_vastaus": "Vety",
+    "vaarat_vastaukset": ["Happi", "Helium", "Hiili"],
+    "kategoria": "Kemia",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+{
+    "kysymys": "Mikä planeetta aurinkokunnassamme pyörii pystysuorassa akselinsa ympäri, jolloin sen napaseudut osoittavat lähes aurinkoon?",
+    "oikea_vastaus": "Uranus",
+    "vaarat_vastaukset": ["Neptunus", "Saturnus", "Jupiter"],
+    "kategoria": "Avaruus",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä on maailman syvin järvi?",
+    "oikea_vastaus": "Baikaljärvi",
+    "vaarat_vastaukset": ["Kaspianmeri", "Tanganjikajärvi", "Viktoriajärvi"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä on alkuaineiden jakautumisen perusperiaate Mendelejevin jaksollisessa järjestelmässä?",
+    "oikea_vastaus": "Atomien järjestys protoniluvun mukaan",
+    "vaarat_vastaukset": ["Atomimassan mukaan", "Tiheyden mukaan", "Elektronien lukumäärän mukaan"],
+    "kategoria": "Kemia",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Kuka oli Rooman ensimmäinen keisari?",
+    "oikea_vastaus": "Augustus",
+    "vaarat_vastaukset": ["Julius Caesar", "Nero", "Tiberius"],
+    "kategoria": "Historia",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä hiukkanen on vastuussa heikon vuorovaikutuksen välittämisestä?",
+    "oikea_vastaus": "W- ja Z-bosonit",
+    "vaarat_vastaukset": ["Gluoni", "Foton", "Gravitoni"],
+    "kategoria": "Hiukkasfysiikka",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Kuinka monta luuta ihmiskehosta löytyy aikuisella?",
+    "oikea_vastaus": "206",
+    "vaarat_vastaukset": ["210", "201", "208"],
+    "kategoria": "Ihmiskeho",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on maailman pienin itsenäinen valtio pinta-alaltaan?",
+    "oikea_vastaus": "Vatikaani",
+    "vaarat_vastaukset": ["Monaco", "San Marino", "Liechtenstein"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on kemiallinen kaava typpihapolle?",
+    "oikea_vastaus": "HNO3",
+    "vaarat_vastaukset": ["H2SO4", "HCl", "NH3"],
+    "kategoria": "Kemia",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Kuka sävelsi 'Kuoleman valssin' (Danse Macabre)?",
+    "oikea_vastaus": "Camille Saint-Saëns",
+    "vaarat_vastaukset": ["Ludwig van Beethoven", "Frédéric Chopin", "Johann Sebastian Bach"],
+    "kategoria": "Taide",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä on maailman pisin joki?",
+    "oikea_vastaus": "Niili",
+    "vaarat_vastaukset": ["Amazon", "Yangtze", "Mississippi"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä fysikaalinen ilmiö selittää sateenkaaren syntymisen?",
+    "oikea_vastaus": "Valon taittuminen ja heijastuminen vesipisaroissa",
+    "vaarat_vastaukset": ["Valon sironta ilmassa", "Maan magneettikenttä", "Pilvien heijastus"],
+    "kategoria": "Tiede",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on Euroopan korkein vuori?",
+    "oikea_vastaus": "Elbrus",
+    "vaarat_vastaukset": ["Mont Blanc", "Matterhorn", "Grossglockner"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on pimeän aineen pääasiallinen vaikutus universumissa?",
+    "oikea_vastaus": "Se vaikuttaa galaksien liikkeisiin gravitaation kautta",
+    "vaarat_vastaukset": ["Se säteilee valoa", "Se tuottaa lämpöä", "Se muodostaa planeettoja"],
+    "kategoria": "Hiukkasfysiikka",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä on ihmiskehon suurin elin?",
+    "oikea_vastaus": "Iho",
+    "vaarat_vastaukset": ["Maksa", "Sydän", "Keuhkot"],
+    "kategoria": "Ihmiskeho",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Kuka kirjoitti 'Odysseian'?",
+    "oikea_vastaus": "Homeros",
+    "vaarat_vastaukset": ["Vergilius", "Sofokles", "Hesiodos"],
+    "kategoria": "Kirjallisuus",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+[
+  {
+    "kysymys": "Mikä on maailman suurin autiomaa pinta-alaltaan?",
+    "oikea_vastaus": "Antarktis",
+    "vaarat_vastaukset": ["Sahara", "Gobi", "Kalahari"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä hiukkanen on neutraali varaukseltaan ja löytyy atomiytimestä?",
+    "oikea_vastaus": "Neutroni",
+    "vaarat_vastaukset": ["Elektroni", "Protoni", "Foton"],
+    "kategoria": "Hiukkasfysiikka",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on maailman pienin itsenäinen valtio väkiluvultaan?",
+    "oikea_vastaus": "Vatikaani",
+    "vaarat_vastaukset": ["Monaco", "San Marino", "Liechtenstein"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on Euroopan pisin joki?",
+    "oikea_vastaus": "Volga",
+    "vaarat_vastaukset": ["Tonava", "Reini", "Loire"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on kemiallinen kaava ammoniakkille?",
+    "oikea_vastaus": "NH3",
+    "vaarat_vastaukset": ["H2O", "HNO3", "CH4"],
+    "kategoria": "Kemia",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on kemiallinen alkuaine, jonka symboli on 'Ag'?",
+    "oikea_vastaus": "Hopea",
+    "vaarat_vastaukset": ["Kulta", "Alumiini", "Arseeni"],
+    "kategoria": "Kemia",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä eurooppalainen kaupunki tunnetaan nimellä 'Ikuinen kaupunki'?",
+    "oikea_vastaus": "Rooma",
+    "vaarat_vastaukset": ["Ateena", "Lontoo", "Pariisi"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on ihmisen veren pääasiallinen happia kuljettava solu?",
+    "oikea_vastaus": "Punasolu",
+    "vaarat_vastaukset": ["Valkosolu", "Verihiutale", "Lymfosyytti"],
+    "kategoria": "Ihmiskeho",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä taiteilija maalasi 'Guernican'?",
+    "oikea_vastaus": "Pablo Picasso",
+    "vaarat_vastaukset": ["Salvador Dalí", "Vincent van Gogh", "Claude Monet"],
+    "kategoria": "Taide",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä on hiukkasfysiikan standardimallin kevyin fermioni?",
+    "oikea_vastaus": "Elektroni",
+    "vaarat_vastaukset": ["Protoni", "Neutroni", "Mioni"],
+    "kategoria": "Hiukkasfysiikka",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä on Yhdysvaltojen väkiluku arvioituna vuonna 2025?",
+    "oikea_vastaus": "noin 334 miljoonaa",
+    "vaarat_vastaukset": ["320 miljoonaa", "350 miljoonaa", "340 miljoonaa"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä on J.K. Rowlingin syntymävuosi?",
+    "oikea_vastaus": "1965",
+    "vaarat_vastaukset": ["1963", "1967", "1960"],
+    "kategoria": "Viihde",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Kuinka monta luuta on aikuisen ihmisen käsivarressa ja kädessä yhteensä?",
+    "oikea_vastaus": "30",
+    "vaarat_vastaukset": ["28", "32", "34"],
+    "kategoria": "Ihmiskeho",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä on maailman suurin Netflix-sarja katsottuna aloituskertoihin vuonna 2023?",
+    "oikea_vastaus": "Squid Game",
+    "vaarat_vastaukset": ["Stranger Things", "Bridgerton", "The Witcher"],
+    "kategoria": "Viihde",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä maa on pinta-alaltaan toiseksi suurin maailmassa?",
+    "oikea_vastaus": "Kanada",
+    "vaarat_vastaukset": ["Kiina", "Yhdysvallat", "Brasil"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä oli Euroopan väkirikkain kaupunki vuonna 2020?",
+    "oikea_vastaus": "Istanbul",
+    "vaarat_vastaukset": ["Lontoo", "Pariisi", "Moskov"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Kuinka monta symfoniaa Ludwig van Beethoven sävelsi?",
+    "oikea_vastaus": "9",
+    "vaarat_vastaukset": ["7", "8", "10"],
+    "kategoria": "Taide",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä oli maailman ensimmäisen pääsiäissaarnaajan (Paavali) koti kaupunki?",
+    "oikea_vastaus": "Tarsos",
+    "vaarat_vastaukset": ["Damaskos", "Jerusalem", "Korintti"],
+    "kategoria": "Historia",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä oli maailman myydyin videopeleihin liittyvä franchise 2020-luvun alussa?",
+    "oikea_vastaus": "Pokémon",
+    "vaarat_vastaukset": ["Call of Duty", "FIFA", "Mario"],
+    "kategoria": "Viihde",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä kemiallinen alkuaine on kevyin alkuaine?",
+    "oikea_vastaus": "Vety",
+    "vaarat_vastaukset": ["Helium", "Litium", "Hiili"],
+    "kategoria": "Kemia",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on maailman korkein rakennus (2025 tilanne)?",
+    "oikea_vastaus": "Burj Khalifa",
+    "vaarat_vastaukset": ["Shanghai Tower", "Abraj Al-Bait Clock Tower", "One World Trade Center"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Kuinka monta varsinaista Harry Potter -kirjaa on olemassa?",
+    "oikea_vastaus": "7",
+    "vaarat_vastaukset": ["6", "8", "9"],
+    "kategoria": "Viihde",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on planeetan Neptunuksen keskimääräinen etäisyys Auringosta kilometreinä?",
+    "oikea_vastaus": "noin 4,5 miljardia km",
+    "vaarat_vastaukset": ["noin 3,5 miljardia km", "noin 5,2 miljardia km", "noin 6 miljardia km"],
+    "kategoria": "Avaruus",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Kuka voitti ensimmäisen Nobelin kirjallisuuspalkinnon vuonna 1901?",
+    "oikea_vastaus": "Sully Prudhomme",
+    "vaarat_vastaukset": ["Emile Zola", "Leo Tolstoi", "Theodor Mommsen"],
+    "kategoria": "Kirjallisuus",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Kuinka monta maata on YK:n jäseninä vuonna 2025?",
+    "oikea_vastaus": "193",
+    "vaarat_vastaukset": ["192", "195", "190"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+ {
+    "kysymys": "Kuka voitti ensimmäisen Nobelin kirjallisuuspalkinnon 1901?",
+    "oikea_vastaus": "Sully Prudhomme",
+    "vaarat_vastaukset": ["Leo Tolstoi", "Theodor Mommsen", "Emile Zola"],
+    "kategoria": "Kirjallisuus",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+ {
+    "kysymys": "Mikä on maailman suurin koralliriutta?",
+    "oikea_vastaus": "Suuri valliriutta",
+    "vaarat_vastaukset": ["Belizen riutta", "New Caledonian riutta", "Ras Mohammed"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on syntymävuosi Albert Einsteinilla?",
+    "oikea_vastaus": "1879",
+    "vaarat_vastaukset": ["1878", "1880", "1882"],
+    "kategoria": "Fysiikka",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Kuka sävelsi 'Taikahuilun' oopperan?",
+    "oikea_vastaus": "Wolfgang Amadeus Mozart",
+    "vaarat_vastaukset": ["Ludwig van Beethoven", "Johann Sebastian Bach", "Richard Wagner"],
+    "kategoria": "Taide",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+ {
+    "kysymys": "Mikä on maailmankaikkeuden suurin tunnettu tähti säteilyn perusteella?",
+    "oikea_vastaus": "UY Scuti",
+    "vaarat_vastaukset": ["Betelgeuse", "Rigel", "VY Canis Majoris"],
+    "kategoria": "Avaruus",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Kuinka monta sydäntä mustekalalla on?",
+    "oikea_vastaus": "3",
+    "vaarat_vastaukset": ["1", "2", "4"],
+    "kategoria": "Eläimet",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä alkuaine on kemialliselta symboliltaan 'Hg'?",
+    "oikea_vastaus": "elohopea",
+    "vaarat_vastaukset": ["Hopea", "Kulta", "Kadmium"],
+    "kategoria": "Kemia",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on syntymävuosi Steve Jobsilla?",
+    "oikea_vastaus": "1955",
+    "vaarat_vastaukset": ["1954", "1956", "1960"],
+    "kategoria": "Viihde",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä suomalainen elokuva ohjasi Renny Harlin vuonna 1987?",
+    "oikea_vastaus": "A Nightmare on Elm Street 4: The Dream Master",
+    "vaarat_vastaukset": ["Die Hard", "Tuntematon sotilas (1987)", "Die Hard 2"],
+    "kategoria": "Viihde",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 25
+  }
+]
+
+]

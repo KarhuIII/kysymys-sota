@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Database Check</title>
+</head>
+<body>
+    <h1>Nopea tietokanta-tarkistus</h1>
+    <button onclick="checkDB()">Tarkista tietokanta</button>
+    <div id="result"></div>
+
+    <script>
+        async function checkDB() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Tarkistetaan...';
+            
+            try {
+                const request = indexedDB.open('KysymysSotaDB', 1);
+                
+                request.onsuccess = function(event) {
+                    const db = event.target.result;
+                    const transaction = db.transaction(['kysymykset'], 'readonly');
+                    const store = transaction.objectStore('kysymykset');
+                    
+                    const getAllRequest = store.getAll();
+                    
+                    getAllRequest.onsuccess = function() {
+                        const kysymykset = getAllRequest.result;
+                        const oppipoikaCount = kysymykset.filter(k => k.vaikeustaso === 'oppipoika').length;
+                        const totalCount = kysymykset.length;
+                        
+                        console.log('Kaikki kysymykset:', kysymykset);
+                        console.log('Oppipoika kysymykset:', kysymykset.filter(k => k.vaikeustaso === 'oppipoika'));
+                        
+                        result.innerHTML = `
+                            <h3>Tietokanta sisältää:</h3>
+                            <p>Yhteensä: ${totalCount} kysymystä</p>
+                            <p>Oppipoika-taso: ${oppipoikaCount} kysymystä</p>
+                            <p>Tietokanta ${totalCount > 0 ? 'löytyi ja sisältää dataa' : 'on tyhjä tai ei löydy'}</p>
+                        `;
+                        
+                        if (oppipoikaCount === 0 && totalCount > 0) {
+                            result.innerHTML += '<p style="color: red;"><strong>⚠️ Oppipoika-kysymyksiä ei löydy!</strong></p>';
+                        } else if (oppipoikaCount > 0) {
+                            result.innerHTML += '<p style="color: green;"><strong>✅ Oppipoika-kysymyksiä löytyy</strong></p>';
+                        }
+                    };
+                };
+                
+                request.onerror = function() {
+                    result.innerHTML = '<p style="color: red;">Virhe tietokannan avaamisessa</p>';
+                };
+                
+            } catch (error) {
+                result.innerHTML = `<p style="color: red;">Virhe: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

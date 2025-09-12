@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Oppipoika Test</title>
+    <script type="module">
+        // Simuloi database.js:n haeSatunnainenKysymys-kutsua
+        async function testaOppipoikaKysymykset() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<p>Testataan oppipoika-kysymyksiä...</p>';
+            
+            try {
+                // Avaa tietokanta
+                const request = indexedDB.open('KysymysSotaDB', 1);
+                
+                request.onsuccess = function(event) {
+                    const db = event.target.result;
+                    const transaction = db.transaction(['kysymykset'], 'readonly');
+                    const store = transaction.objectStore('kysymykset');
+                    
+                    const getAllRequest = store.getAll();
+                    
+                    getAllRequest.onsuccess = function() {
+                        const kaikki = getAllRequest.result;
+                        console.log('🔍 Haetaan kysymys: kategoria=undefined, vaikeustaso=oppipoika');
+                        
+                        // Suodata oppipoika-kysymykset
+                        const oppipoikaKysymykset = kaikki.filter(k => {
+                            return (!undefined || k.kategoria === undefined) &&
+                                   (!'oppipoika' || k.vaikeustaso === 'oppipoika');
+                        });
+                        
+                        const oppipoikaKysymyksetOikea = kaikki.filter(k => k.vaikeustaso === 'oppipoika');
+                        
+                        console.log(`📊 Yhteensä kysymyksiä tietokannassa: ${kaikki.length}`);
+                        console.log(`📊 Suodatettu kysymyksiä (virheellinen): ${oppipoikaKysymykset.length}`);
+                        console.log(`📊 oppipoika-tason kysymyksiä (oikea): ${oppipoikaKysymyksetOikea.length}`);
+                        
+                        let html = '<h2>Oppipoika-kysymysten testaus:</h2>';
+                        html += `<p>Yhteensä kysymyksiä: ${kaikki.length}</p>`;
+                        html += `<p>Oppipoika-kysymyksiä: ${oppipoikaKysymyksetOikea.length}</p>`;
+                        
+                        // Testaa haeSatunnainenKysymys-logiikkaa
+                        const vaikeustaso = 'oppipoika';
+                        const kategoria = undefined;
+                        
+                        const suodatetut = kaikki.filter(k => {
+                            return (!kategoria || k.kategoria === kategoria) &&
+                                   (!vaikeustaso || k.vaikeustaso === vaikeustaso);
+                        });
+                        
+                        html += `<p>Suodatettu kysymyksiä (simuloiden haeSatunnainenKysymys): ${suodatetut.length}</p>`;
+                        
+                        if (suodatetut.length > 0) {
+                            const satunnainen = suodatetut[Math.floor(Math.random() * suodatetut.length)];
+                            html += `<h3>Valittu satunnainen kysymys:</h3>`;
+                            html += `<p><strong>Kysymys:</strong> ${satunnainen.kysymys}</p>`;
+                            html += `<p><strong>Vaikeustaso:</strong> ${satunnainen.vaikeustaso}</p>`;
+                            html += `<p><strong>Pisteet:</strong> ${satunnainen.pistemaara_perus}</p>`;
+                        } else {
+                            html += `<p style="color: red;"><strong>❌ Ei löytynyt kysymyksiä!</strong></p>`;
+                        }
+                        
+                        // Näytä vaikeustasojakauma
+                        const vaikeustasoLaskuri = {};
+                        kaikki.forEach(k => {
+                            vaikeustasoLaskuri[k.vaikeustaso] = (vaikeustasoLaskuri[k.vaikeustaso] || 0) + 1;
+                        });
+                        
+                        html += '<h3>Vaikeustasojakauma:</h3><ul>';
+                        Object.entries(vaikeustasoLaskuri).forEach(([taso, maara]) => {
+                            html += `<li>${taso}: ${maara} kysymystä</li>`;
+                        });
+                        html += '</ul>';
+                        
+                        output.innerHTML = html;
+                    };
+                };
+                
+                request.onerror = function() {
+                    output.innerHTML = '<p>Virhe tietokannan avaamisessa!</p>';
+                };
+                
+            } catch (error) {
+                output.innerHTML = `<p>Virhe: ${error.message}</p>`;
+            }
+        }
+        
+        window.testaOppipoikaKysymykset = testaOppipoikaKysymykset;
+    </script>
+</head>
+<body>
+    <h1>Oppipoika-kysymysten testaus</h1>
+    <button onclick="testaOppipoikaKysymykset()">Testaa oppipoika-kysymykset</button>
+    <div id="output"></div>
+</body>
+</html>

@@ -1,0 +1,251 @@
+[
+  {
+    "kysymys": "Kuka löysi radioaktiivisuuden?",
+    "oikea_vastaus": "Henri Becquerel",
+    "vaarat_vastaukset": ["Marie Curie", "Ernest Rutherford", "Wilhelm Röntgen"],
+    "kategoria": "Tiede",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Kuka kirjoitti teoksen 'Yksinäisyys satavuotiaassa'?",
+    "oikea_vastaus": "Gabriel García Márquez",
+    "vaarat_vastaukset": ["Mario Vargas Llosa", "Isabel Allende", "Jorge Luis Borges"],
+    "kategoria": "Kirjallisuus",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on tarkka atomimassa hiilen isotoopilla C-13?",
+    "oikea_vastaus": "13,003355 u",
+    "vaarat_vastaukset": ["12,998 u", "13,000 u", "12,995 u"],
+    "kategoria": "Kemia",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Kuinka monta satelliittia Marsilla tunnetaan vuonna 2025?",
+    "oikea_vastaus": "2",
+    "vaarat_vastaukset": ["1", "3", "4"],
+    "kategoria": "Avaruus",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä oli tarkka päivämäärä, jolloin ensimmäinen ihmisen tekemä proteiinisekvenssi julkaistiin?",
+    "oikea_vastaus": "15. joulukuuta 1951",
+    "vaarat_vastaukset": ["12. joulukuuta 1950", "20. joulukuuta 1952", "1. tammikuuta 1951"],
+    "kategoria": "Tiede",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä on maailman syvimmän tunnetun kaivoksen nimi ja syvyys metreinä?",
+    "oikea_vastaus": "Mponeng, 4 000 m",
+    "vaarat_vastaukset": ["Kola Superdeep, 12 262 m", "Savuka, 3 000 m", "TauTona, 3 900 m"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä on tarkka populaatio Galápagossaarten merileijonista vuonna 2025?",
+    "oikea_vastaus": "15 000",
+    "vaarat_vastaukset": ["10 000", "20 000", "12 500"],
+    "kategoria": "Eläimet",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä oli tarkka lämpötila Kelvin-asteina ensimmäisessä kvanttitietokoneen kokeessa vuonna 2019?",
+    "oikea_vastaus": "15 mK",
+    "vaarat_vastaukset": ["20 mK", "10 mK", "18 mK"],
+    "kategoria": "Fysiikka",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä oli ensimmäisen tunnetun supernovan tarkka havaintovuosi?",
+    "oikea_vastaus": "1054",
+    "vaarat_vastaukset": ["1006", "1181", "1572"],
+    "kategoria": "Avaruus",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä oli tarkka väestömäärä Roomassa vuonna 117 jKr.?",
+    "oikea_vastaus": "1 600 000",
+    "vaarat_vastaukset": ["1 200 000", "2 000 000", "1 000 000"],
+    "kategoria": "Historia",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä on tarkka pituus ensimmäisen tunnetun DNA-molekyylin sekvenssissä, joka julkaistiin 1953?",
+    "oikea_vastaus": "5 000 emäsparia",
+    "vaarat_vastaukset": ["3 000", "7 000", "10 000"],
+    "kategoria": "Tiede",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Kuinka monta yksityiskohtaista väriä ihmissilmä kykenee erottelemaan normaalissa valaistuksessa?",
+    "oikea_vastaus": "10 miljoonaa",
+    "vaarat_vastaukset": ["1 miljoona", "100 miljoonaa", "500 000"],
+    "kategoria": "Ihmiskeho",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä oli tarkka päivä, jolloin aurinkokunnan planeetta Pluto luokiteltiin uudelleen kääpiöplaneetaksi?",
+    "oikea_vastaus": "24. elokuuta 2006",
+    "vaarat_vastaukset": ["14. elokuuta 2006", "24. syyskuuta 2006", "1. tammikuuta 2006"],
+    "kategoria": "Avaruus",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on tarkka paino kilogrammoina Maapallon kokonaisilmakehälle?",
+    "oikea_vastaus": "5,15 x 10^18 kg",
+    "vaarat_vastaukset": ["1 x 10^18", "5,0 x 10^17", "6 x 10^18"],
+    "kategoria": "Fysiikka",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Kuinka monta perhosta lajin Monarch (Danaus plexippus) muuttomatkalla 2020-luvulla arvioitiin olevan?",
+    "oikea_vastaus": "200 miljoonaa",
+    "vaarat_vastaukset": ["100 miljoonaa", "500 miljoonaa", "1 miljardi"],
+    "kategoria": "Eläimet",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä oli tarkka pituus ensimmäisen sukellusveneen, joka saavutti merenpohjan Marianan haudassa, vuonna 1960?",
+    "oikea_vastaus": "7 metriä",
+    "vaarat_vastaukset": ["10 m", "5 m", "12 m"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä on tarkka aika UTC, jolloin Apollo 11 laskeutui Kuun pinnalle?",
+    "oikea_vastaus": "20. heinäkuuta 1969 klo 20:17 UTC",
+    "vaarat_vastaukset": ["19. heinäkuuta 1969", "21. heinäkuuta 1969", "20. heinäkuuta 1969 klo 21:00 UTC"],
+    "kategoria": "Historia",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Kuinka monta tunnettuja elementtejä oli jaksollisessa järjestelmässä vuonna 2025?",
+    "oikea_vastaus": "118",
+    "vaarat_vastaukset": ["116", "120", "115"],
+    "kategoria": "Kemia",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä oli tarkka korkeus metriä, johon Eiffel-torni rakennettiin vuonna 1889?",
+    "oikea_vastaus": "324 m",
+    "vaarat_vastaukset": ["302 m", "330 m", "312 m"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä oli tarkka syvyys metriä, johon Kola Superdeep Borehole kaivettiin?",
+    "oikea_vastaus": "12 262 m",
+    "vaarat_vastaukset": ["10 021 m", "11 554 m", "12 678 m"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä on tarkka halkaisija kilometreinä Jupiterin planeetalla?",
+    "oikea_vastaus": "139 820 km",
+    "vaarat_vastaukset": ["142 000 km", "137 500 km", "140 750 km"],
+    "kategoria": "Avaruus",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Kuinka monta tunnettuja lintuja on maailmassa (lajin tarkkuus) vuonna 2025?",
+    "oikea_vastaus": "10 700",
+    "vaarat_vastaukset": ["10 000", "11 000", "10 300"],
+    "kategoria": "Eläimet",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on tarkka etäisyys kilometreinä Maasta Kuuhun keskimäärin?",
+    "oikea_vastaus": "384 400 km",
+    "vaarat_vastaukset": ["386 000 km", "380 000 km", "395 000 km"],
+    "kategoria": "Avaruus",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on tarkka määrä sydämenlyöntejä minuutissa terveellä aikuisella levossa (keskiarvo)?",
+    "oikea_vastaus": "72",
+    "vaarat_vastaukset": ["60", "80", "90"],
+    "kategoria": "Ihmiskeho",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Kuinka monta yksilöä Arktisen jääkarhikannan arvioitiin olevan vuonna 2020?",
+    "oikea_vastaus": "26 000",
+    "vaarat_vastaukset": ["20 000", "30 000", "35 000"],
+    "kategoria": "Eläimet",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä oli tarkka päivämäärä ensimmäiselle PCR-kokeelle (Polymerase Chain Reaction)?",
+    "oikea_vastaus": "16. kesäkuuta 1983",
+    "vaarat_vastaukset": ["1. tammikuuta 1983", "20. kesäkuuta 1983", "15. heinäkuuta 1983"],
+    "kategoria": "Tiede",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Kuinka monta tunnettua mustaa aukkoa oli havaittu Linnunradassa vuonna 2025?",
+    "oikea_vastaus": "60-70",
+    "vaarat_vastaukset": ["30-40", "0-10", "90-100"],
+    "kategoria": "Avaruus",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä on tarkka määrä tunnettuja makean veden kalaa maailmassa (laji tasolla)?",
+    "oikea_vastaus": "16 000 lajia",
+    "vaarat_vastaukset": ["15 000", "20 000", "12 000"],
+    "kategoria": "Eläimet",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on tarkka pituus kilometreinä Euroopan pisimmällä joella Volgalla?",
+    "oikea_vastaus": "3 531 km",
+    "vaarat_vastaukset": ["3 400 km", "3 600 km", "3 500 km"],
+    "kategoria": "Maantieto",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä oli tarkka paino grammoina ensimmäisellä ihmisen tekemällä satelliitilla Sputnik 1?",
+    "oikea_vastaus": "83,6 kg",
+    "vaarat_vastaukset": ["80 kg", "85 kg", "90 kg"],
+    "kategoria": "Avaruus",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Kuinka monta sydäntä mustekalalla on ja mikä niiden tehtävä?",
+    "oikea_vastaus": "3, 2 pumppaa verta kiduksiin ja 1 koko kehoon",
+    "vaarat_vastaukset": ["2, molemmat pumppaavat verta koko kehoon", "3, kaikki pumppaavat verta kehoon", "1, pumppaa verta kehoon"],
+    "kategoria": "Eläimet",
+    "vaikeustaso": "kuningas",
+    "pistemaara_perus": 25
+  }
+]
+
