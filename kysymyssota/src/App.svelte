@@ -25,7 +25,6 @@
   
   // Leijuvat elementit - näkyvät elementit ja niiden tilat
   let nakyvatElementit: any[] = [];
-  let maxElementit = 12; // Maksimimäärä elementtejä kerrallaan
   
   // Pelin tila
   let peliPelaajat: Kayttaja[] = [];
@@ -51,8 +50,15 @@
           // Alusta leijuvat elementit kun data on ladattu
           setTimeout(() => {
             alustaLeijuvatElementit();
-            // Päivitä elementtejä säännöllisesti
-            setInterval(paivitaLeijuvatElementit, 5000); // Päivitä 5s välein
+            // Päivitä elementtejä 15-30s välein satunnaisesti
+            function asetaSatunnainenPaivitys() {
+              const aika = 15000 + Math.random() * 15000; // 15-30s
+              setTimeout(() => {
+                paivitaLeijuvatElementit();
+                asetaSatunnainenPaivitys(); // Rekursiivinen kutsu seuraavalle satunnaiselle ajalle
+              }, aika);
+            }
+            asetaSatunnainenPaivitys(); // Aloita satunnaiset päivitykset
           }, 1000); // 1s viive että sivu on valmis
         }
       } catch (error) {
@@ -74,16 +80,6 @@
   // TOIMINTOFUNKTIOT (Action Functions)
   // ===============================================
   
-  // Apufunktio satunnaisen sijainnin luomiseen (sallii ulos näkyvyydestä)
-  function luoSatunnainenSijainti() {
-    return {
-      top: Math.random() * 120 - 10 + '%', // -10% to 110% (sallii ulos)
-      left: Math.random() * 120 - 10 + '%', // -10% to 110% (sallii ulos)
-      animationDelay: Math.random() * 2 + 's', // Lyhyempi viive
-      animationDuration: (Math.random() * 8 + 15) + 's' // 15-23s kesto
-    };
-  }
-
   // Luo satunnainen elementti kaikista kategorioista
   function luoSatunnainenElementti() {
     if (!leijuvatElementit) return null;
@@ -102,7 +98,26 @@
       ...randomElement,
       id: Math.random().toString(36).substr(2, 9),
       sijainti: luoSatunnainenSijainti(),
-      luontiaika: Date.now()
+      luontiaika: Date.now(),
+      opacity: 0 // Aloita näkymättömänä fade-in varten
+    };
+  }
+
+  // Apufunktio satunnaisen sijainnin luomiseen
+  function luoSatunnainenSijainti() {
+    // Satunnaiset liikkuvuussuunnat - kaikki suunnat mahdollisia
+    const deltaY = -60 + Math.random() * 120; // -60 to +60px (ylös ja alas)
+    const deltaX = -60 + Math.random() * 120; // -60 to +60px (vasemmalle ja oikealle)
+    const rotation = -4 + Math.random() * 8; // -4 to +4 degrees (enemmän kierroa)
+    
+    return {
+      top: Math.random() * 130 - 15 + '%', // -15% to 115% - sallii reunojen yli
+      left: Math.random() * 130 - 15 + '%', // -15% to 115% - sallii reunojen yli
+      animationDelay: Math.random() * 2 + 's', // 0-2s lyhyempi viive
+      animationDuration: (2 + Math.random() * 3) + 's', // 2-5s nopeammat animaatiot
+      deltaY: deltaY,
+      deltaX: deltaX,
+      rotation: rotation
     };
   }
 
@@ -111,31 +126,50 @@
     if (!leijuvatElementit) return;
     
     nakyvatElementit = [];
-    for (let i = 0; i < maxElementit; i++) {
+    for (let i = 0; i < 96; i++) { // 64 elementtiä
       const elementti = luoSatunnainenElementti();
       if (elementti) {
-        // Hajautetaan aloitusajat estämään ryppäitä
-        elementti.sijainti.animationDelay = (i * 2) + Math.random() * 3 + 's';
+        // Porrastetut viiveet - osa alkaa heti, osa myöhemmin
+        elementti.sijainti.animationDelay = (i * 0.1) + 's'; // 0, 0.1s, 0.2s, 0.3s...
+        elementti.opacity = 0.6; // Näkyväksi kun on luotu
         nakyvatElementit.push(elementti);
       }
     }
   }
 
-  // Päivitä leijuvat elementit säännöllisesti
+  // Satunnaisempi ja nopeampi elementtien vaihto
   function paivitaLeijuvatElementit() {
-    if (!leijuvatElementit) return;
+    if (!leijuvatElementit || nakyvatElementit.length === 0) return;
     
-    const nyt = Date.now();
-    const maxIka = 25000; // 25 sekuntia
+    // Valitse 2-4 elementtiä vaihdettavaksi kerralla (enemmän dynamiikkaa)
+    const vaihdettavienMaara = 2 + Math.floor(Math.random() * 3);
     
-    // Korvaa vanhat elementit uusilla
-    nakyvatElementit = nakyvatElementit.map(elementti => {
-      if (nyt - elementti.luontiaika > maxIka) {
-        const uusiElementti = luoSatunnainenElementti();
-        return uusiElementti || elementti;
-      }
-      return elementti;
-    });
+    for (let i = 0; i < vaihdettavienMaara; i++) {
+      // Satunnainen viive jokaiselle elementille
+      setTimeout(() => {
+        const indeksi = Math.floor(Math.random() * nakyvatElementit.length);
+        const vanhaElementti = nakyvatElementit[indeksi];
+        
+        // ENSIN fade out täysin
+        vanhaElementti.opacity = 0;
+        
+        // ODOTA että fade out on valmis, SITTEN vaihda teksti
+        setTimeout(() => {
+          const uusiElementti = luoSatunnainenElementti();
+          if (uusiElementti) {
+            // Aloita uusi elementti näkymättömänä
+            uusiElementti.opacity = 0;
+            nakyvatElementit[indeksi] = uusiElementti;
+            nakyvatElementit = [...nakyvatElementit]; // Triggeri reactivity
+            
+            // SITTEN fade in uusi teksti
+            setTimeout(() => {
+              uusiElementti.opacity = 0.5 + Math.random() * 0.3; // 0.5-0.8 opacity
+            }, 50); // Pieni viive että DOM päivittyy
+          }
+        }, 600); // Odota fade out (500ms) + puskuri
+      }, i * 1000); // 1s viive per elementti
+    }
   }
   
   /**
@@ -317,20 +351,23 @@
           <!-- Main Content -->
           <main class="col-span-1 space-y-6">
             <!-- Hero Card -->
-            <div class="card p-8 text-center shadow-xl border border-primary-200 dark:border-primary-800 relative overflow-hidden bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-primary-950 dark:to-secondary-950">
+            <div class="card p-8 text-center shadow-xl relative overflow-hidden bg-white/70 dark:bg-surface-900/70 backdrop-blur-lg border border-white/20 dark:border-surface-700/30">
               <!-- Leijuvat elementit taustalla -->
-              <div class="absolute inset-0 opacity-20">
+              <div class="absolute inset-0 opacity-60">
                 {#if nakyvatElementit && nakyvatElementit.length > 0}
-                  {#each nakyvatElementit.slice(0, 8) as elementti (elementti.id)}
+                  {#each nakyvatElementit as elementti (elementti.id)}
                     <div 
-                      class="floating-item absolute pointer-events-none select-none text-primary-400 dark:text-primary-600"
+                      class="floating-item-custom absolute pointer-events-none select-none text-primary-500/60 dark:text-primary-400/60 transition-opacity duration-200"
                       style="
-                        top: {Math.random() * 80 + 10}%; 
-                        left: {Math.random() * 80 + 10}%; 
+                        top: {elementti.sijainti.top}; 
+                        left: {elementti.sijainti.left}; 
                         font-size: {elementti.koko === 'xl' ? '2rem' : elementti.koko === 'lg' ? '1.5rem' : '1rem'}; 
-                        opacity: 0.4;
-                        animation-delay: {Math.random() * 3}s;
-                        animation-duration: {20 + Math.random() * 10}s;
+                        opacity: {elementti.opacity || 0.6};
+                        animation-delay: {elementti.sijainti.animationDelay};
+                        animation-duration: {elementti.sijainti.animationDuration};
+                        --delta-y: {elementti.sijainti.deltaY}px;
+                        --delta-x: {elementti.sijainti.deltaX}px;
+                        --rotation: {elementti.sijainti.rotation}deg;
                       "
                     >
                       {elementti.teksti}
@@ -491,8 +528,14 @@
 
 <style>
   .floating-item {
-    animation: float 15s ease-in-out infinite;
+    animation: float 7s ease-in-out infinite;
     transition: all 0.3s ease;
+    will-change: transform, opacity;
+  }
+  
+  .floating-item-gentle {
+    animation: gentleFloat 10s ease-in-out infinite;
+    transition: all 0.5s ease;
     will-change: transform, opacity;
   }
   
@@ -530,6 +573,23 @@
     100% {
       transform: translateY(-50px) translateX(0px) rotate(0deg) scale(0.8);
       opacity: 0;
+    }
+  }
+  
+  .floating-item-custom {
+    animation: customFloat 2s ease-out infinite;
+    transition: all 0.2s ease;
+    will-change: transform, opacity;
+  }
+  
+  @keyframes customFloat {
+    0% {
+      transform: translateY(0px) translateX(0px) rotate(0deg) scale(1);
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateY(var(--delta-y)) translateX(var(--delta-x)) rotate(var(--rotation)) scale(1.15);
+      opacity: 0.2;
     }
   }
 </style>

@@ -11,13 +11,13 @@
     { "teksti": "🚀 Avaruus", "koko": "xl" }
   ],
   "liput": [
-    { "teksti": "🇫🇮 🇸🇪 🇳🇴", "koko": "lg" },
-    { "teksti": "🇺🇸 🇬🇧 🇩🇪", "koko": "lg" },
-    { "teksti": "🇫🇷 🇮🇹 🇪🇸", "koko": "lg" },
-    { "teksti": "🇯🇵 🇰🇷 🇨🇳", "koko": "lg" },
-    { "teksti": "🇧🇷 🇦🇷 🇨🇱", "koko": "lg" },
-    { "teksti": "🇦🇺 🇳🇿 🇨🇦", "koko": "lg" },
-    { "teksti": "🇷🇺 🇮🇳 🇿🇦", "koko": "lg" }
+    { "teksti": "FI SE NO", "koko": "lg" },
+    { "teksti": "USA GB GER", "koko": "lg" },
+    { "teksti": "FRA ITA ESP", "koko": "lg" },
+    { "teksti": "JPN KOR CHN", "koko": "lg" },
+    { "teksti": "BRA ARG CHL", "koko": "lg" },
+    { "teksti": "AUS NZL CAN", "koko": "lg" },
+    { "teksti": "RUS IND RSA", "koko": "lg" }
   ],
 "kaavat_ja_lauseet": [
     { "teksti": "E=mc²", "koko": "sm", "opacity": 0.7 },
