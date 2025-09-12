@@ -30,6 +30,7 @@
   // Pelin tila
   let peliPelaajat: Kayttaja[] = [];
   let pelinKierrosMaara: number = 10; // Tallennetaan kierrosmäärä
+  let pelinKategoria: string | undefined = undefined; // Kategoriasuodatus
 
   // ===============================================
   // ELINKAARIFUNKTIOT (Lifecycle Functions)
@@ -163,26 +164,63 @@
     pelinKierrosMaara = 10; // Reset kierrosmäärä
   }
   /**
-   * Pika-aloitus - luo testipelaajan ja siirry peliin
+   * Pika-aloitus - käyttää olemassa olevia pelaajia
    */
   async function aloitaPeli() {
     try {
-      // Luo yksinkertainen testipelaaja
-      const testipelaaja: Omit<Kayttaja, 'id'> = {
-        nimi: 'Testipelaaja',
-        ika: 25,
-        vaikeustaso_min: 'oppipoika',
-        vaikeustaso_max: 'taitaja',
-        pelaajan_vari: '#3b82f6',
-        pisteet_yhteensa: 0,
-        luotu: new Date().toISOString()
-      };
-
-      // Siirry peliin testipelaajalla
-      peliPelaajat = [testipelaaja as Kayttaja];
-      nykyinenSivu = 'peli';
+      // Hae kaikki käyttäjät
+      const kayttajat = await peliPalvelu.haeKaikkiKayttajat();
+      
+      if (kayttajat && kayttajat.length > 0) {
+        // Käytä ensimmäistä pelaajaa tai viimeisintä luotua
+        const valittuPelaaja = kayttajat.sort((a: any, b: any) => 
+          new Date(b.luotu).getTime() - new Date(a.luotu).getTime()
+        )[0];
+        
+        peliPelaajat = [valittuPelaaja];
+        nykyinenSivu = 'peli';
+        console.log(`Aloitettu peli pelaajalla: ${valittuPelaaja.nimi}`);
+      } else {
+        // Jos ei ole pelaajia, siirry asetuksiin luomaan uusi
+        console.log('Ei pelaajia - siirretään asetuksiin');
+        nykyinenSivu = 'asetukset';
+      }
     } catch (error) {
       console.error('Virhe pika-aloituksessa:', error);
+      // Fallback: siirry asetuksiin
+      nykyinenSivu = 'asetukset';
+    }
+  }
+  
+  /**
+   * Aloita peli tietyllä kategorialla - käyttää olemassa olevia pelaajia
+   */
+  async function aloitaPeliKategorialla(kategoria: string) {
+    try {
+      // Hae kaikki käyttäjät
+      const kayttajat = await peliPalvelu.haeKaikkiKayttajat();
+      
+      if (kayttajat && kayttajat.length > 0) {
+        // Käytä viimeisintä luotua pelaajaa
+        const valittuPelaaja = kayttajat.sort((a: any, b: any) => 
+          new Date(b.luotu).getTime() - new Date(a.luotu).getTime()
+        )[0];
+        
+        // Siirry peliin kategorialla
+        peliPelaajat = [valittuPelaaja];
+        pelinKierrosMaara = 5; // Lyhyempi peli kategorioille
+        pelinKategoria = kategoria; // Aseta kategoriasuodatus
+        console.log(`Aloitetaan peli kategorialla: ${kategoria}, pelaaja: ${valittuPelaaja.nimi}`);
+        nykyinenSivu = 'peli';
+      } else {
+        // Jos ei ole pelaajia, siirry asetuksiin luomaan uusi
+        console.log('Ei pelaajia kategoriapelille - siirretään asetuksiin');
+        nykyinenSivu = 'asetukset';
+      }
+    } catch (error) {
+      console.error('Virhe kategoriapikapelissä:', error);
+      // Fallback: siirry asetuksiin
+      nykyinenSivu = 'asetukset';
     }
   }
   
@@ -243,20 +281,28 @@
       {:else if nykyinenSivu === 'admin'}
         <AdminSivu takaisinCallback={() => navigoi('etusivu')} />
       {:else if nykyinenSivu === 'peli'}
-        <PeliIkkuna pelaajat={peliPelaajat} kierrosMaara={pelinKierrosMaara} takaisinCallback={palaaPelistaAsetuksiin} />
+        <PeliIkkuna pelaajat={peliPelaajat} kierrosMaara={pelinKierrosMaara} kategoria={pelinKategoria} takaisinCallback={palaaPelistaAsetuksiin} />
       {:else if nykyinenSivu === 'etusivu'}
         <!-- Etusivu -->
         <div class="container mx-auto grid grid-cols-1 xl:grid-cols-[250px_minmax(0px,_1fr)_250px] gap-6 p-6">
           <!-- Sidebar (Left) -->
           <aside class="sticky top-24 col-span-1 hidden h-fit xl:block">
             <div class="card p-6 space-y-4 shadow-lg bg-surface-100-900/90 backdrop-blur-sm border border-surface-200-800">
-              <h3 class="text-lg font-medium">🎮 Pelivalikko</h3>
-              <nav class="space-y-2">
-                <button class="block w-full text-left p-3 rounded-lg hover:variant-soft-primary transition-all duration-200" on:click={() => navigoi('etusivu')}>🏠 Etusivu</button>
-                <button class="block w-full text-left p-3 rounded-lg hover:variant-soft-primary transition-all duration-200" on:click={() => navigoi('asetukset')}>⚙️ Asetukset</button>
-                <button class="block w-full text-left p-3 rounded-lg hover:variant-soft-primary transition-all duration-200" on:click={() => navigoi('tilastot')}>📊 Tilastot</button>
-                <button class="block w-full text-left p-3 rounded-lg hover:variant-soft-primary transition-all duration-200">❓ Ohjeet</button>
-              </nav>
+              <h3 class="text-lg font-medium">🎮 Pikapeli-kategoriat</h3>
+              <div class="space-y-3">
+                {#each Object.entries(kategoriat).sort(([,a], [,b]) => b - a).slice(0, 5) as [kategoria, maara]}
+                  <button 
+                    class="btn variant-soft-primary w-full justify-start shadow-sm" 
+                    on:click={() => aloitaPeliKategorialla(kategoria)}
+                  >
+                    <span>📚</span>
+                    <span>{kategoria}</span>
+                  </button>
+                {/each}
+                {#if Object.keys(kategoriat).length === 0}
+                  <div class="text-sm text-surface-600-400">Ladataan kategorioita...</div>
+                {/if}
+              </div>
             </div>
           </aside>
           

@@ -311,6 +311,15 @@ export class PeliPalvelu {
     const db = await this.varmistaTietokanta();
     return await db.haeKategoriat();
   }
+
+  /**
+   * Hae kaikki käyttäjät/pelaajat
+   * @returns Lista kaikista käyttäjistä
+   */
+  public async haeKaikkiKayttajat() {
+    const db = await this.varmistaTietokanta();
+    return await db.haeKaikkiKayttajat();
+  }
 }
 
 // ===============================================
