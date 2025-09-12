@@ -30,7 +30,6 @@
     { "teksti": "a² + b² = c²", "koko": "sm", "opacity": 0.7 },
     { "teksti": "√", "koko": "sm", "opacity": 0.6 },
     { "teksti": "∞", "koko": "sm", "opacity": 0.6 },
-    { "teksti": "DNA → RNA", "koko": "sm", "opacity": 0.6 },
     { "teksti": "🏺 Historia", "koko": "sm", "opacity": 0.6 },
     { "teksti": "🎨 Renessanssi", "koko": "sm", "opacity": 0.6 },
     { "teksti": "🎵 Mozart", "koko": "sm", "opacity": 0.6 },
