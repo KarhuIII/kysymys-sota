@@ -19,8 +19,8 @@
   --glass-opacity-heavy: 0.95;
   
   /* Border opacity */
-  --glass-border-light: rgba(255, 255, 255, 0.2);
-  --glass-border-medium: rgba(255, 255, 255, 0.3);
+  --glass-border-light: rgba(255, 255, 255, 0.1);
+  --glass-border-medium: rgba(255, 255, 255, 0.1);
   
   /* Backdrop blur levels */
   --glass-blur-sm: 4px;

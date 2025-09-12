@@ -552,6 +552,7 @@
           <div class="flex flex-col items-center">
             <span class="text-3xl mb-2">🕑</span>
             <span class="text-cyan-400 font-medium">Aikalisä</span>
+          </div>
         </button>
         
         <!-- Tuplapisteet -->
@@ -790,37 +791,35 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           {#each vastausVaihtoehdot as vastaus, index}
             {@const kirjain = String.fromCharCode(65 + index)}
+            {@const vastausVarit = ['#3b82f6', '#10b981', '#8b5cf6', '#ec4899']} <!-- Sininen, Vihreä, Violetti, Pinkki -->
+            {@const vastausVari = vastausVarit[index]}
             <!-- A, B, C, D -->
             <button
-              class="card p-6 text-left transition-all duration-300 hover:scale-105 border-2 backdrop-blur-md bg-white/10 dark:bg-black/10"
-              class:variant-filled-success={pisteytys &&
-                vastaus === nykyinenKysymys?.oikea_vastaus}
-              class:variant-filled-error={pisteytys &&
-                vastaus === valittuVastaus &&
-                vastaus !== nykyinenKysymys?.oikea_vastaus}
-              class:variant-soft={!pisteytys}
-              class:opacity-50={pisteytys &&
-                vastaus !== nykyinenKysymys?.oikea_vastaus &&
-                vastaus !== valittuVastaus}
-              style="backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); {!pisteytys
-                ? 'background: rgba(255, 255, 255, 0.1);'
-                : ''}"
+              class="{GLASS_STYLES.card} p-6 text-left transition-all duration-300 hover:scale-105 border-2"
+              class:border-green-400={pisteytys && vastaus === nykyinenKysymys?.oikea_vastaus}
+              class:border-red-400={pisteytys && vastaus === valittuVastaus && vastaus !== nykyinenKysymys?.oikea_vastaus}
+              class:border-white={!pisteytys}
+              class:opacity-50={pisteytys && vastaus !== nykyinenKysymys?.oikea_vastaus && vastaus !== valittuVastaus}
               disabled={peliPysaytetty || valittuVastaus !== null || pisteytys}
               on:click={() => valitseVastaus(vastaus)}
             >
               <div class="flex items-center space-x-4">
                 <div
-                  class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg"
-                  class:bg-primary-500={!pisteytys}
-                  class:text-white={!pisteytys}
-                  class:bg-green-500={pisteytys &&
-                    vastaus === nykyinenKysymys?.oikea_vastaus}
-                  class:bg-red-500={pisteytys &&
-                    vastaus === valittuVastaus &&
-                    vastaus !== nykyinenKysymys?.oikea_vastaus}
-                  class:bg-surface-500={pisteytys &&
-                    vastaus !== nykyinenKysymys?.oikea_vastaus &&
-                    vastaus !== valittuVastaus}
+                  class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg text-white shadow-lg transition-all duration-300"
+                  style="background-color: {pisteytys 
+                    ? (vastaus === nykyinenKysymys?.oikea_vastaus 
+                       ? '#10b981' 
+                       : vastaus === valittuVastaus && vastaus !== nykyinenKysymys?.oikea_vastaus 
+                         ? '#ef4444' 
+                         : '#6b7280')
+                    : vastausVari}; 
+                    box-shadow: 0 4px 12px {pisteytys 
+                      ? (vastaus === nykyinenKysymys?.oikea_vastaus 
+                         ? 'rgba(16, 185, 129, 0.4)' 
+                         : vastaus === valittuVastaus && vastaus !== nykyinenKysymys?.oikea_vastaus 
+                           ? 'rgba(239, 68, 68, 0.4)' 
+                           : 'rgba(0, 0, 0, 0.1)')
+                      : vastausVari + '40'};"
                 >
                   {kirjain}
                 </div>

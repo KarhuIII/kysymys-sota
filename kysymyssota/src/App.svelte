@@ -9,6 +9,14 @@
   import { AppBar, Switch, Modal } from '@skeletonlabs/skeleton-svelte';
   import { peliPalvelu } from './lib/database/gameService.js';
   import { onMount } from 'svelte';
+  import { 
+    GLASS_STYLES, 
+    GLASS_COLORS, 
+    GLASS_ANIMATIONS,
+    GLASS_BACKGROUNDS,
+    GLASS_LAYOUT,
+    glassUtils 
+  } from './lib/styles/glass-morphism.js';
   
   // ===============================================
   // TILAN HALLINTA (State Management)
@@ -280,54 +288,53 @@
 <!-- PÄÄSOVELLUS (Main Application) -->
 <!-- =============================================== -->
 
-<main>
-  <div class="grid grid-rows-[auto_1fr_auto] min-h-screen">
-    <!-- Header -->
-    <header class="bg-surface-100-900/80 backdrop-blur-sm p-4 border-b border-surface-200-800/50 sticky top-0 z-10">
-      <div class="container mx-auto flex justify-between items-center">
-        <h1 class="text-xl font-semibold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
-          <button class="text-xl font-bold" on:click={() => navigoi('etusivu')}>
-            🎯 Kysymys-sota
-          </button>
-        </h1>
-        
-        <!-- Navigointipainikkeet -->
-        <nav class="flex gap-2">
-          <button 
-            class="btn btn-sm"
-            class:variant-filled-primary={nykyinenSivu === 'etusivu'}
-            class:variant-soft={nykyinenSivu !== 'etusivu'}
-            on:click={() => navigoi('etusivu')}
-          >
-            🏠 Etusivu
-          </button>
-          <button 
-            class="btn btn-sm"
-            class:variant-filled-primary={nykyinenSivu === 'asetukset'}
-            class:variant-soft={nykyinenSivu !== 'asetukset'}
-            on:click={() => navigoi('asetukset')}
-          >
-            ⚙️ Asetukset
-          </button>
-          <button 
-            class="btn btn-sm"
-            class:variant-filled-primary={nykyinenSivu === 'tilastot'}
-            class:variant-soft={nykyinenSivu !== 'tilastot'}
-            on:click={() => navigoi('tilastot')}
-          >
-            📊 Tilastot
-          </button>
-          <button 
-            class="btn btn-sm"
-            class:variant-filled-primary={nykyinenSivu === 'admin'}
-            class:variant-soft={nykyinenSivu !== 'admin'}
-            on:click={() => navigoi('admin')}
-          >
-            🛠️ Admin
-          </button>
-        </nav>
-      </div>
-    </header>
+<!-- Glass effect background with floating particles -->
+<div class="{GLASS_BACKGROUNDS.main}">
+  <!-- Floating elements background -->
+  <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+    {@html GLASS_BACKGROUNDS.floatingParticles}
+  </div>
+
+  <main class="{GLASS_BACKGROUNDS.contentLayer}">
+    <div class="grid grid-rows-[auto_1fr_auto] min-h-screen">
+      <!-- Header -->
+      <header class="{GLASS_STYLES.card} sticky top-0 z-10 m-2 rounded-xl">
+        <div class="container mx-auto flex justify-between items-center p-4">
+          <h1 class="text-xl font-semibold {GLASS_COLORS.titleGradient}">
+            <button class="text-xl font-bold" on:click={() => navigoi('etusivu')}>
+              🎯 Kysymys-sota
+            </button>
+          </h1>
+          
+          <!-- Navigointipainikkeet -->
+          <nav class="flex gap-2">
+            <button 
+              class="{glassUtils.button(nykyinenSivu === 'etusivu' ? 'primary' : 'ghost')}"
+              on:click={() => navigoi('etusivu')}
+            >
+              🏠 Etusivu
+            </button>
+            <button 
+              class="{glassUtils.button(nykyinenSivu === 'asetukset' ? 'primary' : 'ghost')}"
+              on:click={() => navigoi('asetukset')}
+            >
+              ⚙️ Asetukset
+            </button>
+            <button 
+              class="{glassUtils.button(nykyinenSivu === 'tilastot' ? 'primary' : 'ghost')}"
+              on:click={() => navigoi('tilastot')}
+            >
+              📊 Tilastot
+            </button>
+            <button 
+              class="{glassUtils.button(nykyinenSivu === 'admin' ? 'primary' : 'ghost')}"
+              on:click={() => navigoi('admin')}
+            >
+              🛠️ Admin
+            </button>
+          </nav>
+        </div>
+      </header>
 
     <!-- Sisältöalue -->
     <div class="flex-1">
@@ -342,12 +349,12 @@
         <div class="container mx-auto grid grid-cols-1 xl:grid-cols-[250px_minmax(0px,_1fr)_250px] gap-6 p-6">
           <!-- Sidebar (Left) -->
           <aside class="sticky top-24 col-span-1 hidden h-fit xl:block">
-            <div class="card p-6 space-y-4 shadow-lg bg-surface-100-900/90 backdrop-blur-sm border border-surface-200-800">
+            <div class="{GLASS_STYLES.card} p-6 space-y-4">
               <h3 class="text-lg font-medium">🎮 Pikapeli-kategoriat</h3>
               <div class="space-y-3">
                 {#each Object.entries(kategoriat).sort(([,a], [,b]) => b - a).slice(0, 5) as [kategoria, maara]}
                   <button 
-                    class="btn variant-soft-primary w-full justify-start shadow-sm" 
+                    class="{glassUtils.button('ghost')} w-full justify-start" 
                     on:click={() => aloitaPeliKategorialla(kategoria)}
                   >
                     <span>📚</span>
@@ -355,14 +362,14 @@
                   </button>
                 {/each}
                 {#if Object.keys(kategoriat).length === 0}
-                  <div class="text-sm text-surface-600-400">Ladataan kategorioita...</div>
+                  <div class="text-sm {GLASS_COLORS.textSecondary}">Ladataan kategorioita...</div>
                 {/if}
               </div>
               
               <!-- Pelaajat -->
               {#if kaikkiPelaajat.length > 0}
-                <div class="border-t border-surface-300-700 pt-4">
-                  <h4 class="text-sm font-medium mb-3 text-surface-600-400">👥 Pelaajat ({kaikkiPelaajat.length})</h4>
+                <div class="border-t border-white/20 pt-1">
+                  <h4 class="text-sm font-medium mb-3 {GLASS_COLORS.textSecondary}">👥 Pelaajat ({kaikkiPelaajat.length})</h4>
                   <div class="flex flex-wrap gap-1">
                     {#each kaikkiPelaajat.slice(0, 8) as pelaaja}
                       <div 
@@ -373,8 +380,8 @@
                       </div>
                     {/each}
                     {#if kaikkiPelaajat.length > 8}
-                      <div class="flex items-center gap-1 bg-surface-200-800/20 rounded px-2 py-1">
-                        <span class="text-xs text-surface-500-400">+{kaikkiPelaajat.length - 8}</span>
+                      <div class="flex items-center gap-1 {GLASS_STYLES.cardLight} rounded px-2 py-1">
+                        <span class="text-xs {GLASS_COLORS.textSecondary}">+{kaikkiPelaajat.length - 8}</span>
                       </div>
                     {/if}
                   </div>
@@ -386,7 +393,7 @@
           <!-- Main Content -->
           <main class="col-span-1 space-y-6">
             <!-- Hero Card -->
-            <div class="card p-8 text-center shadow-xl relative overflow-hidden bg-white/33 dark:bg-surface-900/33 backdrop-blur-lg border border-white/20 dark:border-surface-700/30">
+            <div class="{GLASS_STYLES.card} p-8 text-center relative overflow-hidden">
               <!-- Leijuvat elementit taustalla -->
               <div class="absolute inset-0 opacity-70">
                 {#if nakyvatElementit && nakyvatElementit.length > 0}
@@ -414,14 +421,14 @@
               <!-- Varsinainen sisältö -->
               <div class="relative z-10">
                 <!-- Koko sisältö kortti lasiefektillä -->
-                <div class="p-8 rounded-lg shadow-xl bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg border border-white/30 dark:border-surface-600/30 space-y-4 max-w-md mx-auto">
+                <div class="{GLASS_STYLES.cardLight} p-8 space-y-4 max-w-md mx-auto">
                   <div class="w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center shadow-lg mx-auto">
                     <span class="text-2xl">🧠</span>
                   </div>
                   <h2 class="text-3xl font-bold">Tervetuloa Kysymys-sotaan!</h2>
                   <p class="text-lg opacity-80">Hauska tietokilpailu koko perheelle</p>
                   <div class="flex gap-3 justify-center items-center">
-                    <button class="btn variant-filled-secondary shadow-xl text-lg px-8 py-3 bg-opacity-100" on:click={() => navigoi('asetukset')}>
+                    <button class="{glassUtils.button('primary')} text-lg px-8 py-3" on:click={() => navigoi('asetukset')}>
                       🚀 Pelaa!
                     </button>
                   </div>
@@ -432,13 +439,13 @@
             
             <!-- Features Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div class="card p-6 shadow-lg bg-surface-100-900/90 backdrop-blur-sm border border-surface-200-800">
+              <div class="{GLASS_STYLES.card} p-6">
                 <div class="space-y-4">
                   <div class="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center shadow-md">
                     <span class="text-white text-xl">👨‍👩‍👧‍👦</span>
                   </div>
                   <h3 class="text-xl font-semibold">Perheystävällinen</h3>
-                  <p class="text-surface-600-400">Sopii kaikenikäisille - lapsista isovanhempiin.</p>
+                  <p class="{GLASS_COLORS.textSecondary}">Sopii kaikenikäisille - lapsista isovanhempiin.</p>
                   <ul class="space-y-2 text-sm">
                     <li class="flex items-center gap-2">
                       <span class="text-success-500">✓</span>
@@ -452,13 +459,13 @@
                 </div>
               </div>
               
-              <div class="card p-6 shadow-lg bg-surface-100-900/90 backdrop-blur-sm border border-surface-200-800">
+              <div class="{GLASS_STYLES.card} p-6">
                 <div class="space-y-4">
                   <div class="w-12 h-12 bg-gradient-to-br from-secondary-500 to-secondary-700 rounded-lg flex items-center justify-center shadow-md">
                     <span class="text-white text-xl">🎓</span>
                   </div>
                   <h3 class="text-xl font-semibold">Hauska ja Opettavainen</h3>
-                  <p class="text-surface-600-400">Opi uutta samalla kun pidät hauskaa!</p>
+                  <p class="{GLASS_COLORS.textSecondary}">Opi uutta samalla kun pidät hauskaa!</p>
                   <div class="flex items-center gap-3">
                     <Switch />
                   </div>
@@ -467,24 +474,24 @@
             </div>
             
             <!-- Stats Card -->
-            <div class="card p-6 shadow-lg bg-surface-100-900/90 backdrop-blur-sm border border-surface-200-800">
+            <div class="{GLASS_STYLES.card} p-6">
               <h3 class="text-xl font-semibold mb-6">📈 Pelitilastot</h3>
               <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
                 <div class="text-center space-y-2">
                   <div class="text-3xl font-bold text-primary-500">{pisteet}</div>
-                  <div class="text-sm text-surface-600-400">Pisteitä yhteensä</div>
+                  <div class="text-sm {GLASS_COLORS.textSecondary}">Pisteitä yhteensä</div>
                 </div>
                 <div class="text-center space-y-2">
                   <div class="text-3xl font-bold text-secondary-500">{pelatutKierrokset}</div>
-                  <div class="text-sm text-surface-600-400">Pelikertaa</div>
+                  <div class="text-sm {GLASS_COLORS.textSecondary}">Pelikertaa</div>
                 </div>
                 <div class="text-center space-y-2">
                   <div class="text-3xl font-bold text-tertiary-500">{Object.keys(kategoriat).length}</div>
-                  <div class="text-sm text-surface-600-400">Kategoriaa</div>
+                  <div class="text-sm {GLASS_COLORS.textSecondary}">Kategoriaa</div>
                 </div>
                 <div class="text-center space-y-2">
                   <div class="text-3xl font-bold text-warning-500">{Object.values(kategoriat).reduce((sum, count) => sum + count, 0)}</div>
-                  <div class="text-sm text-surface-600-400">Kysymystä</div>
+                  <div class="text-sm {GLASS_COLORS.textSecondary}">Kysymystä</div>
                 </div>
               </div>
             </div>
@@ -493,25 +500,25 @@
           <!-- Sidebar (Right) -->
           <aside class="sticky top-24 col-span-1 hidden h-fit xl:block">
             <div class="space-y-4">
-              <div class="card p-6 shadow-lg bg-surface-100-900/90 backdrop-blur-sm border border-surface-200-800">
+              <div class="{GLASS_STYLES.card} p-6">
                 <h3 class="text-lg font-medium mb-4">🎮 Pika-toiminnot</h3>
                 <div class="space-y-3">
-                  <button class="btn variant-soft-primary w-full justify-start shadow-sm" on:click={() => navigoi('asetukset')}>
+                  <button class="{glassUtils.button('ghost')} w-full justify-start" on:click={() => navigoi('asetukset')}>
                     <span>⚙️</span>
                     <span>Asetukset</span>
                   </button>
-                  <button class="btn variant-soft-secondary w-full justify-start shadow-sm" on:click={() => navigoi('tilastot')}>
+                  <button class="{glassUtils.button('ghost')} w-full justify-start" on:click={() => navigoi('tilastot')}>
                     <span>📊</span>
                     <span>Katso tilastoja</span>
                   </button>
-                  <button class="btn variant-soft-tertiary w-full justify-start shadow-sm">
+                  <button class="{glassUtils.button('ghost')} w-full justify-start">
                     <span>❓</span>
                     <span>Ohjeet</span>
                   </button>
                 </div>
               </div>
               
-              <div class="card p-6 shadow-lg bg-surface-100-900/90 backdrop-blur-sm border border-surface-200-800">
+              <div class="{GLASS_STYLES.card} p-6">
                 <h3 class="text-lg font-medium">🏆 Ennätykset</h3>
               </div>
             </div>
@@ -529,7 +536,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-surface-100-900/80 backdrop-blur-sm p-6 border-t border-surface-200-800/50">
+    <footer class="{GLASS_STYLES.card} p-6 border-t border-white/20 dark:border-white/10">
       <div class="container mx-auto text-center space-y-2">
         <div class="text-sm text-surface-600-400">
           Tehty ❤️:llä <span class="text-primary-500 font-semibold"> - Pienille ja suurille tietoviisaille</span>
@@ -541,6 +548,7 @@
     </footer>
   </div>
 </main>
+</div>
 
 <style>
   .floating-item-custom {
