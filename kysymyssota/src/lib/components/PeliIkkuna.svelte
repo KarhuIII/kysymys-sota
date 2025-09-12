@@ -11,6 +11,7 @@
   export let pelaajat: Kayttaja[] = [];
   export let takaisinCallback: () => void;
   export let kierrosMaara: number = 10;
+  export let kategoria: string | undefined = undefined; // Kategoriasuodatus
 
   let nykyinenKysymys: Kysymys | null = null;
   let vastausVaihtoehdot: string[] = [];
@@ -185,7 +186,7 @@
 
       do {
         kysymys = await db.haeSatunnainenKysymys(
-          undefined, // ei kategoriarajoitusta
+          kategoria, // kategoria-suodatus
           valittuVaikeustaso // pelaajan tason mukainen kysymys
         );
         yritykset++;

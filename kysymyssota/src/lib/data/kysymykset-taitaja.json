@@ -1,16 +1,24 @@
-[
+﻿[
   {
     "kysymys": "Missä pingviinit elävät?",
     "oikea_vastaus": "Etelämantereella",
-    "vaarat_vastaukset": ["Pohjoisnavalla", "Afrikassa", "Aasiassa"],
-    "kategoria": "Eläimet",
+    "vaarat_vastaukset": [
+      "Pohjoisnavalla",
+      "Afrikassa",
+      "Aasiassa"
+    ],
+    "kategoria": "Biologia",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
   },
   {
     "kysymys": "Kuinka monta maanosaa on?",
     "oikea_vastaus": "7",
-    "vaarat_vastaukset": ["5", "6", "8"],
+    "vaarat_vastaukset": [
+      "5",
+      "6",
+      "8"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -18,7 +26,11 @@
   {
     "kysymys": "Mikä planeetta on lähimpänä aurinkoa?",
     "oikea_vastaus": "Merkurius",
-    "vaarat_vastaukset": ["Venus", "Mars", "Maa"],
+    "vaarat_vastaukset": [
+      "Venus",
+      "Mars",
+      "Maa"
+    ],
     "kategoria": "Avaruus",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -26,15 +38,23 @@
   {
     "kysymys": "Kuinka monta hampaita aikuisella ihmisellä on normaalisti?",
     "oikea_vastaus": "32",
-    "vaarat_vastaukset": ["28", "30", "36"],
-    "kategoria": "Ihmiskeho",
+    "vaarat_vastaukset": [
+      "28",
+      "30",
+      "36"
+    ],
+    "kategoria": "Biologia",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
   },
   {
     "kysymys": "Mikä on veden kiehumispiste?",
     "oikea_vastaus": "100°C",
-    "vaarat_vastaukset": ["90°C", "110°C", "120°C"],
+    "vaarat_vastaukset": [
+      "90°C",
+      "110°C",
+      "120°C"
+    ],
     "kategoria": "Tiede",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -42,7 +62,11 @@
   {
     "kysymys": "Mikä planeetta tunnetaan nimellä 'Punainen planeetta'?",
     "oikea_vastaus": "Mars",
-    "vaarat_vastaukset": ["Venus", "Jupiter", "Saturnus"],
+    "vaarat_vastaukset": [
+      "Venus",
+      "Jupiter",
+      "Saturnus"
+    ],
     "kategoria": "Avaruus",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -50,15 +74,23 @@
   {
     "kysymys": "Kuka kirjoitti 'Tuntematon sotilas'?",
     "oikea_vastaus": "Väinö Linna",
-    "vaarat_vastaukset": ["Aleksis Kivi", "Mika Waltari", "Tove Jansson"],
-    "kategoria": "Kirjallisuus",
+    "vaarat_vastaukset": [
+      "Aleksis Kivi",
+      "Mika Waltari",
+      "Tove Jansson"
+    ],
+    "kategoria": "Kulttuuri",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
   },
   {
     "kysymys": "Mikä on Suomen suurin järvi?",
     "oikea_vastaus": "Saimaa",
-    "vaarat_vastaukset": ["Päijänne", "Inarijärvi", "Näsijärvi"],
+    "vaarat_vastaukset": [
+      "Päijänne",
+      "Inarijärvi",
+      "Näsijärvi"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -66,7 +98,11 @@
   {
     "kysymys": "Milloin Suomi itsenäistyi?",
     "oikea_vastaus": "1917",
-    "vaarat_vastaukset": ["1905", "1918", "1920"],
+    "vaarat_vastaukset": [
+      "1905",
+      "1918",
+      "1920"
+    ],
     "kategoria": "Historia",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -74,63 +110,95 @@
   {
     "kysymys": "Milloin talvisota alkoi Suomessa?",
     "oikea_vastaus": "1939",
-    "vaarat_vastaukset": ["1938", "1940", "1941"],
+    "vaarat_vastaukset": [
+      "1938",
+      "1940",
+      "1941"
+    ],
     "kategoria": "Historia",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
   },
-{
-  "kysymys": "Mikä on veden tiheys kilogrammaa kuutiometriä kohden normaalissa lämpötilassa?",
-  "oikea_vastaus": "1000",
-  "vaarat_vastaukset": ["500", "800", "1200"],
-  "kategoria": "Fysiikka",
-  "vaikeustaso": "taitaja",
-  "pistemaara_perus": 25
-},
-{
-  "kysymys": "Kuka oli Suomen presidentti ennen Urho Kekkosta?",
-  "oikea_vastaus": "Juho Kusti Paasikivi",
-  "vaarat_vastaukset": ["Risto Ryti", "Mauno Koivisto", "Carl Gustaf Emil Mannerheim"],
-  "kategoria": "Historia",
-  "vaikeustaso": "taitaja",
-  "pistemaara_perus": 10
-},
-{
-  "kysymys": "Mikä on ihmisen suurin sisäinen elin?",
-  "oikea_vastaus": "Maksa",
-  "vaarat_vastaukset": ["Sydän", "Keuhkot", "Munuaiset"],
-  "kategoria": "Ihmiskeho",
-  "vaikeustaso": "taitaja",
-  "pistemaara_perus": 10
-},
-{
-  "kysymys": "Mikä alkuaine on kemialliselta symboliltaan O?",
-  "oikea_vastaus": "Happi",
-  "vaarat_vastaukset": ["Kulta", "Osmium", "Vety"],
-  "kategoria": "Kemia",
-  "vaikeustaso": "taitaja",
-  "pistemaara_perus": 25
-},
-{
-  "kysymys": "Mikä on neliön kulmien summa?",
-  "oikea_vastaus": "360",
-  "vaarat_vastaukset": ["180", "270", "400"],
-  "kategoria": "Matematiikka",
-  "vaikeustaso": "taitaja",
-  "pistemaara_perus": 25
-},
+  {
+    "kysymys": "Mikä on veden tiheys kilogrammaa kuutiometriä kohden normaalissa lämpötilassa?",
+    "oikea_vastaus": "1000",
+    "vaarat_vastaukset": [
+      "500",
+      "800",
+      "1200"
+    ],
+    "kategoria": "Tiede",
+    "vaikeustaso": "taitaja",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Kuka oli Suomen presidentti ennen Urho Kekkosta?",
+    "oikea_vastaus": "Juho Kusti Paasikivi",
+    "vaarat_vastaukset": [
+      "Risto Ryti",
+      "Mauno Koivisto",
+      "Carl Gustaf Emil Mannerheim"
+    ],
+    "kategoria": "Historia",
+    "vaikeustaso": "taitaja",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä on ihmisen suurin sisäinen elin?",
+    "oikea_vastaus": "Maksa",
+    "vaarat_vastaukset": [
+      "Sydän",
+      "Keuhkot",
+      "Munuaiset"
+    ],
+    "kategoria": "Biologia",
+    "vaikeustaso": "taitaja",
+    "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Mikä alkuaine on kemialliselta symboliltaan O?",
+    "oikea_vastaus": "Happi",
+    "vaarat_vastaukset": [
+      "Kulta",
+      "Osmium",
+      "Vety"
+    ],
+    "kategoria": "Tiede",
+    "vaikeustaso": "taitaja",
+    "pistemaara_perus": 25
+  },
+  {
+    "kysymys": "Mikä on neliön kulmien summa?",
+    "oikea_vastaus": "360",
+    "vaarat_vastaukset": [
+      "180",
+      "270",
+      "400"
+    ],
+    "kategoria": "Matematiikka",
+    "vaikeustaso": "taitaja",
+    "pistemaara_perus": 25
+  },
   {
     "kysymys": "Mikä on pienin tunnettu alkuaineen osa?",
     "oikea_vastaus": "Kvarkki",
-    "vaarat_vastaukset": ["Protoni", "Elektroni", "Neutroni"],
-    "kategoria": "Hiukkasfysiikka",
+    "vaarat_vastaukset": [
+      "Protoni",
+      "Elektroni",
+      "Neutroni"
+    ],
+    "kategoria": "Tiede",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 25
   },
   {
     "kysymys": "Kuinka monta kuuta Jupiterilla on ainakin tunnetusti?",
     "oikea_vastaus": "80",
-    "vaarat_vastaukset": ["60", "50", "100"],
+    "vaarat_vastaukset": [
+      "60",
+      "50",
+      "100"
+    ],
     "kategoria": "Avaruus",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -138,23 +206,35 @@
   {
     "kysymys": "Mikä on maailman suurin lintu, joka ei lennä?",
     "oikea_vastaus": "Strutsi",
-    "vaarat_vastaukset": ["Emu", "Pingviini", "Albatrossi"],
-    "kategoria": "Eläimet",
+    "vaarat_vastaukset": [
+      "Emu",
+      "Pingviini",
+      "Albatrossi"
+    ],
+    "kategoria": "Biologia",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
   },
   {
     "kysymys": "Jos kappaleen nopeus kaksinkertaistuu, kuinka monta kertaa sen kineettinen energia kasvaa?",
     "oikea_vastaus": "4",
-    "vaarat_vastaukset": ["2", "8", "1"],
-    "kategoria": "Fysiikka",
+    "vaarat_vastaukset": [
+      "2",
+      "8",
+      "1"
+    ],
+    "kategoria": "Tiede",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 25
   },
   {
     "kysymys": "Mikä Euroopan maa ei koskaan ollut osa Rooman valtakuntaa?",
     "oikea_vastaus": "Suomi",
-    "vaarat_vastaukset": ["Ranska", "Italia", "Saksa"],
+    "vaarat_vastaukset": [
+      "Ranska",
+      "Italia",
+      "Saksa"
+    ],
     "kategoria": "Historia",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -162,39 +242,59 @@
   {
     "kysymys": "Mikä hiukkanen vastaa elektronin varauksesta mutta on 1836 kertaa raskaampi?",
     "oikea_vastaus": "Protoni",
-    "vaarat_vastaukset": ["Neutroni", "Kvarkki", "Foton"],
-    "kategoria": "Hiukkasfysiikka",
+    "vaarat_vastaukset": [
+      "Neutroni",
+      "Kvarkki",
+      "Foton"
+    ],
+    "kategoria": "Tiede",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 25
   },
   {
     "kysymys": "Mikä ihmisen elin tuottaa insuliinia?",
     "oikea_vastaus": "Haima",
-    "vaarat_vastaukset": ["Munuaiset", "Sydän", "Maksa"],
-    "kategoria": "Ihmiskeho",
+    "vaarat_vastaukset": [
+      "Munuaiset",
+      "Sydän",
+      "Maksa"
+    ],
+    "kategoria": "Biologia",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
   },
   {
     "kysymys": "Mikä on kemiallinen yhdiste H2O2?",
     "oikea_vastaus": "Vetyperoksidi",
-    "vaarat_vastaukset": ["Vesi", "Happi", "Hiilidioksidi"],
-    "kategoria": "Kemia",
+    "vaarat_vastaukset": [
+      "Vesi",
+      "Happi",
+      "Hiilidioksidi"
+    ],
+    "kategoria": "Tiede",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 25
   },
   {
     "kysymys": "Kuka kirjoitti Kalevalan runot?",
     "oikea_vastaus": "Elias Lönnrot",
-    "vaarat_vastaukset": ["Aleksis Kivi", "Väinö Linna", "Eino Leino"],
-    "kategoria": "Kirjallisuus",
+    "vaarat_vastaukset": [
+      "Aleksis Kivi",
+      "Väinö Linna",
+      "Eino Leino"
+    ],
+    "kategoria": "Kulttuuri",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
   },
   {
     "kysymys": "Mikä on maailman korkein vuori maanpinnan tasosta mitattuna?",
     "oikea_vastaus": "Mount Everest",
-    "vaarat_vastaukset": ["K2", "Kilimanjaro", "Mont Blanc"],
+    "vaarat_vastaukset": [
+      "K2",
+      "Kilimanjaro",
+      "Mont Blanc"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -202,7 +302,11 @@
   {
     "kysymys": "Kuinka monta kulmaa on hexagonissa?",
     "oikea_vastaus": "6",
-    "vaarat_vastaukset": ["4", "5", "8"],
+    "vaarat_vastaukset": [
+      "4",
+      "5",
+      "8"
+    ],
     "kategoria": "Matematiikka",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 25
@@ -210,7 +314,11 @@
   {
     "kysymys": "Mikä fyysinen ilmiö saa jääpalat kellumaan vedessä?",
     "oikea_vastaus": "Tiheys",
-    "vaarat_vastaukset": ["Painovoima", "Paine", "Turbulenssi"],
+    "vaarat_vastaukset": [
+      "Painovoima",
+      "Paine",
+      "Turbulenssi"
+    ],
     "kategoria": "Tiede",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -218,15 +326,23 @@
   {
     "kysymys": "Kuka tunnetaan musiikkimaailmassa lempinimellä 'King of Pop'?",
     "oikea_vastaus": "Michael Jackson",
-    "vaarat_vastaukset": ["Elvis Presley", "Prince", "Freddie Mercury"],
-    "kategoria": "Viihde",
+    "vaarat_vastaukset": [
+      "Elvis Presley",
+      "Prince",
+      "Freddie Mercury"
+    ],
+    "kategoria": "Kulttuuri",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
   },
   {
     "kysymys": "Kuinka monta kuuta Saturnuksella on tunnetusti?",
     "oikea_vastaus": "83",
-    "vaarat_vastaukset": ["70", "100", "60"],
+    "vaarat_vastaukset": [
+      "70",
+      "100",
+      "60"
+    ],
     "kategoria": "Avaruus",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -234,55 +350,83 @@
   {
     "kysymys": "Mikä nisäkäs pystyy lentämään?",
     "oikea_vastaus": "Lepakko",
-    "vaarat_vastaukset": ["Susi", "Siili", "Orava"],
-    "kategoria": "Eläimet",
+    "vaarat_vastaukset": [
+      "Susi",
+      "Siili",
+      "Orava"
+    ],
+    "kategoria": "Biologia",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
   },
   {
     "kysymys": "Mikä voima pitää planeetat kiertämässä Aurinkoa?",
     "oikea_vastaus": "Gravitaatio",
-    "vaarat_vastaukset": ["Sähkövoima", "Magnetismi", "Ilmavirta"],
-    "kategoria": "Fysiikka",
+    "vaarat_vastaukset": [
+      "Sähkövoima",
+      "Magnetismi",
+      "Ilmavirta"
+    ],
+    "kategoria": "Tiede",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 25
   },
   {
     "kysymys": "Mikä hiukkanen ei kanna sähkövarausta?",
     "oikea_vastaus": "Neutroni",
-    "vaarat_vastaukset": ["Protoni", "Elektroni", "Foton"],
-    "kategoria": "Hiukkasfysiikka",
+    "vaarat_vastaukset": [
+      "Protoni",
+      "Elektroni",
+      "Foton"
+    ],
+    "kategoria": "Tiede",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 25
   },
   {
     "kysymys": "Mikä on ihmisen pisin luu?",
     "oikea_vastaus": "Reisiluu",
-    "vaarat_vastaukset": ["Sääriluu", "Olkaluu", "Solisluu"],
-    "kategoria": "Ihmiskeho",
+    "vaarat_vastaukset": [
+      "Sääriluu",
+      "Olkaluu",
+      "Solisluu"
+    ],
+    "kategoria": "Biologia",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
   },
   {
     "kysymys": "Mikä on kemiallinen symboli hopealle?",
     "oikea_vastaus": "Ag",
-    "vaarat_vastaukset": ["Au", "Pb", "Hg"],
-    "kategoria": "Kemia",
+    "vaarat_vastaukset": [
+      "Au",
+      "Pb",
+      "Hg"
+    ],
+    "kategoria": "Tiede",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 25
   },
   {
     "kysymys": "Kuka kirjoitti kirjan 'Sinuhe egyptiläinen'?",
     "oikea_vastaus": "Mika Waltari",
-    "vaarat_vastaukset": ["Aleksis Kivi", "Eino Leino", "Väinö Linna"],
-    "kategoria": "Kirjallisuus",
+    "vaarat_vastaukset": [
+      "Aleksis Kivi",
+      "Eino Leino",
+      "Väinö Linna"
+    ],
+    "kategoria": "Kulttuuri",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
   },
   {
     "kysymys": "Mikä ilmiö aiheuttaa sateenkaaren taivaalle?",
     "oikea_vastaus": "Valon taittuminen",
-    "vaarat_vastaukset": ["Pilvien heijastus", "Tuulen liike", "Sateen ropina"],
+    "vaarat_vastaukset": [
+      "Pilvien heijastus",
+      "Tuulen liike",
+      "Sateen ropina"
+    ],
     "kategoria": "Tiede",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -290,15 +434,23 @@
   {
     "kysymys": "Kuka laulaja tunnetaan lempinimellä 'Queen of Pop'?",
     "oikea_vastaus": "Madonna",
-    "vaarat_vastaukset": ["Beyoncé", "Lady Gaga", "Whitney Houston"],
-    "kategoria": "Viihde",
+    "vaarat_vastaukset": [
+      "Beyoncé",
+      "Lady Gaga",
+      "Whitney Houston"
+    ],
+    "kategoria": "Kulttuuri",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
   },
-    {
+  {
     "kysymys": "Mikä on suurin saari maailmassa?",
     "oikea_vastaus": "Grönlanti",
-    "vaarat_vastaukset": ["Madagaskar", "Borneo", "Sumatra"],
+    "vaarat_vastaukset": [
+      "Madagaskar",
+      "Borneo",
+      "Sumatra"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -306,7 +458,11 @@
   {
     "kysymys": "Mikä joki virtaa Egyptin läpi?",
     "oikea_vastaus": "Niili",
-    "vaarat_vastaukset": ["Amazon", "Mississippi", "Ganges"],
+    "vaarat_vastaukset": [
+      "Amazon",
+      "Mississippi",
+      "Ganges"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -314,7 +470,11 @@
   {
     "kysymys": "Mikä kaupunki on Brasilian pääkaupunki?",
     "oikea_vastaus": "Brasília",
-    "vaarat_vastaukset": ["Rio de Janeiro", "São Paulo", "Salvador"],
+    "vaarat_vastaukset": [
+      "Rio de Janeiro",
+      "São Paulo",
+      "Salvador"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -322,7 +482,11 @@
   {
     "kysymys": "Mikä on maailman suurin autiomaa?",
     "oikea_vastaus": "Sahara",
-    "vaarat_vastaukset": ["Gobi", "Kalahari", "Arabian autiomaa"],
+    "vaarat_vastaukset": [
+      "Gobi",
+      "Kalahari",
+      "Arabian autiomaa"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -330,7 +494,11 @@
   {
     "kysymys": "Mikä on Ranskan pääkaupunki?",
     "oikea_vastaus": "Pariisi",
-    "vaarat_vastaukset": ["Lyon", "Marseille", "Nizza"],
+    "vaarat_vastaukset": [
+      "Lyon",
+      "Marseille",
+      "Nizza"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -338,7 +506,11 @@
   {
     "kysymys": "Mikä on Japanin pääkaupunki?",
     "oikea_vastaus": "Tokio",
-    "vaarat_vastaukset": ["Osaka", "Kyoto", "Hiroshima"],
+    "vaarat_vastaukset": [
+      "Osaka",
+      "Kyoto",
+      "Hiroshima"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -346,7 +518,11 @@
   {
     "kysymys": "Mikä on maailman väkirikkain maa?",
     "oikea_vastaus": "Kiina",
-    "vaarat_vastaukset": ["Intia", "Yhdysvallat", "Indonesia"],
+    "vaarat_vastaukset": [
+      "Intia",
+      "Yhdysvallat",
+      "Indonesia"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -354,7 +530,11 @@
   {
     "kysymys": "Mikä on Yhdysvaltojen pääkaupunki?",
     "oikea_vastaus": "Washington D.C.",
-    "vaarat_vastaukset": ["New York", "Los Angeles", "Chicago"],
+    "vaarat_vastaukset": [
+      "New York",
+      "Los Angeles",
+      "Chicago"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -362,7 +542,11 @@
   {
     "kysymys": "Mikä on Intian pääkaupunki?",
     "oikea_vastaus": "New Delhi",
-    "vaarat_vastaukset": ["Mumbai", "Kolkata", "Bangalore"],
+    "vaarat_vastaukset": [
+      "Mumbai",
+      "Kolkata",
+      "Bangalore"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -370,7 +554,11 @@
   {
     "kysymys": "Mikä Afrikan maa on väkiluvultaan suurin?",
     "oikea_vastaus": "Nigeria",
-    "vaarat_vastaukset": ["Egypti", "Etiopia", "Etelä-Afrikka"],
+    "vaarat_vastaukset": [
+      "Egypti",
+      "Etiopia",
+      "Etelä-Afrikka"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -378,7 +566,11 @@
   {
     "kysymys": "Mikä on Australian pääkaupunki?",
     "oikea_vastaus": "Canberra",
-    "vaarat_vastaukset": ["Sydney", "Melbourne", "Brisbane"],
+    "vaarat_vastaukset": [
+      "Sydney",
+      "Melbourne",
+      "Brisbane"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -386,7 +578,11 @@
   {
     "kysymys": "Mikä on Saksan pääkaupunki?",
     "oikea_vastaus": "Berliini",
-    "vaarat_vastaukset": ["München", "Frankfurt", "Hamburg"],
+    "vaarat_vastaukset": [
+      "München",
+      "Frankfurt",
+      "Hamburg"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -394,7 +590,11 @@
   {
     "kysymys": "Mikä on maailman suurin saari, joka kuuluu Tanskan kuningaskunnalle?",
     "oikea_vastaus": "Grönlanti",
-    "vaarat_vastaukset": ["Islanti", "Madagaskar", "Borneo"],
+    "vaarat_vastaukset": [
+      "Islanti",
+      "Madagaskar",
+      "Borneo"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -402,7 +602,11 @@
   {
     "kysymys": "Mikä on Brasilian pääkaupunki?",
     "oikea_vastaus": "Brasília",
-    "vaarat_vastaukset": ["Rio de Janeiro", "São Paulo", "Salvador"],
+    "vaarat_vastaukset": [
+      "Rio de Janeiro",
+      "São Paulo",
+      "Salvador"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -410,7 +614,11 @@
   {
     "kysymys": "Mikä on maailman väkiluvultaan toiseksi suurin maa?",
     "oikea_vastaus": "Intia",
-    "vaarat_vastaukset": ["Yhdysvallat", "Indonesia", "Kiina"],
+    "vaarat_vastaukset": [
+      "Yhdysvallat",
+      "Indonesia",
+      "Kiina"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -418,7 +626,11 @@
   {
     "kysymys": "Mikä on Kanadan pääkaupunki?",
     "oikea_vastaus": "Ottawa",
-    "vaarat_vastaukset": ["Toronto", "Vancouver", "Montreal"],
+    "vaarat_vastaukset": [
+      "Toronto",
+      "Vancouver",
+      "Montreal"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -426,7 +638,11 @@
   {
     "kysymys": "Mikä on Venäjän pääkaupunki?",
     "oikea_vastaus": "Moskova",
-    "vaarat_vastaukset": ["Pietari", "Novosibirsk", "Kazan"],
+    "vaarat_vastaukset": [
+      "Pietari",
+      "Novosibirsk",
+      "Kazan"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -434,7 +650,11 @@
   {
     "kysymys": "Mikä on Egyptin pääkaupunki?",
     "oikea_vastaus": "Kairo",
-    "vaarat_vastaukset": ["Alexandria", "Gizeh", "Luxor"],
+    "vaarat_vastaukset": [
+      "Alexandria",
+      "Gizeh",
+      "Luxor"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -442,7 +662,11 @@
   {
     "kysymys": "Mikä on Iso-Britannian pääkaupunki?",
     "oikea_vastaus": "Lontoo",
-    "vaarat_vastaukset": ["Manchester", "Edinburgh", "Birmingham"],
+    "vaarat_vastaukset": [
+      "Manchester",
+      "Edinburgh",
+      "Birmingham"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -450,7 +674,11 @@
   {
     "kysymys": "Mikä on Ruotsin pääkaupunki?",
     "oikea_vastaus": "Tukholma",
-    "vaarat_vastaukset": ["Göteborg", "Malmö", "Uppsala"],
+    "vaarat_vastaukset": [
+      "Göteborg",
+      "Malmö",
+      "Uppsala"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -458,7 +686,11 @@
   {
     "kysymys": "Mikä on Norjan pääkaupunki?",
     "oikea_vastaus": "Oslo",
-    "vaarat_vastaukset": ["Bergen", "Trondheim", "Stavanger"],
+    "vaarat_vastaukset": [
+      "Bergen",
+      "Trondheim",
+      "Stavanger"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -466,7 +698,11 @@
   {
     "kysymys": "Mikä on Tanskan pääkaupunki?",
     "oikea_vastaus": "Kööpenhamina",
-    "vaarat_vastaukset": ["Aarhus", "Odense", "Aalborg"],
+    "vaarat_vastaukset": [
+      "Aarhus",
+      "Odense",
+      "Aalborg"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -474,7 +710,11 @@
   {
     "kysymys": "Mikä on Islannin pääkaupunki?",
     "oikea_vastaus": "Reykjavík",
-    "vaarat_vastaukset": ["Akureyri", "Keflavík", "Hafnarfjörður"],
+    "vaarat_vastaukset": [
+      "Akureyri",
+      "Keflavík",
+      "Hafnarfjörður"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -482,7 +722,11 @@
   {
     "kysymys": "Mikä on Saksan pääkaupunki?",
     "oikea_vastaus": "Berliini",
-    "vaarat_vastaukset": ["München", "Frankfurt", "Hamburg"],
+    "vaarat_vastaukset": [
+      "München",
+      "Frankfurt",
+      "Hamburg"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -490,7 +734,11 @@
   {
     "kysymys": "Mikä on Ranskan pääkaupunki?",
     "oikea_vastaus": "Pariisi",
-    "vaarat_vastaukset": ["Lyon", "Marseille", "Toulouse"],
+    "vaarat_vastaukset": [
+      "Lyon",
+      "Marseille",
+      "Toulouse"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -498,7 +746,11 @@
   {
     "kysymys": "Mikä on Espanjan pääkaupunki?",
     "oikea_vastaus": "Madrid",
-    "vaarat_vastaukset": ["Barcelona", "Valencia", "Sevilla"],
+    "vaarat_vastaukset": [
+      "Barcelona",
+      "Valencia",
+      "Sevilla"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -506,7 +758,11 @@
   {
     "kysymys": "Mikä on Italian pääkaupunki?",
     "oikea_vastaus": "Rooma",
-    "vaarat_vastaukset": ["Milano", "Napoli", "Venetsia"],
+    "vaarat_vastaukset": [
+      "Milano",
+      "Napoli",
+      "Venetsia"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -514,7 +770,11 @@
   {
     "kysymys": "Mikä on Iso-Britannian pääkaupunki?",
     "oikea_vastaus": "Lontoo",
-    "vaarat_vastaukset": ["Manchester", "Edinburgh", "Birmingham"],
+    "vaarat_vastaukset": [
+      "Manchester",
+      "Edinburgh",
+      "Birmingham"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -522,7 +782,11 @@
   {
     "kysymys": "Mikä on Alankomaiden pääkaupunki?",
     "oikea_vastaus": "Amsterdam",
-    "vaarat_vastaukset": ["Rotterdam", "Utrecht", "Haag"],
+    "vaarat_vastaukset": [
+      "Rotterdam",
+      "Utrecht",
+      "Haag"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -530,7 +794,11 @@
   {
     "kysymys": "Mikä on Belgian pääkaupunki?",
     "oikea_vastaus": "Bryssel",
-    "vaarat_vastaukset": ["Antwerpen", "Gent", "Brugge"],
+    "vaarat_vastaukset": [
+      "Antwerpen",
+      "Gent",
+      "Brugge"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -538,7 +806,11 @@
   {
     "kysymys": "Mikä on Sveitsin pääkaupunki?",
     "oikea_vastaus": "Bern",
-    "vaarat_vastaukset": ["Zürich", "Geneve", "Lausanne"],
+    "vaarat_vastaukset": [
+      "Zürich",
+      "Geneve",
+      "Lausanne"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -546,7 +818,11 @@
   {
     "kysymys": "Mikä on Kreikan pääkaupunki?",
     "oikea_vastaus": "Ateena",
-    "vaarat_vastaukset": ["Thessaloniki", "Patras", "Heraklion"],
+    "vaarat_vastaukset": [
+      "Thessaloniki",
+      "Patras",
+      "Heraklion"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -554,7 +830,11 @@
   {
     "kysymys": "Mikä on Portugalin pääkaupunki?",
     "oikea_vastaus": "Lissabon",
-    "vaarat_vastaukset": ["Porto", "Coimbra", "Funchal"],
+    "vaarat_vastaukset": [
+      "Porto",
+      "Coimbra",
+      "Funchal"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
@@ -562,11 +842,157 @@
   {
     "kysymys": "Mikä on maailman yleisin kieli äidinkielenään puhuttuna?",
     "oikea_vastaus": "Mandariinikiina",
-    "vaarat_vastaukset": ["Englanti", "Espanja", "Hindi"],
+    "vaarat_vastaukset": [
+      "Englanti",
+      "Espanja",
+      "Hindi"
+    ],
     "kategoria": "Maantieto",
     "vaikeustaso": "taitaja",
     "pistemaara_perus": 10
+  },
+  {
+    "kysymys": "Kuinka monta kultamitalia Usain Bolt voitti olympialaisissa urallaan?",
+    "oikea_vastaus": "8",
+    "vaarat_vastaukset": [
+      "7",
+      "9",
+      "6"
+    ],
+    "kategoria": "Urheilu",
+    "vaikeustaso": "taitaja",
+    "pistemaara_perus": 15
+  },
+  {
+    "kysymys": "Mikä maa on voittanut eniten jalkapallon MM-kisoja?",
+    "oikea_vastaus": "Brasilia",
+    "vaarat_vastaukset": [
+      "Saksa",
+      "Italia",
+      "Argentiina"
+    ],
+    "kategoria": "Urheilu",
+    "vaikeustaso": "taitaja",
+    "pistemaara_perus": 15
+  },
+  {
+    "kysymys": "Kuinka monta kierrosta on Formula 1 -kaudella normaalisti?",
+    "oikea_vastaus": "20–23 kilpailua",
+    "vaarat_vastaukset": [
+      "18–20",
+      "15–18",
+      "25–28"
+    ],
+    "kategoria": "Urheilu",
+    "vaikeustaso": "taitaja",
+    "pistemaara_perus": 15
+  },
+  {
+    "kysymys": "Mikä joukkue voitti NBA-mestaruuden 2020?",
+    "oikea_vastaus": "Los Angeles Lakers",
+    "vaarat_vastaukset": [
+      "Miami Heat",
+      "Toronto Raptors",
+      "Boston Celtics"
+    ],
+    "kategoria": "Urheilu",
+    "vaikeustaso": "taitaja",
+    "pistemaara_perus": 15
+  },
+  {
+    "kysymys": "Kuka voitti miesten yleisurheilun 100 m olympiakultaa Tokiossa 2020?",
+    "oikea_vastaus": "Marcell Jacobs",
+    "vaarat_vastaukset": [
+      "Usain Bolt",
+      "Andre De Grasse",
+      "Justin Gatlin"
+    ],
+    "kategoria": "Urheilu",
+    "vaikeustaso": "taitaja",
+    "pistemaara_perus": 15
+  },
+  {
+    "kysymys": "Kuinka monta pelaajaa on amerikkalaisessa jalkapallojoukkueessa kentällä?",
+    "oikea_vastaus": "11",
+    "vaarat_vastaukset": [
+      "10",
+      "12",
+      "9"
+    ],
+    "kategoria": "Urheilu",
+    "vaikeustaso": "taitaja",
+    "pistemaara_perus": 15
+  },
+  {
+    "kysymys": "Mikä maa voitti jalkapallon EM-kisat 2020?",
+    "oikea_vastaus": "Italia",
+    "vaarat_vastaukset": [
+      "Englanti",
+      "Ranska",
+      "Portugali"
+    ],
+    "kategoria": "Urheilu",
+    "vaikeustaso": "taitaja",
+    "pistemaara_perus": 15
+  },
+  {
+    "kysymys": "Kuka voitti Wimbledonin miesten kaksinpelin 2021?",
+    "oikea_vastaus": "Novak Djokovic",
+    "vaarat_vastaukset": [
+      "Roger Federer",
+      "Rafael Nadal",
+      "Matteo Berrettini"
+    ],
+    "kategoria": "Urheilu",
+    "vaikeustaso": "taitaja",
+    "pistemaara_perus": 15
+  },
+  {
+    "kysymys": "Kuinka monta pelaajaa on rugby-joukkueessa kentällä?",
+    "oikea_vastaus": "15",
+    "vaarat_vastaukset": [
+      "13",
+      "14",
+      "11"
+    ],
+    "kategoria": "Urheilu",
+    "vaikeustaso": "taitaja",
+    "pistemaara_perus": 15
+  },
+  {
+    "kysymys": "Kuka on voittanut eniten golfin major-turnauksia miesten sarjassa?",
+    "oikea_vastaus": "Jack Nicklaus",
+    "vaarat_vastaukset": [
+      "Tiger Woods",
+      "Arnold Palmer",
+      "Sam Snead"
+    ],
+    "kategoria": "Urheilu",
+    "vaikeustaso": "taitaja",
+    "pistemaara_perus": 15
+  },
+  {
+    "kysymys": "Mikä oli ensimmäinen planeetta, johon ihmiset lähettivät satelliitin kiertämään?",
+    "oikea_vastaus": "Maa",
+    "vaarat_vastaukset": [
+      "Kuu",
+      "Venus",
+      "Mars"
+    ],
+    "kategoria": "Avaruus",
+    "vaikeustaso": "taitaja",
+    "pistemaara_perus": 20
+  },
+  {
+    "kysymys": "Kuinka monta ihmistä on käynyt kuussa?",
+    "oikea_vastaus": "12",
+    "vaarat_vastaukset": [
+      "10",
+      "14",
+      "8"
+    ],
+    "kategoria": "Avaruus",
+    "vaikeustaso": "mestari",
+    "pistemaara_perus": 20
   }
 ]
-
-

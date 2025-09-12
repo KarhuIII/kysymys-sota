@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
-  import { getDB } from '../database/database.js';
+  import { getDB, paivitaKysymykset } from '../database/database.js';
   import type { Kayttaja, Kysymys, Peli, Tilasto } from '../database/schema.js';
 
   // ===============================================
@@ -70,14 +70,19 @@
 
   async function paivitaKysymyksetUI() {
     try {
-      console.log('🔄 Päivitetään kysymysten UI...');
+      console.log('🔄 Päivitetään kysymykset tietokannasta...');
+      
+      // Päivitä kysymykset tietokannasta
+      await paivitaKysymykset();
+      
+      // Lataa kysymykset UI:hin
       const db = await getDB();
       const uudetKysymykset = await db.haeKaikkiKysymykset();
       
       console.log('📊 UI-päivitys: haettiin', uudetKysymykset.length, 'kysymystä');
       console.log('🔍 Vanhat kysymykset UI:ssa:', kysymykset.length);
       
-      // Debug: tarkista onko tyhjia kysymyksiä
+      // Debug: tarkista onko tyhjia kysymyksia
       const tyhjatKysymykset = uudetKysymykset.filter(k => !k.kysymys || k.kysymys.trim() === '');
       if (tyhjatKysymykset.length > 0) {
         console.warn('⚠️ Löydettiin', tyhjatKysymykset.length, 'tyhjää kysymystä:', tyhjatKysymykset);
@@ -93,11 +98,12 @@
       // Odota että DOM päivittyy
       await tick();
       
-      console.log(`✅ UI päivitetty: ${kysymykset.length} kysymystä`);
+      console.log(`✅ Kysymykset päivitetty tietokannasta ja UI päivitetty: ${kysymykset.length} kysymystä`);
       console.log(`🔍 Filtteröityjä kysymyksiä: ${filteredKysymykset.length}`);
       
     } catch (error) {
-      console.error('❌ Virhe UI:n päivittämisessä:', error);
+      console.error('❌ Virhe kysymysten päivityksessä:', error);
+      alert('Virhe kysymysten päivityksessä: ' + (error as Error).message);
     }
   }
 
@@ -388,9 +394,12 @@
     <!-- Quick Actions -->
     <div class="card p-6">
       <h3 class="text-xl font-bold mb-4">🚀 Pikavalinnat</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <button class="btn variant-filled-secondary" on:click={() => avaPelaajaModal()}>
           👤 Lisää pelaaja
+        </button>
+        <button class="btn variant-filled-warning" on:click={paivitaKysymyksetUI}>
+          🔄 Päivitä kysymykset
         </button>
         <button class="btn variant-filled-tertiary" on:click={() => aktiivnenValkka = 'stats'}>
           📊 Näytä tilastot

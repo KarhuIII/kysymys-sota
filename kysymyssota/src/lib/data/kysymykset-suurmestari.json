@@ -1,16 +1,24 @@
-[
+﻿[
   {
     "kysymys": "Mikä on Planck-vakio arvoltaan?",
     "oikea_vastaus": "6.626 × 10^-34 J⋅s",
-    "vaarat_vastaukset": ["6.626 × 10^-27 J⋅s", "3.626 × 10^-34 J⋅s", "6.626 × 10^-31 J⋅s"],
-    "kategoria": "Fysiikka",
+    "vaarat_vastaukset": [
+      "6.626 × 10^-27 J⋅s",
+      "3.626 × 10^-34 J⋅s",
+      "6.626 × 10^-31 J⋅s"
+    ],
+    "kategoria": "Tiede",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
   },
   {
     "kysymys": "Kuka kehitti Gödelin epätäydellisyyslauseet?",
     "oikea_vastaus": "Kurt Gödel",
-    "vaarat_vastaukset": ["Bertrand Russell", "David Hilbert", "Alfred North Whitehead"],
+    "vaarat_vastaukset": [
+      "Bertrand Russell",
+      "David Hilbert",
+      "Alfred North Whitehead"
+    ],
     "kategoria": "Matematiikka",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
@@ -18,15 +26,23 @@
   {
     "kysymys": "Mikä on neutriinojen massavaje efekti?",
     "oikea_vastaus": "Neutriino-oskillaatio",
-    "vaarat_vastaukset": ["Neutriino-interferenssi", "Neutriino-dekohereenssi", "Neutriino-dispersio"],
-    "kategoria": "Hiukkasfysiikka",
+    "vaarat_vastaukset": [
+      "Neutriino-interferenssi",
+      "Neutriino-dekohereenssi",
+      "Neutriino-dispersio"
+    ],
+    "kategoria": "Tiede",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
   },
   {
     "kysymys": "Mikä on Riemann-hypoteesin keskeisin väite?",
     "oikea_vastaus": "Kaikki ei-triviaalit nollakohdat sijaitsevat kriittisellä suoralla",
-    "vaarat_vastaukset": ["Kaikki parilliset luvut ovat alkulukujen summia", "Äärettömyys on laskettavissa", "Kompleksiluvut ovat reaalilukujen ylijoukko"],
+    "vaarat_vastaukset": [
+      "Kaikki parilliset luvut ovat alkulukujen summia",
+      "Äärettömyys on laskettavissa",
+      "Kompleksiluvut ovat reaalilukujen ylijoukko"
+    ],
     "kategoria": "Matematiikka",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
@@ -34,95 +50,143 @@
   {
     "kysymys": "Mikä on kvanttikromodynamiikan kytkentävakio αs arvoltaan noin 1 GeV energiassa?",
     "oikea_vastaus": "0.3",
-    "vaarat_vastaukset": ["0.1", "0.03", "1.0"],
-    "kategoria": "Hiukkasfysiikka",
+    "vaarat_vastaukset": [
+      "0.1",
+      "0.03",
+      "1.0"
+    ],
+    "kategoria": "Tiede",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
   },
   {
     "kysymys": "Kuinka monta eri Pokémonia oli alkuperäisessä Red/Blue -pelissä?",
     "oikea_vastaus": "151",
-    "vaarat_vastaukset": ["150", "200", "100"],
-    "kategoria": "Viihde",
+    "vaarat_vastaukset": [
+      "150",
+      "200",
+      "100"
+    ],
+    "kategoria": "Kulttuuri",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
   },
   {
     "kysymys": "Kuinka monta erilaista LEGO-palikkaa oli käytössä ensimmäisessä LEGO Historian sarjassa?",
     "oikea_vastaus": "6",
-    "vaarat_vastaukset": ["5", "8", "10"],
-    "kategoria": "Viihde",
+    "vaarat_vastaukset": [
+      "5",
+      "8",
+      "10"
+    ],
+    "kategoria": "Kulttuuri",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
   },
   {
     "kysymys": "Mikä on Ihmemaan Liisan lemmikkieläimen nimi?",
     "oikea_vastaus": "Dinah",
-    "vaarat_vastaukset": ["Cheshire", "Rex", "Fido"],
-    "kategoria": "Kirjallisuus",
+    "vaarat_vastaukset": [
+      "Cheshire",
+      "Rex",
+      "Fido"
+    ],
+    "kategoria": "Kulttuuri",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
   },
   {
     "kysymys": "Kuinka monta erilaista eläintä esiintyy Leijonakuningas-elokuvan alussa Jylhäkalliolla?",
     "oikea_vastaus": "10",
-    "vaarat_vastaukset": ["5", "15", "20"],
-    "kategoria": "Eläimet",
+    "vaarat_vastaukset": [
+      "5",
+      "15",
+      "20"
+    ],
+    "kategoria": "Biologia",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
   },
   {
     "kysymys": "Kuinka monta jalkaa on Muumipapan purjeveneessä?",
     "oikea_vastaus": "0",
-    "vaarat_vastaukset": ["2", "4", "6"],
-    "kategoria": "Viihde",
+    "vaarat_vastaukset": [
+      "2",
+      "4",
+      "6"
+    ],
+    "kategoria": "Kulttuuri",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
   },
   {
     "kysymys": "Kuinka monta kultakalaa on 'Pienen merenneidon' Arielin akvaariossa?",
     "oikea_vastaus": "1",
-    "vaarat_vastaukset": ["2", "5", "10"],
-    "kategoria": "Eläimet",
+    "vaarat_vastaukset": [
+      "2",
+      "5",
+      "10"
+    ],
+    "kategoria": "Biologia",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
   },
   {
     "kysymys": "Kuinka monta jalkaa on Nalle Puhilla?",
     "oikea_vastaus": "2",
-    "vaarat_vastaukset": ["4", "3", "5"],
-    "kategoria": "Eläimet",
+    "vaarat_vastaukset": [
+      "4",
+      "3",
+      "5"
+    ],
+    "kategoria": "Biologia",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
   },
   {
     "kysymys": "Kuinka monta lentävää eläintä esiintyy Dumbo-elokuvassa alussa?",
     "oikea_vastaus": "3",
-    "vaarat_vastaukset": ["1", "2", "4"],
-    "kategoria": "Eläimet",
+    "vaarat_vastaukset": [
+      "1",
+      "2",
+      "4"
+    ],
+    "kategoria": "Biologia",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
   },
   {
     "kysymys": "Kuinka monta tikkua Pinocchion nenä kasvaa, kun hän valehtelee elokuvassa?",
     "oikea_vastaus": "3-4",
-    "vaarat_vastaukset": ["1", "5-6", "7"],
-    "kategoria": "Viihde",
+    "vaarat_vastaukset": [
+      "1",
+      "5-6",
+      "7"
+    ],
+    "kategoria": "Kulttuuri",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
   },
   {
     "kysymys": "Mikä on Planckin vakion tarkka arvo SI-järjestelmässä?",
     "oikea_vastaus": "6.62607015 × 10^-34 J·s",
-    "vaarat_vastaukset": ["6.626 × 10^-32 J·s", "3.14159 × 10^-34 J·s", "1.602 × 10^-19 J·s"],
-    "kategoria": "Fysiikka",
+    "vaarat_vastaukset": [
+      "6.626 × 10^-32 J·s",
+      "3.14159 × 10^-34 J·s",
+      "1.602 × 10^-19 J·s"
+    ],
+    "kategoria": "Tiede",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
   },
   {
     "kysymys": "Mikä on Riemannin hypoteesin merkitys kompleksitasolle?",
     "oikea_vastaus": "Kaikki ei-triviaalit nollakohdat ζ(s) sijaitsevat Re(s) = 1/2",
-    "vaarat_vastaukset": ["Kaikki nollakohdat ovat kokonaislukuja", "Kaikki nollakohdat ovat reaalisia", "Kaikki nollakohdat ovat rationaalisia"],
+    "vaarat_vastaukset": [
+      "Kaikki nollakohdat ovat kokonaislukuja",
+      "Kaikki nollakohdat ovat reaalisia",
+      "Kaikki nollakohdat ovat rationaalisia"
+    ],
     "kategoria": "Matematiikka",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
@@ -130,15 +194,23 @@
   {
     "kysymys": "Mikä on Navier-Stokesin yhtälön perusmuoto incompressible fluid -tapauksessa?",
     "oikea_vastaus": "ρ(∂v/∂t + v·∇v) = -∇p + μ∇²v + f",
-    "vaarat_vastaukset": ["F = ma", "∇²ψ + k²ψ = 0", "E = mc^2"],
-    "kategoria": "Fysiikka",
+    "vaarat_vastaukset": [
+      "F = ma",
+      "∇²ψ + k²ψ = 0",
+      "E = mc^2"
+    ],
+    "kategoria": "Tiede",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
   },
   {
     "kysymys": "Mikä on Gödelin epätäydellisyyslauseen pääväite muodollisessa järjestelmässä?",
     "oikea_vastaus": "Jokaisessa riittävän voimakkaassa konsistentissa järjestelmässä on väittämiä, joita ei voida todistaa tai kumota sen sisällä",
-    "vaarat_vastaukset": ["Kaikki totuudet voidaan todistaa", "Kaikki väitteet ovat epätäydellisiä", "Kaikki järjestelmät ovat ristiriitaisia"],
+    "vaarat_vastaukset": [
+      "Kaikki totuudet voidaan todistaa",
+      "Kaikki väitteet ovat epätäydellisiä",
+      "Kaikki järjestelmät ovat ristiriitaisia"
+    ],
     "kategoria": "Matematiikka",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
@@ -146,18 +218,25 @@
   {
     "kysymys": "Mikä on Standardimallin Higgsin bosonin ominaispaino?",
     "oikea_vastaus": "Noin 125 GeV/c²",
-    "vaarat_vastaukset": ["91 GeV/c²", "0.511 MeV/c²", "173 GeV/c²"],
-    "kategoria": "Fysiikka",
+    "vaarat_vastaukset": [
+      "91 GeV/c²",
+      "0.511 MeV/c²",
+      "173 GeV/c²"
+    ],
+    "kategoria": "Tiede",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
   },
   {
     "kysymys": "Mikä on Schrödingerin yhtälön ajallinen riippumaton muoto?",
     "oikea_vastaus": "Hψ = Eψ",
-    "vaarat_vastaukset": ["iħ(∂ψ/∂t) = Hψ", "E = mc^2", "F = ma"],
-    "kategoria": "Fysiikka",
+    "vaarat_vastaukset": [
+      "iħ(∂ψ/∂t) = Hψ",
+      "E = mc^2",
+      "F = ma"
+    ],
+    "kategoria": "Tiede",
     "vaikeustaso": "suurmestari",
     "pistemaara_perus": 50
   }
 ]
-

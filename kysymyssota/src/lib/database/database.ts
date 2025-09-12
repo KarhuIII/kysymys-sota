@@ -491,8 +491,19 @@ export class KysymyssotaDB {
           kaikki.push(kysymys);
 
           // Suodata kategoria ja vaikeustaso
+          let kategoriaMatch = true;
+          if (kategoria) {
+            // Tarkista onko kategoria pilkulla erotettu lista
+            if (kategoria.includes(',')) {
+              const kategoriatLista = kategoria.split(',').map(k => k.trim());
+              kategoriaMatch = kategoriatLista.includes(kysymys.kategoria || '');
+            } else {
+              kategoriaMatch = kysymys.kategoria === kategoria;
+            }
+          }
+          
           if (
-            (!kategoria || kysymys.kategoria === kategoria) &&
+            kategoriaMatch &&
             (!vaikeustaso || kysymys.vaikeustaso === vaikeustaso)
           ) {
             kysymykset.push(kysymys);

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { getDB, paivitaKysymykset } from '../database/database.js';
+  import { getDB } from '../database/database.js';
   import type { Kayttaja } from '../database/schema.js';
   import { peliPalvelu } from '../database/gameService.js';
 
@@ -70,24 +70,6 @@
       valitutKategoriat = new Set(Object.keys(saatavilla_kategoriat));
     } catch (error) {
       console.error('Virhe kategorioiden latauksessa:', error);
-    }
-  }
-
-  /**
-   * Päivitä kysymykset tietokannassa
-   */
-  async function paivitaKysymyksetDebug() {
-    console.log('🔄 Päivitetään kysymykset...');
-    try {
-      await paivitaKysymykset();
-      console.log('✅ Kysymykset päivitetty!');
-      // Päivitä kategoriat
-      await lataaKategoriat();
-      // Näytä ilmoitus käyttäjälle
-      alert('✅ Kysymykset päivitetty onnistuneesti!');
-    } catch (error) {
-      console.error('❌ Virhe kysymysten päivityksessä:', error);
-      alert('❌ Virhe kysymysten päivityksessä: ' + error);
     }
   }
 
@@ -418,11 +400,6 @@
     <p class="text-lg text-surface-600-400">
       Hallitse pelaajia ja heidän asetuksiaan
     </p>
-    <div class="flex justify-center">
-      <button class="btn variant-soft-warning" on:click={paivitaKysymyksetDebug}>
-        🔄 Päivitä kysymykset
-      </button>
-    </div>
   </div>
 
   <!-- Pelaajien lista -->
