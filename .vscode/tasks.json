@@ -197,7 +197,7 @@
       "command": "powershell",
       "args": [
         "-Command",
-        "$message = Read-Host -Prompt 'Enter commit message'; if ($message) { git commit -m \"'$message'\"; Write-Host 'Committed successfully!' -ForegroundColor Green } else { Write-Host 'Commit cancelled - no message provided' -ForegroundColor Yellow }"
+        "$message = Read-Host -Prompt \"Enter commit message\"; if ($message) { git commit -m \"$message\"; Write-Host \"Committed successfully!\" -ForegroundColor Green } else { Write-Host \"Commit cancelled - no message provided\" -ForegroundColor Yellow }"
       ],
       "group": "build",
       "options": {
