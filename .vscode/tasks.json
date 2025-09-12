@@ -197,7 +197,20 @@
       "command": "powershell",
       "args": [
         "-Command",
-        "$message = Read-Host -Prompt \"Enter commit message\"; if ($message) { git commit -m \"$message\"; Write-Host \"Committed successfully!\" -ForegroundColor Green } else { Write-Host \"Commit cancelled - no message provided\" -ForegroundColor Yellow }"
+        "$msg = Read-Host 'Enter commit message'; if ($msg) { git commit -m \"$msg\"; Write-Host 'Committed successfully!' -ForegroundColor Green } else { Write-Host 'Commit cancelled' -ForegroundColor Yellow }"
+      ],
+      "group": "build",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "label": "📝 Git Commit (Simple)",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-Command",
+        "$msg = Read-Host 'Commit message'; git commit -m \"$msg\""
       ],
       "group": "build",
       "options": {
