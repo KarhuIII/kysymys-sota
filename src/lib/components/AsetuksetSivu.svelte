@@ -296,7 +296,7 @@
         {#if vierasPelaajat.length > 0}
           <div class="space-y-2">
             {#each vierasPelaajat as vieras, index}
-              <div class="flex items-center gap-3 p-3 rounded-lg border border-surface-300 bg-surface-50">
+              <div class="flex items-center gap-3 p-3 rounded-xl bg-white/20 dark:bg-white/10 backdrop-blur-sm ">
                 <div 
                   class="w-6 h-6 rounded-full flex-shrink-0" 
                   style="background-color: {vieras.pelaajan_vari}"
@@ -337,7 +337,10 @@
         <div class="flex gap-3 flex-wrap justify-center">
           {#each kierrosMaaraVaihtoehdot as maara}
             <button 
-              class="{glassUtils.depthButton(kierrosMaara === maara, 'px-6 py-3 text-lg font-semibold')}"
+              class="{kierrosMaara === maara 
+                ? 'px-6 py-3 text-lg font-semibold bg-white/90 dark:bg-white/20 backdrop-blur-sm rounded-xl shadow-lg text-surface-900 dark:text-white transition-all duration-300'
+                : 'px-6 py-3 text-lg font-semibold rounded-xl border-0 hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-300 text-surface-700 dark:text-surface-300'
+              }"
               on:click={() => { kierrosMaara = maara; tallennaAsetukset(); }}
             >
               <span class="relative z-10">{maara}</span>

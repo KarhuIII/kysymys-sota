@@ -9,7 +9,7 @@
       "isBackground": true,
       "problemMatcher": [],
       "options": {
-        "cwd": "${workspaceFolder}/kysymyssota"
+        "cwd": "${workspaceFolder}"
       }
     },
     {
@@ -22,7 +22,7 @@
       },
       "problemMatcher": ["$tsc"],
       "options": {
-        "cwd": "${workspaceFolder}/kysymyssota"
+        "cwd": "${workspaceFolder}"
       }
     },
     {
@@ -32,7 +32,7 @@
       "group": "test",
       "problemMatcher": ["$tsc"],
       "options": {
-        "cwd": "${workspaceFolder}/kysymyssota"
+        "cwd": "${workspaceFolder}"
       }
     },
     {
