@@ -1,5 +1,15 @@
 /**
- * Glass Morphism Design System
+ * Gl  // Pääkortit ja kontainerit
+  card: "bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-black/5 dark:border-white/10",
+  
+  // Kevyemmät kortit (sisäkkäiset elementit)
+  cardLight: "bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-black/10 dark:border-white/20",
+  
+  // Navigaatio ja valikot
+  nav: "bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-black/5 dark:border-white/10",
+  
+  // Modaalit ja popupit
+  modal: "bg-white/95 dark:bg-surface-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-black/5 dark:border-white/10",m Design System
  * Yhtenäiset tyylimäärittelyt koko sovellukselle
  * 
  * Käyttö:
@@ -9,27 +19,27 @@
 // ===== PERUS GLASS MORPHISM LUOKAT =====
 export const GLASS_STYLES = {
   // Pääkortit ja kontainerit
-  card: "bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10",
+  card: "bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/5 dark:border-white/5",
   
   // Kevyemmät kortit (sisäkkäiset elementit)
-  cardLight: "bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30",
+  cardLight: "bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/5",
   
   // Navigaatio ja valikot
-  nav: "bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10",
+  nav: "bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/5 dark:border-white/5",
   
   // Modaalit ja popupit
-  modal: "bg-white/95 dark:bg-surface-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 dark:border-white/10",
+  modal: "bg-white/95 dark:bg-surface-900/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/5 dark:border-white/5",
   modalBackdrop: "fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm",
   
   // Lomakeelementit
-  input: "px-4 py-3 bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 focus:ring-2 focus:ring-primary-500 focus:outline-none transition-all duration-300",
-  select: "px-4 py-3 bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 focus:ring-2 focus:ring-primary-500 focus:outline-none transition-all duration-300",
+  input: "px-4 py-3 bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-black/10 dark:border-white/5 focus:ring-2 focus:ring-primary-500 focus:outline-none transition-all duration-300",
+  select: "px-4 py-3 bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-black/10 dark:border-white/5 focus:ring-2 focus:ring-primary-500 focus:outline-none transition-all duration-300",
   
   // Painikkeet
-  button: "px-6 py-3 backdrop-blur-sm rounded-xl border border-white/30 transition-all duration-300 cursor-pointer shadow-inner scale-95 hover:scale-[1.02] hover:shadow-lg",
-  buttonPrimary: "px-6 py-3 bg-primary-500/80 text-white rounded-xl backdrop-blur-sm transition-all duration-300 cursor-pointer shadow-inner scale-95 hover:scale-[1.02] hover:shadow-lg border border-white/30",
-  buttonSecondary: "px-6 py-3 bg-secondary-500/80 text-white rounded-xl backdrop-blur-sm transition-all duration-300 cursor-pointer shadow-inner scale-95 hover:scale-[1.02] hover:shadow-lg border border-white/30",
-  buttonGhost: "px-6 py-3 bg-white/20 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 hover:bg-white/30 dark:hover:bg-surface-700/60 transition-all duration-300 cursor-pointer shadow-inner scale-95 hover:scale-[1.02] hover:shadow-lg",
+  button: "px-6 py-3 backdrop-blur-sm rounded-xl border border-black/10 dark:border-white/0 shadow-lg transition-all duration-300 cursor-pointer shadow-inner scale-95 hover:scale-[1.02] hover:shadow-lg",
+  buttonPrimary: "px-6 py-3 bg-primary-500/80 text-white rounded-xl backdrop-blur-sm transition-all duration-300 cursor-pointer shadow-inner scale-95 hover:scale-[1.02] hover:shadow-lg border border-black/5 dark:border-white/10",
+  buttonSecondary: "px-6 py-3 bg-secondary-500/80 text-white rounded-xl backdrop-blur-sm transition-all duration-300 cursor-pointer shadow-inner scale-95 hover:scale-[1.02] hover:shadow-lg border border-black/5 dark:border-white/10",
+  buttonGhost: "px-6 py-3 bg-white/20 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-black/10 dark:border-white/0 hover:bg-white/30 dark:hover:bg-surface-700/60 transition-all duration-300 cursor-pointer shadow-inner scale-95 hover:scale-[1.02] hover:shadow-lg",
   
   // Valintapainikkeet (toggle)
   toggleSelected: "bg-primary-500/80 text-white shadow-lg scale-[1.02]",
@@ -229,7 +239,7 @@ export const GLASS_COMPONENTS = {
   // Navigaatio
   navigation: {
     container: glassUtils.combine(GLASS_STYLES.nav, GLASS_LAYOUT.padding.section),
-    tab: "px-6 py-3 rounded-xl border border-white/30 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02]",
+    tab: "px-6 py-3 rounded-xl border border-white/5 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02]",
     tabActive: "bg-primary-500/80 text-white shadow-lg",
     tabInactive: "bg-white/20 dark:bg-surface-800/50 hover:bg-white/30 dark:hover:bg-surface-700/60",
   },

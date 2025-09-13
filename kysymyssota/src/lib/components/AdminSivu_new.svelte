@@ -2,6 +2,7 @@
   import { onMount, tick } from 'svelte';
   import { getDB } from '../database/database.js';
   import type { Kayttaja, Kysymys, Peli, Tilasto } from '../database/schema.js';
+  import { glassUtils } from '../styles/glass-morphism.js';
 
   // ===============================================
   // PROPS & NAVIGATION
@@ -234,9 +235,21 @@
   async function lataaTilastot() {
     try {
       const db = await getDB();
-      tilastot = await db.haeTilastot();
+      // Käytetään olemassa olevia metodeja tilastojen laskemiseen
+      const kaikkiKayttajat = await db.haeKaikkiKayttajat();
+      const kaikkiPelit = await db.haeKaikkiPelit();
+      
+      // Lasketaan tilastot manuaalisesti
+      const keskiarvoPisteet = kaikkiPelit.length > 0 
+        ? kaikkiPelit.reduce((sum, peli) => sum + peli.pisteet, 0) / kaikkiPelit.length
+        : 0;
+      
+      tilastot = {
+        keskiarvoPisteet: keskiarvoPisteet
+      };
     } catch (error) {
       console.error('Virhe tilastojen latauksessa:', error);
+      tilastot = { keskiarvoPisteet: 0 };
     }
   }
 
@@ -301,36 +314,36 @@
 <div class="card p-4 mb-6">
   <nav class="flex flex-wrap gap-2">
     <button 
-      class="btn {aktiivnenValkka === 'overview' ? 'variant-filled-primary' : 'variant-ghost'}"
+      class="{glassUtils.depthButton(aktiivnenValkka === 'overview')}"
       on:click={() => aktiivnenValkka = 'overview'}
     >
       📊 Yleiskatsaus
     </button>
     <button 
-      class="btn {aktiivnenValkka === 'questions' ? 'variant-filled-primary' : 'variant-ghost'}"
+      class="{glassUtils.depthButton(aktiivnenValkka === 'questions')}"
       on:click={() => aktiivnenValkka = 'questions'}
     >
       ❓ Kysymykset
     </button>
     <button 
-      class="btn {aktiivnenValkka === 'players' ? 'variant-filled-primary' : 'variant-ghost'}"
+      class="{glassUtils.depthButton(aktiivnenValkka === 'players')}"
       on:click={() => aktiivnenValkka = 'players'}
     >
       👥 Pelaajat
     </button>
     <button 
-      class="btn {aktiivnenValkka === 'games' ? 'variant-filled-primary' : 'variant-ghost'}"
+      class="{glassUtils.depthButton(aktiivnenValkka === 'games')}"
       on:click={() => aktiivnenValkka = 'games'}
     >
       🎮 Pelit
     </button>
     <button 
-      class="btn {aktiivnenValkka === 'stats' ? 'variant-filled-primary' : 'variant-ghost'}"
+      class="{glassUtils.depthButton(aktiivnenValkka === 'stats')}"
       on:click={() => aktiivnenValkka = 'stats'}
     >
       📈 Tilastot
     </button>
-    <button class="btn variant-ghost ml-auto" on:click={takaisinCallback}>
+    <button class="{glassUtils.button('ghost')} ml-auto" on:click={takaisinCallback}>
       ← Takaisin
     </button>
   </nav>
@@ -374,10 +387,10 @@
     <div class="card p-6">
       <h3 class="text-xl font-bold mb-4">🚀 Pikavalinnat</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <button class="btn variant-filled-secondary" on:click={() => avaPelaajaModal()}>
+        <button class="{glassUtils.button('secondary')}" on:click={() => avaPelaajaModal()}>
           👤 Lisää pelaaja
         </button>
-        <button class="btn variant-filled-tertiary" on:click={() => aktiivnenValkka = 'stats'}>
+        <button class="{glassUtils.button('secondary')}" on:click={() => aktiivnenValkka = 'stats'}>
           📊 Näytä tilastot
         </button>
       </div>
@@ -464,7 +477,7 @@
     <div class="space-y-6">
       <div class="flex justify-between items-center">
         <h2 class="text-2xl font-bold">Pelaajien hallinta</h2>
-        <button class="btn variant-filled-primary" on:click={() => avaPelaajaModal()}>
+        <button class="{glassUtils.button('primary')}" on:click={() => avaPelaajaModal()}>
           ➕ Uusi pelaaja
         </button>
       </div>
@@ -491,14 +504,14 @@
             
             <div class="flex justify-end space-x-2 mt-4">
               <button 
-                class="btn-icon variant-filled-secondary"
+                class="{glassUtils.button('secondary')} !px-3 !py-2"
                 on:click={() => avaPelaajaModal(pelaaja)}
                 title="Muokkaa"
               >
                 ✏️
               </button>
               <button 
-                class="btn-icon variant-filled-error"
+                class="{glassUtils.button('ghost')} !px-3 !py-2 text-red-500"
                 on:click={() => poistaPelaaja(pelaaja.id!)}
                 title="Poista"
               >
@@ -515,7 +528,7 @@
     <div class="space-y-6">
       <div class="flex justify-between items-center">
         <h2 class="text-2xl font-bold">Pelien historia</h2>
-        <button class="btn variant-filled-tertiary" on:click={lataaPelit}>
+        <button class="{glassUtils.button('secondary')}" on:click={lataaPelit}>
           🔄 Päivitä
         </button>
       </div>
@@ -527,12 +540,17 @@
               <div>
                 <h4 class="font-semibold">Peli #{peli.id}</h4>
                 <div class="text-sm text-surface-600-400">
-                  {formatDate(peli.luotu)}
+                  {formatDate(peli.aloitettu)}
                 </div>
+                {#if peli.lopetettu}
+                  <div class="text-xs text-surface-500-400">
+                    Lopetettu: {formatDate(peli.lopetettu)}
+                  </div>
+                {/if}
               </div>
               <div class="text-right">
-                <div class="text-lg font-bold">{peli.kierros_maara} kierrosta</div>
-                <div class="text-sm">Pelaajia: {(peli.pelaajat as any[])?.length || 0}</div>
+                <div class="text-lg font-bold">{peli.kysymysten_maara} kysymystä</div>
+                <div class="text-sm">Pisteet: {peli.pisteet}</div>
               </div>
             </div>
           </div>
@@ -643,10 +661,10 @@
       </section>
       
       <footer class="modal-footer">
-        <button class="btn variant-ghost" on:click={suljePelaajaModal}>
+        <button class="{glassUtils.button('ghost')}" on:click={suljePelaajaModal}>
           Peruuta
         </button>
-        <button class="btn variant-filled-primary" on:click={tallennaPelaaja}>
+        <button class="{glassUtils.button('primary')}" on:click={tallennaPelaaja}>
           Tallenna
         </button>
       </footer>
