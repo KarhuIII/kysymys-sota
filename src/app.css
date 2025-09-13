@@ -13,7 +13,7 @@
 
 @import "@skeletonlabs/skeleton";
 @import "@skeletonlabs/skeleton/optional/presets";
-@import "@skeletonlabs/skeleton/themes/modern";
+@import "@skeletonlabs/skeleton/themes/legacy";
 
 /* Custom gradient background similar to Skeleton.dev */
 body {

@@ -732,7 +732,7 @@
             </div>
           </div>
           <div
-            class="text-lg opacity-60"
+            class="text-4xl opacity-75"
             title="Vaikeustaso: {nykyinenKysymys.vaikeustaso}"
           >
             {vaikeustasoTahtina(nykyinenKysymys.vaikeustaso)}
