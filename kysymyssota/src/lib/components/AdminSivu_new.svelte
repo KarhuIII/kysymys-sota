@@ -382,6 +382,7 @@
         </button>
       </div>
     </div>
+  </div>
 
   {:else if aktiivnenValkka === 'questions'}
     <!-- Questions Management -->

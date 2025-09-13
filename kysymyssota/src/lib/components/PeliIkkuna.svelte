@@ -50,6 +50,14 @@
   let kysytytKysymykset: Set<number> = new Set(); // Seuraa kysyttyjä kysymyksiä ID:n perusteella
   let peliPysaytetty = false; // Pelin pysäytystila
 
+  // Power-up tila (kaikki alkavat ei-aktiivisina)
+  let powerupActive = {
+    kysymyksenVaihto: false,
+    aikalisä: false,
+    tuplapisteet: false,
+    puolitus: false
+  };
+
   // ===============================================
   // ELINKAARIFUNKTIOT (Lifecycle Functions)
   // ===============================================
@@ -535,7 +543,12 @@
         
         <!-- Kysymyksen vaihto -->
         <button 
-          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
+          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-md relative overflow-hidden"
+          class:shadow-inner={!powerupActive.kysymyksenVaihto}
+          class:transform={!powerupActive.kysymyksenVaihto}
+          class:scale-95={!powerupActive.kysymyksenVaihto}
+          class:shadow-lg={powerupActive.kysymyksenVaihto}
+          class:scale-[1.02]={powerupActive.kysymyksenVaihto}
           title="🎭 Kysymyksen vaihto – jos et halua vastata, vaihda kortti toiseen."
         >
           <div class="flex flex-col items-center">
@@ -546,7 +559,12 @@
         
         <!-- Aikalisä -->
         <button 
-          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
+          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-md relative overflow-hidden"
+          class:shadow-inner={!powerupActive.aikalisä}
+          class:transform={!powerupActive.aikalisä}
+          class:scale-95={!powerupActive.aikalisä}
+          class:shadow-lg={powerupActive.aikalisä}
+          class:scale-[1.02]={powerupActive.aikalisä}
           title="🕑 Aikalisä – saat ylimääräisen hetken miettimiseen."
         >
           <div class="flex flex-col items-center">
@@ -557,7 +575,12 @@
         
         <!-- Tuplapisteet -->
         <button 
-          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
+          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-md relative overflow-hidden"
+          class:shadow-inner={!powerupActive.tuplapisteet}
+          class:transform={!powerupActive.tuplapisteet}
+          class:scale-95={!powerupActive.tuplapisteet}
+          class:shadow-lg={powerupActive.tuplapisteet}
+          class:scale-[1.02]={powerupActive.tuplapisteet}
           title="🎯 Tuplapisteet – seuraava oikea vastaus antaa 2× pisteet."
         >
           <div class="flex flex-col items-center">
@@ -568,7 +591,12 @@
         
         <!-- Puolitus (50/50) -->
         <button 
-          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
+          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-md relative overflow-hidden"
+          class:shadow-inner={!powerupActive.puolitus}
+          class:transform={!powerupActive.puolitus}
+          class:scale-95={!powerupActive.puolitus}
+          class:shadow-lg={powerupActive.puolitus}
+          class:scale-[1.02]={powerupActive.puolitus}
           title="🪄 Puolitus – poistaa kaksi väärää vastausta (50/50)."
         >
           <div class="flex flex-col items-center">
@@ -787,13 +815,18 @@
             {@const kirjain = String.fromCharCode(65 + index)}
             {@const vastausVarit = ['#3b82f6', '#10b981', '#14b8a6', '#facc15']} <!-- Sininen, Vihreä, Turkoosi, Keltainen -->
             {@const vastausVari = vastausVarit[index]}
+            {@const isActive = valittuVastaus === vastaus}
             <!-- A, B, C, D -->
             <button
-              class="{GLASS_STYLES.card} p-6 text-left transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
+              class="{GLASS_STYLES.card} p-6 text-left transition-all duration-300 cursor-pointer hover:shadow-md relative overflow-hidden"
+              class:shadow-inner={!isActive}
+              class:transform={!isActive}
+              class:scale-95={!isActive}
+              class:shadow-lg={isActive}
+              class:scale-[1.02]={isActive}
               class:border-green-400={pisteytys && vastaus === nykyinenKysymys?.oikea_vastaus}
               class:border-red-400={pisteytys && vastaus === valittuVastaus && vastaus !== nykyinenKysymys?.oikea_vastaus}
               class:opacity-50={pisteytys && vastaus !== nykyinenKysymys?.oikea_vastaus && vastaus !== valittuVastaus}
-              class:scale-[1.02]={valittuVastaus === vastaus}
               disabled={peliPysaytetty || valittuVastaus !== null || pisteytys}
               on:click={() => valitseVastaus(vastaus)}
             >

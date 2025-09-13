@@ -2,6 +2,14 @@
   import { onMount, tick } from 'svelte';
   import { getDB, paivitaKysymykset } from '../database/database.js';
   import type { Kayttaja, Kysymys, Peli, Tilasto } from '../database/schema.js';
+  import { 
+    GLASS_STYLES, 
+    GLASS_COLORS, 
+    GLASS_ANIMATIONS,
+    GLASS_BACKGROUNDS,
+    GLASS_LAYOUT,
+    glassUtils 
+  } from '../styles/glass-morphism.js';
 
   // ===============================================
   // PROPS & NAVIGATION

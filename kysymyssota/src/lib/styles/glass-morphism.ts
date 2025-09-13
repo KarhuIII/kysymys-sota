@@ -26,14 +26,14 @@ export const GLASS_STYLES = {
   select: "px-4 py-3 bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 focus:ring-2 focus:ring-primary-500 focus:outline-none transition-all duration-300",
   
   // Painikkeet
-  button: "px-6 py-3 backdrop-blur-sm rounded-xl border border-white/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg",
-  buttonPrimary: "px-6 py-3 bg-primary-500/80 text-white rounded-xl backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-lg border border-white/30",
-  buttonSecondary: "px-6 py-3 bg-secondary-500/80 text-white rounded-xl backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-lg border border-white/30",
-  buttonGhost: "px-6 py-3 bg-white/20 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 hover:bg-white/30 dark:hover:bg-surface-700/60 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg",
+  button: "px-6 py-3 backdrop-blur-sm rounded-xl border border-white/30 transition-all duration-300 cursor-pointer shadow-inner scale-95 hover:scale-[1.02] hover:shadow-lg",
+  buttonPrimary: "px-6 py-3 bg-primary-500/80 text-white rounded-xl backdrop-blur-sm transition-all duration-300 cursor-pointer shadow-inner scale-95 hover:scale-[1.02] hover:shadow-lg border border-white/30",
+  buttonSecondary: "px-6 py-3 bg-secondary-500/80 text-white rounded-xl backdrop-blur-sm transition-all duration-300 cursor-pointer shadow-inner scale-95 hover:scale-[1.02] hover:shadow-lg border border-white/30",
+  buttonGhost: "px-6 py-3 bg-white/20 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 hover:bg-white/30 dark:hover:bg-surface-700/60 transition-all duration-300 cursor-pointer shadow-inner scale-95 hover:scale-[1.02] hover:shadow-lg",
   
   // Valintapainikkeet (toggle)
   toggleSelected: "bg-primary-500/80 text-white shadow-lg scale-[1.02]",
-  toggleUnselected: "bg-white/20 dark:bg-surface-800/50 hover:bg-white/30 dark:hover:bg-surface-700/60 scale-95 shadow-inner",
+  toggleUnselected: "bg-white/20 dark:bg-surface-800/50 hover:bg-white/30 dark:hover:bg-surface-700/60 shadow-inner scale-95",
 } as const;
 
 // ===== TAUSTAKUVIOT JA FLOATING ELEMENTIT =====
@@ -188,6 +188,17 @@ export const glassUtils = {
   toggle: (selected: boolean, extra?: string) => {
     const baseStyle = GLASS_STYLES.button;
     const stateStyle = selected ? GLASS_STYLES.toggleSelected : GLASS_STYLES.toggleUnselected;
+    return glassUtils.combine(baseStyle, stateStyle, extra || "");
+  },
+  
+  /**
+   * Luo depth-painikkeen tyyli (asetussivun pelaaja/kategoria valinta tyyli)
+   */
+  depthButton: (selected: boolean, extra?: string) => {
+    const baseStyle = "cursor-pointer p-4 rounded-lg transition-all duration-300 hover:shadow-md relative overflow-hidden";
+    const stateStyle = selected ? 
+      "shadow-lg scale-[1.02]" : 
+      "shadow-inner scale-95 hover:scale-[1.02] hover:shadow-lg";
     return glassUtils.combine(baseStyle, stateStyle, extra || "");
   },
   

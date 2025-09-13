@@ -3,6 +3,14 @@
   import { getDB } from '../database/database.js';
   import type { Kayttaja } from '../database/schema.js';
   import { peliPalvelu } from '../database/gameService.js';
+  import { 
+    GLASS_STYLES, 
+    GLASS_COLORS, 
+    GLASS_ANIMATIONS,
+    GLASS_BACKGROUNDS,
+    GLASS_LAYOUT,
+    glassUtils 
+  } from '../styles/glass-morphism.js';
 
   // ===============================================
   // PROPS (Props)
@@ -208,27 +216,27 @@
   $: yhteensaPelaajat = Array.from(valitutPelaajat).length + vierasPelaajat.length;
 </script>
 
-<div class="container mx-auto p-6 space-y-8">
+<div class="{GLASS_LAYOUT.container} {GLASS_LAYOUT.section}">
   <!-- Header Card with Glass Effect -->
-  <div class="card p-6 text-center shadow-xl bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg border border-white/30 dark:border-surface-600/30">
-    <h1 class="text-4xl font-bold mb-2">🎮 Peliasetukset</h1>
-    <p class="text-surface-600-400">Valitse pelaajat ja aloita peli</p>
+  <div class="{GLASS_STYLES.card} {GLASS_LAYOUT.padding.card} text-center">
+    <h1 class="text-4xl font-bold mb-2 {GLASS_COLORS.titleGradient}">🎮 Peliasetukset</h1>
+    <p class="{GLASS_COLORS.textSecondary}">Valitse pelaajat ja aloita peli</p>
   </div>
 
   {#if loading}
-    <div class="card p-8 text-center shadow-xl bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg border border-white/30 dark:border-surface-600/30">
-      <div class="text-surface-600-400">Ladataan...</div>
+    <div class="{GLASS_STYLES.card} {GLASS_LAYOUT.padding.card} text-center">
+      <div class="{GLASS_COLORS.textSecondary}">Ladataan...</div>
     </div>
   {:else}
     <!-- VAIHE 1: PELAAJIEN VALINTA -->
-    <div class="card p-6 space-y-4 shadow-xl bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg border border-white/30 dark:border-surface-600/30">
+    <div class="{GLASS_STYLES.card} {GLASS_LAYOUT.padding.card} {GLASS_LAYOUT.spacing.medium}">
       <div class="flex justify-between items-center">
         <h2 class="text-2xl font-semibold">👥 Pelaajat ({yhteensaPelaajat} valittu)</h2>
         <div class="flex gap-2">
-          <button class="btn btn-sm variant-soft-primary" on:click={valitseKaikki}>
+          <button class="{glassUtils.button('ghost', 'btn-sm')}" on:click={valitseKaikki}>
             Valitse kaikki
           </button>
-          <button class="btn btn-sm variant-soft-secondary" on:click={tyhjennäValinnat}>
+          <button class="{glassUtils.button('ghost', 'btn-sm')}" on:click={tyhjennäValinnat}>
             Tyhjennä
           </button>
         </div>
@@ -241,12 +249,7 @@
           <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
             {#each tallennetutPelaajat as pelaaja (pelaaja.id)}
               <div 
-                class="cursor-pointer p-4 rounded-lg transition-all hover:shadow-md relative overflow-hidden"
-                class:shadow-inner={!valitutPelaajat.has(pelaaja.id!)}
-                class:transform={!valitutPelaajat.has(pelaaja.id!)}
-                class:scale-95={!valitutPelaajat.has(pelaaja.id!)}
-                class:shadow-lg={valitutPelaajat.has(pelaaja.id!)}
-                class:scale-[1.02]={valitutPelaajat.has(pelaaja.id!)}
+                class="{glassUtils.depthButton(valitutPelaajat.has(pelaaja.id!))}"
                 on:click={() => togglePelaajaValinta(pelaaja.id!)}
                 on:keydown={(e) => e.key === 'Enter' && togglePelaajaValinta(pelaaja.id!)}
                 role="button"
@@ -285,7 +288,7 @@
       <div>
         <div class="flex justify-between items-center mb-3">
           <h3 class="text-lg font-medium">👤 Vieraspelaajat</h3>
-          <button class="btn variant-filled-primary btn-sm" on:click={avaaVierasPelaajaModal}>
+          <button class="{glassUtils.button('primary', 'btn-sm')}" on:click={avaaVierasPelaajaModal}>
             + Lisää vieraspelaaja
           </button>
         </div>
@@ -306,7 +309,7 @@
                   </span>
                 </div>
                 <button 
-                  class="btn btn-sm variant-soft-error"
+                  class="{glassUtils.button('ghost', 'btn-sm')}"
                   on:click={() => poistaVierasPelaaja(index)}
                 >
                   ✕
@@ -323,7 +326,7 @@
     </div>
 
     <!-- VAIHE 2: PELIASETUKSET -->
-    <div class="card p-6 space-y-4 shadow-xl bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg border border-white/30 dark:border-surface-600/30">
+    <div class="{GLASS_STYLES.card} {GLASS_LAYOUT.padding.card} {GLASS_LAYOUT.spacing.medium}">
       <h2 class="text-2xl font-semibold">⚙️ Peliasetukset</h2>
       
       <!-- Kierrosmäärä -->
@@ -334,14 +337,9 @@
         <div class="flex gap-3 flex-wrap justify-center">
           {#each kierrosMaaraVaihtoehdot as maara}
             <button 
-              class="btn px-6 py-3 text-lg font-semibold relative overflow-hidden"
-              class:variant-filled-primary={kierrosMaara === maara}
-              class:variant-soft-surface={kierrosMaara !== maara}
+              class="{glassUtils.depthButton(kierrosMaara === maara, 'px-6 py-3 text-lg font-semibold')}"
               on:click={() => { kierrosMaara = maara; tallennaAsetukset(); }}
             >
-              {#if kierrosMaara === maara}
-                <div class="absolute inset-0 bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded"></div>
-              {/if}
               <span class="relative z-10">{maara}</span>
             </button>
           {/each}
@@ -360,12 +358,7 @@
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
           {#each Object.entries(saatavilla_kategoriat) as [kategoria, maara]}
             <div 
-              class="cursor-pointer p-3 rounded transition-all text-sm relative overflow-hidden hover:shadow-md text-center font-medium"
-              class:shadow-inner={!valitutKategoriat.has(kategoria)}
-              class:transform={!valitutKategoriat.has(kategoria)}
-              class:scale-95={!valitutKategoriat.has(kategoria)}
-              class:shadow-lg={valitutKategoriat.has(kategoria)}
-              class:scale-[1.02]={valitutKategoriat.has(kategoria)}
+              class="{glassUtils.depthButton(valitutKategoriat.has(kategoria), 'p-3 text-sm text-center font-medium')}"
               on:click={() => toggleKategoria(kategoria)}
               on:keydown={(e) => e.key === 'Enter' && toggleKategoria(kategoria)}
               role="button"
@@ -389,9 +382,9 @@
     </div>
 
     <!-- VAIHE 3: ALOITA PELI -->
-    <div class="card p-6 text-center shadow-xl bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg border border-white/30 dark:border-surface-600/30">
+    <div class="{GLASS_STYLES.card} {GLASS_LAYOUT.padding.card} text-center">
       <button 
-        class="btn variant-filled-secondary text-xl px-8 py-3 shadow-xl"
+        class="{glassUtils.button('primary', 'text-xl px-8 py-3')}"
         disabled={yhteensaPelaajat === 0}
         on:click={aloitaPeli}
       >
@@ -404,7 +397,7 @@
 <!-- VIERASPELAAJA MODAALI -->
 {#if vierasPelaajaModal}
   <div class="modal-backdrop" role="dialog" aria-label="Modal" tabindex="-1" on:click={() => vierasPelaajaModal = false} on:keydown={(e) => e.key === 'Escape' && (vierasPelaajaModal = false)}>
-    <div class="modal card p-6 w-full max-w-md shadow-xl bg-white/95 dark:bg-surface-900/95 backdrop-blur-lg border border-white/40 dark:border-surface-600/40" role="dialog" tabindex="-1" on:click|stopPropagation on:keydown={() => {}}>
+    <div class="{GLASS_STYLES.modal} {GLASS_LAYOUT.padding.modal} w-full max-w-md" role="dialog" tabindex="-1" on:click|stopPropagation on:keydown={() => {}}>
       <header class="modal-header">
         <h3 class="h3">👤 Lisää vieraspelaaja</h3>
       </header>
@@ -480,11 +473,11 @@
         </label>
       </section>
       <footer class="modal-footer flex gap-2">
-        <button class="btn variant-soft flex-1" on:click={() => vierasPelaajaModal = false}>
+        <button class="{glassUtils.button('ghost', 'flex-1')}" on:click={() => vierasPelaajaModal = false}>
           Peruuta
         </button>
         <button 
-          class="btn variant-filled-primary flex-1" 
+          class="{glassUtils.button('primary', 'flex-1')}" 
           disabled={!uusiVieras.nimi.trim()}
           on:click={lisaaVierasPelaaja}
         >
