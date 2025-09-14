@@ -30,6 +30,9 @@ export interface Kysymys {
   luotu: string; // Milloin kysymys luotiin
   virhe?: boolean; // Onko kysymyksessä ilmoitettu virhe
   lahde?: "json" | "admin"; // Kysymyksen lähde: JSON-tiedosto vai admin-paneeli
+  // Tilastokentät
+  oikeita_vastauksia?: number; // Kuinka monta kertaa tämän kysymyksen kohdalla on vastattu oikein
+  vaaria_vastauksia?: number; // Kuinka monta kertaa väärin
 }
 
 /**
@@ -54,6 +57,7 @@ export interface PeliVastaus {
   annettu_vastaus: string; // Pelaajan antama vastaus
   oikein: boolean; // Oliko vastaus oikein
   vastausaika_ms: number; // Vastausaika millisekunneissa
+  kategoria?: string; // Kysymyksen kategoria
 }
 
 /**

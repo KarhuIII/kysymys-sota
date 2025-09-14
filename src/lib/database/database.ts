@@ -15,6 +15,21 @@ import kuningasKysymykset from "../data/kysymykset-kuningas.json";
 import suurmestariKysymykset from "../data/kysymykset-suurmestari.json";
 
 export class KysymyssotaDB {
+  /**
+   * Tallenna tilastotietue tietokantaan
+   * @param tilastoObj - Tilastotiedot
+   */
+  public async tallennaTilasto(tilastoObj: any): Promise<void> {
+    if (!this.db) throw new Error("Tietokanta ei ole alustettu");
+    console.log('📈 Tallennetaan tilastot:', tilastoObj);
+    const transaction = this.db.transaction(["tilastot"], "readwrite");
+    const store = transaction.objectStore("tilastot");
+    return new Promise((resolve, reject) => {
+      const request = store.add(tilastoObj);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
   private db: IDBDatabase | null = null;
   private readonly DB_NAME = "KysymyssotaDB";
   private readonly DB_VERSION = 1;
@@ -31,7 +46,7 @@ export class KysymyssotaDB {
       "kysymykset", 
       "kayttajat", 
       "pelit", 
-      "pelien_vastaukset", 
+      "peli_vastaukset", 
       "tilastot"
     ], "readwrite");
 
@@ -39,7 +54,7 @@ export class KysymyssotaDB {
     const kysymyksetStore = transaction.objectStore("kysymykset");
     const kayttajatStore = transaction.objectStore("kayttajat");
     const pelitStore = transaction.objectStore("pelit");
-    const vastauksetStore = transaction.objectStore("pelien_vastaukset");
+  const vastauksetStore = transaction.objectStore("peli_vastaukset");
     const tilastotStore = transaction.objectStore("tilastot");
 
     await Promise.all([
@@ -156,7 +171,7 @@ export class KysymyssotaDB {
             keyPath: "id",
             autoIncrement: true,
           });
-          tilastotStore.createIndex("kayttaja_id", "kauttaja_id", {
+          tilastotStore.createIndex("kayttaja_id", "kayttaja_id", {
             unique: false,
           });
         }
@@ -403,7 +418,7 @@ export class KysymyssotaDB {
     lisaPisteet: number,
   ): Promise<void> {
     if (!this.db) return;
-
+    console.log('🔁 paivitaKayttajanPisteet kutsuttu:', { kayttajaId, lisaPisteet });
     const transaction = this.db.transaction(["kayttajat"], "readwrite");
     const store = transaction.objectStore("kayttajat");
 
@@ -413,13 +428,20 @@ export class KysymyssotaDB {
       getRequest.onsuccess = () => {
         const kayttaja = getRequest.result as Kayttaja;
         if (kayttaja) {
-          kayttaja.pisteet_yhteensa =
-            (kayttaja.pisteet_yhteensa || 0) + lisaPisteet;
+          const ennen = kayttaja.pisteet_yhteensa || 0;
+          kayttaja.pisteet_yhteensa = ennen + (lisaPisteet || 0);
           kayttaja.viimeksi_pelattu = new Date().toISOString();
+          console.log('ℹ️ Päivitetään pelaajan pisteet (ennen, lisäys, jälkeen):', ennen, lisaPisteet, kayttaja.pisteet_yhteensa);
 
           const putRequest = store.put(kayttaja);
-          putRequest.onsuccess = () => resolve();
-          putRequest.onerror = () => reject(putRequest.error);
+          putRequest.onsuccess = () => {
+            console.log('✅ Pelaajan pisteet päivitetty tietokantaan:', { id: kayttajaId, uusi_pisteet: kayttaja.pisteet_yhteensa });
+            resolve();
+          };
+          putRequest.onerror = () => {
+            console.error('❌ Virhe pelaajan pisteiden päivittämisessä:', putRequest.error);
+            reject(putRequest.error);
+          };
         } else {
           reject(new Error("Pelaajaa ei löytynyt"));
         }
@@ -690,24 +712,70 @@ export class KysymyssotaDB {
     annettuVastaus: string,
     oikein: boolean,
     vastausaikaMs: number,
+    kategoria?: string,
   ): Promise<void> {
     if (!this.db) return;
+    // Käytetään ensin transaktiota vastaukselle ja kysymyksen päivittämiselle
+    const transaction = this.db.transaction(["peli_vastaukset", "kysymykset"], "readwrite");
+    const vastauksetStore = transaction.objectStore("peli_vastaukset");
+    const kysymyksetStore = transaction.objectStore("kysymykset");
 
-    const transaction = this.db.transaction(["peli_vastaukset"], "readwrite");
-    const store = transaction.objectStore("peli_vastaukset");
-
-    const vastaus: Omit<PeliVastaus, "id"> = {
+    const vastaus: any = {
       peli_id: peliId,
       kysymys_id: kysymysId,
       annettu_vastaus: annettuVastaus,
       oikein,
       vastausaika_ms: vastausaikaMs,
+      kategoria: kategoria || "Tuntematon"
     };
+    console.log('📝 Tallennetaan vastaus:', vastaus);
 
     return new Promise((resolve, reject) => {
-      const request = store.add(vastaus);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      const addReq = vastauksetStore.add(vastaus);
+
+      addReq.onsuccess = () => {
+        try {
+          console.log('✅ Vastauksen lisäys onnistui, haetaan kysymys päivitystä varten. kysymysId type:', typeof kysymysId, 'value:', kysymysId);
+          // Hae kysymys ja päivitä laskurit
+          const getReq = kysymyksetStore.get(kysymysId);
+          getReq.onsuccess = () => {
+            const kysymys = getReq.result as any;
+            console.log('🔎 getReq.onsuccess, löytyikö kysymys:', !!kysymys, 'kysymys:', kysymys);
+            if (kysymys) {
+              const ennenOikeita = kysymys.oikeita_vastauksia || 0;
+              const ennenVaaria = kysymys.vaaria_vastauksia || 0;
+              if (oikein) {
+                kysymys.oikeita_vastauksia = ennenOikeita + 1;
+              } else {
+                kysymys.vaaria_vastauksia = ennenVaaria + 1;
+              }
+              console.log(`✏️ Päivitetään kysymys ${kysymysId}: ennen oikeita=${ennenOikeita}, ennen vääriä=${ennenVaaria} -> jälkeen oikeita=${kysymys.oikeita_vastauksia}, vääriä=${kysymys.vaaria_vastauksia}`);
+              const putReq = kysymyksetStore.put(kysymys);
+              putReq.onsuccess = () => {
+                console.log('💾 Kysymys päivitetty onnistuneesti (put.onsuccess)', kysymysId);
+                resolve();
+              };
+              putReq.onerror = () => {
+                console.error('❌ Kysymyksen päivitys epäonnistui (put.error):', putReq.error);
+                reject(putReq.error);
+              };
+            } else {
+              // Kysymystä ei löytynyt, mutta vastaus tallennettiin -- ratkaistaan myöhemmin
+              console.warn('⚠️ Kysymystä ei löytynyt päivitystä varten:', kysymysId);
+              resolve();
+            }
+          };
+          getReq.onerror = () => {
+            console.error('❌ Kysymyksen haku epäonnistui päivitystä varten:', getReq.error);
+            reject(getReq.error);
+          };
+        } catch (e) {
+          console.error('❌ Poikkeus tallennaPeliVastaus.addReq.onsuccess-lohkossa:', e);
+          reject(e);
+        }
+      };
+
+      addReq.onerror = () => reject(addReq.error);
     });
   }
 
@@ -1104,6 +1172,117 @@ export class KysymyssotaDB {
         console.error("❌ Virhe kysymyksen poistamisessa:", request.error);
         reject(request.error);
       };
+    });
+  }
+
+  /**
+   * Hae kaikki tilastot
+   * @returns Lista kaikista tilastoista
+   */
+  public async haeTilastot(): Promise<Tilasto[]> {
+    if (!this.db) {
+      throw new Error("Tietokanta ei ole käytettävissä");
+    }
+
+    const transaction = this.db.transaction(["tilastot"], "readonly");
+    const store = transaction.objectStore("tilastot");
+
+    return new Promise((resolve, reject) => {
+      const request = store.getAll();
+
+      request.onsuccess = () => {
+        resolve(request.result || []);
+      };
+
+      request.onerror = () => {
+        console.error("❌ Virhe tilastojen haussa:", request.error);
+        reject(request.error);
+      };
+    });
+  }
+
+  /**
+   * Hae käyttäjä ID:n perusteella
+   * @param id - Käyttäjän ID
+   * @returns Käyttäjän tiedot tai null jos ei löydy
+   */
+  public async haeKayttajaById(id: number): Promise<Kayttaja | null> {
+    if (!this.db) {
+      throw new Error("Tietokanta ei ole käytettävissä");
+    }
+
+    const transaction = this.db.transaction(["kayttajat"], "readonly");
+    const store = transaction.objectStore("kayttajat");
+
+    return new Promise((resolve, reject) => {
+      const request = store.get(id);
+
+      request.onsuccess = () => {
+        resolve(request.result || null);
+      };
+
+      request.onerror = () => {
+        console.error("❌ Virhe käyttäjän haussa ID:llä:", id, request.error);
+        reject(request.error);
+      };
+    });
+  }
+
+  /**
+   * Hae kaikki peli_vastaukset tiedot tilastoja varten
+   * @returns Lista kaikista peli_vastaukset tietueista
+   */
+  public async haePeliVastaukset(): Promise<PeliVastaus[]> {
+    if (!this.db) {
+      throw new Error("Tietokanta ei ole käytettävissä");
+    }
+
+    const transaction = this.db.transaction(["peli_vastaukset"], "readonly");
+    const store = transaction.objectStore("peli_vastaukset");
+
+    return new Promise((resolve, reject) => {
+      const request = store.getAll();
+
+      request.onsuccess = () => {
+        resolve(request.result || []);
+      };
+
+      request.onerror = () => {
+        console.error("❌ Virhe peli_vastausten haussa:", request.error);
+        reject(request.error);
+      };
+    });
+  }
+
+  /**
+   * Hae kaikki vastaukset tietystä pelistä
+   * @param peliId - Pelin ID
+   */
+  public async haePeliVastauksetByPeliId(peliId: number): Promise<PeliVastaus[]> {
+    if (!this.db) {
+      throw new Error("Tietokanta ei ole käytettävissä");
+    }
+
+    const transaction = this.db.transaction(["peli_vastaukset"], "readonly");
+    const store = transaction.objectStore("peli_vastaukset");
+  // (ei indeksin käyttöä tässä metodissa)
+
+    return new Promise((resolve, reject) => {
+      const request = store.openCursor();
+      const results: PeliVastaus[] = [];
+
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
+        if (cursor) {
+          const rec = cursor.value as PeliVastaus;
+          if (rec.peli_id === peliId) results.push(rec);
+          cursor.continue();
+        } else {
+          resolve(results);
+        }
+      };
+
+      request.onerror = () => reject(request.error);
     });
   }
 

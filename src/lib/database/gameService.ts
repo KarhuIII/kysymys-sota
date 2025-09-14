@@ -43,6 +43,8 @@ export class PeliPalvelu {
   private aktiivisetPelit: Map<number, PeliTilanne> = new Map();
   // Tietokanta-instanssi (alustetaan tarpeen mukaan)
   private db: any = null;
+  // Yksinkertainen event-käsittelijä leaderboardin päivitystä varten
+  private listeners: { [event: string]: Array<(...args: any[]) => void> } = {};
 
   // ===============================================
   // YKSITYISET APUFUNKTIOT (Private Helpers)
@@ -225,7 +227,16 @@ export class PeliPalvelu {
       vastaus,
       oikein,
       vastausaika,
+      kysymys.kategoria
     );
+    console.log('📝 Vastaus tallennettu:', {
+      peliId,
+      kysymysId: kysymys.id,
+      annettuVastaus: vastaus,
+      oikein,
+      vastausaikaMs: vastausaika,
+      kategoria: kysymys.kategoria
+    });
 
     return {
       oikein,
@@ -250,8 +261,57 @@ export class PeliPalvelu {
     // Päivitä pelaajan kokonaispistemäärä
     await db.paivitaKayttajanPisteet(peli.kayttaja.id!, peli.pisteet);
 
+    // Tallenna tilastot
+    try {
+      // Hae kaikki pelaajan vastaukset tästä pelistä
+      const peliVastaukset = await db.haePeliVastauksetByPeliId(peliId);
+  const oikeita = peliVastaukset.filter((v: any) => v.oikein).length;
+  const vaaria = peliVastaukset.filter((v: any) => !v.oikein).length;
+      const yhteensa = peliVastaukset.length;
+      const vastausprosentti = yhteensa > 0 ? (oikeita / yhteensa) * 100 : 0;
+      const kategoriat: Record<string, { oikeita: number, vaaria: number }> = {};
+      for (const v of peliVastaukset) {
+        const kategoria = v.kategoria || 'Tuntematon';
+        if (!kategoriat[kategoria]) kategoriat[kategoria] = { oikeita: 0, vaaria: 0 };
+        if (v.oikein) kategoriat[kategoria].oikeita++;
+        else kategoriat[kategoria].vaaria++;
+      }
+      console.log('📊 Pelin tilastot kerätty ja tallennetaan:', {
+        pisteet: peli.pisteet,
+        oikeita,
+        vaaria,
+        yhteensa,
+        vastausprosentti,
+        kategoriat
+      });
+      await db.tallennaTilasto({
+        kayttaja_id: peli.kayttaja.id!,
+        pelatut_pelit: 1,
+        kokonais_pisteet: peli.pisteet,
+        oikeita_vastauksia: oikeita,
+        vaaria_vastauksia: vaaria,
+        vastausprosentti,
+        kategoriatilastot: kategoriat,
+        paivays: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.warn('Tilastojen tallennus epäonnistui:', error);
+    }
+
     // Poista aktiivisista peleistä
     this.aktiivisetPelit.delete(peliId);
+
+    // Emit event that game ended and leaderboard may need refresh
+    try {
+      const kayttajaId = peli.kayttaja.id;
+      const totalPoints = peli.pisteet;
+      console.log('🔔 Emitting peliLoppui event for kayttajaId:', kayttajaId, 'points:', totalPoints, 'peliId:', peliId);
+      (this.listeners['peliLoppui'] || []).forEach(fn => {
+        try { fn({ kayttajaId, totalPoints, peliId }); } catch (e) { console.warn('Listener error', e); }
+      });
+    } catch (e) {
+      console.warn('Error emitting peliLoppui event:', e);
+    }
 
     return peli;
   }
@@ -319,6 +379,273 @@ export class PeliPalvelu {
   public async haeKaikkiKayttajat() {
     const db = await this.varmistaTietokanta();
     return await db.haeKaikkiKayttajat();
+  }
+
+  /**
+   * Hae top-pelaajat kokonaispisteiden mukaan laskevasti
+   * @param raja - Kuinka monta pelaajaa näytetään (oletus: 10)
+   */
+  public async haeTopPelaajat(raja: number = 10) {
+    const db = await this.varmistaTietokanta();
+    try {
+      const pelaajat = await db.haeKaikkiKayttajat();
+      if (!pelaajat || pelaajat.length === 0) return [];
+      const sorted = pelaajat.sort((a: any, b: any) => (b.pisteet_yhteensa || 0) - (a.pisteet_yhteensa || 0));
+      return sorted.slice(0, raja);
+    } catch (error) {
+      console.error('Virhe top-pelaajien haussa:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Rekisteröi event-kuuntelijan
+   * @param event - tapahtuman nimi (esim. 'peliLoppui')
+   * @param fn - callback
+   */
+  public on(event: string, fn: (...args: any[]) => void) {
+    if (!this.listeners[event]) this.listeners[event] = [];
+    this.listeners[event].push(fn);
+  }
+
+  /**
+   * Poista event-kuuntelija
+   */
+  public off(event: string, fn: (...args: any[]) => void) {
+    if (!this.listeners[event]) return;
+    this.listeners[event] = this.listeners[event].filter(f => f !== fn);
+  }
+
+  // ===============================================
+  // TILASTOFUNKTIOT (Statistics Functions)
+  // ===============================================
+
+  /**
+   * Hae pelaaja jolla on eniten pisteitä
+   * @returns Pelaaja eniten pisteillä tai null jos ei pelaajia
+   */
+  public async haePelaajaEnitenPisteilla() {
+    const db = await this.varmistaTietokanta();
+    
+    try {
+      const tilastot = await db.haeTilastot();
+      if (!tilastot || tilastot.length === 0) return null;
+
+      // Järjestä pisteiden mukaan laskevasti
+      const sorted = tilastot.sort((a: any, b: any) => (b.kokonais_pisteet || 0) - (a.kokonais_pisteet || 0));
+      
+      if (sorted.length > 0 && sorted[0].kokonais_pisteet > 0) {
+        // Hae pelaajan tiedot
+        const pelaaja = await db.haeKayttajaById(sorted[0].kayttaja_id);
+        return {
+          pelaaja,
+          pisteet: sorted[0].kokonais_pisteet
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Virhe eniten pisteitä haettaessa:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Hae pelaaja jolla on eniten oikeita vastauksia
+   * @returns Pelaaja eniten oikeilla vastauksilla tai null jos ei pelaajia
+   */
+  public async haePelaajaEnitenOikeilla() {
+    const db = await this.varmistaTietokanta();
+    
+    try {
+      const tilastot = await db.haeTilastot();
+      if (!tilastot || tilastot.length === 0) return null;
+
+      // Järjestä oikeiden vastausten mukaan laskevasti
+      const sorted = tilastot.sort((a: any, b: any) => (b.oikeita_vastauksia || 0) - (a.oikeita_vastauksia || 0));
+      
+      if (sorted.length > 0 && sorted[0].oikeita_vastauksia > 0) {
+        // Hae pelaajan tiedot
+        const pelaaja = await db.haeKayttajaById(sorted[0].kayttaja_id);
+        return {
+          pelaaja,
+          oikeitaVastauksia: sorted[0].oikeita_vastauksia
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Virhe eniten oikeita vastauksia haettaessa:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Hae pelaaja jolla on eniten vääriä vastauksia
+   * @returns Pelaaja eniten väärillä vastauksilla tai null jos ei pelaajia
+   */
+  public async haePelaajaEnitenVaarilla() {
+    const db = await this.varmistaTietokanta();
+    
+    try {
+      const tilastot = await db.haeTilastot();
+      if (!tilastot || tilastot.length === 0) return null;
+
+      // Järjestä väärien vastausten mukaan laskevasti
+      const sorted = tilastot.sort((a: any, b: any) => (b.vaaria_vastauksia || 0) - (a.vaaria_vastauksia || 0));
+      
+      if (sorted.length > 0 && sorted[0].vaaria_vastauksia > 0) {
+        // Hae pelaajan tiedot
+        const pelaaja = await db.haeKayttajaById(sorted[0].kayttaja_id);
+        return {
+          pelaaja,
+          vaariaVastauksia: sorted[0].vaaria_vastauksia
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Virhe eniten vääriä vastauksia haettaessa:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Hae pelaaja parhaalla vastausprosentilla
+   * @param minimipelit - Vähimmäispelimäärä huomioidakseen (oletus: 3)
+   * @returns Pelaaja parhaalla vastausprosentilla tai null jos ei pelaajia
+   */
+  public async haePelaajaParhaallaProsent(minimipelit: number = 1) {
+    const db = await this.varmistaTietokanta();
+    
+    try {
+      const tilastot = await db.haeTilastot();
+      if (!tilastot || tilastot.length === 0) return null;
+
+      // Suodata pelaajat joilla on tarpeeksi pelejä ja laske vastausprosentit
+      const pelaajatProsentit = tilastot
+        .filter((t: any) => (t.pelatut_pelit || 0) >= minimipelit)
+        .map((t: any) => {
+          const oikeita = t.oikeita_vastauksia || 0;
+          const vaaria = t.vaaria_vastauksia || 0;
+          const yhteensa = oikeita + vaaria;
+          const prosentti = yhteensa > 0 ? (oikeita / yhteensa) * 100 : 0;
+          
+          return {
+            ...t,
+            vastausprosentti: prosentti,
+            yhteensaVastauksia: yhteensa
+          };
+        })
+        .filter((t: any) => t.yhteensaVastauksia > 0) // Vain ne joilla on vastauksia
+        .sort((a: any, b: any) => b.vastausprosentti - a.vastausprosentti);
+      
+      if (pelaajatProsentit.length > 0) {
+        const paras = pelaajatProsentit[0];
+        // Hae pelaajan tiedot
+        const pelaaja = await db.haeKayttajaById(paras.kayttaja_id);
+        return {
+          pelaaja,
+          vastausprosentti: Math.round(paras.vastausprosentti * 10) / 10, // Pyöristä yhteen desimaaliin
+          oikeitaVastauksia: paras.oikeita_vastauksia || 0,
+          vaariaVastauksia: paras.vaaria_vastauksia || 0,
+          yhteensaVastauksia: paras.yhteensaVastauksia
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Virhe parasta vastausprosenttia haettaessa:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Hae vaikein kategoria (eniten vääriä vastauksia)
+   * @returns Vaikein kategoria tai null jos ei tietoja
+   */
+  public async haeVaikeinKategoria() {
+    const db = await this.varmistaTietokanta();
+    
+    try {
+      // Hae kaikki peli_vastaukset tiedot
+      const peliVastaukset = await db.haePeliVastaukset();
+      if (!peliVastaukset || peliVastaukset.length === 0) return null;
+
+      // Ryhmittele kategorioittain ja laske väärien vastausten määrät
+      const kategoriatilastot: { [kategoria: string]: { oikeita: number, vaaria: number } } = {};
+
+      for (const vastaus of peliVastaukset) {
+        const kategoria = vastaus.kategoria || 'Tuntematon';
+        
+        if (!kategoriatilastot[kategoria]) {
+          kategoriatilastot[kategoria] = { oikeita: 0, vaaria: 0 };
+        }
+
+        if (vastaus.on_oikein) {
+          kategoriatilastot[kategoria].oikeita++;
+        } else {
+          kategoriatilastot[kategoria].vaaria++;
+        }
+      }
+
+      // Etsi kategoria jossa eniten vääriä vastauksia
+      let vaikeinKategoria = null;
+      let enitenVaaria = 0;
+
+      for (const [kategoria, stats] of Object.entries(kategoriatilastot)) {
+        const yhteensa = stats.oikeita + stats.vaaria;
+        // Huomioi vain kategoriat joissa on vähintään 10 vastausta
+        if (yhteensa >= 10 && stats.vaaria > enitenVaaria) {
+          enitenVaaria = stats.vaaria;
+          vaikeinKategoria = {
+            kategoria,
+            vaariaVastauksia: stats.vaaria,
+            oikeitaVastauksia: stats.oikeita,
+            yhteensaVastauksia: yhteensa,
+            vaikeusprosen: Math.round((stats.vaaria / yhteensa) * 1000) / 10 // Pyöristä 1 desimaaliin
+          };
+        }
+      }
+
+      return vaikeinKategoria;
+    } catch (error) {
+      console.error('Virhe vaikeinta kategoriaa haettaessa:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Hae kaikki tilastot yhtenä objektina (yleiskatsaus)
+   * @returns Yhteenveto kaikista tilastoista
+   */
+  public async haeYleisTilastot() {
+    try {
+      const [
+        enitenPisteet,
+        enitenOikeat,
+        enitenVaarat,
+        parasProsentti,
+        vaikeinKategoria
+      ] = await Promise.all([
+        this.haePelaajaEnitenPisteilla(),
+        this.haePelaajaEnitenOikeilla(),
+        this.haePelaajaEnitenVaarilla(),
+        this.haePelaajaParhaallaProsent(),
+        this.haeVaikeinKategoria()
+      ]);
+
+      return {
+        enitenPisteet,
+        enitenOikeat,
+        enitenVaarat,
+        parasProsentti,
+        vaikeinKategoria
+      };
+    } catch (error) {
+      console.error('Virhe yleistilastojen haussa:', error);
+      return null;
+    }
   }
 }
 

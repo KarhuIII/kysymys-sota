@@ -9,6 +9,7 @@
   import { AppBar, Switch, Modal } from '@skeletonlabs/skeleton-svelte';
   import { peliPalvelu } from './lib/database/gameService.js';
   import { onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
   import { 
     GLASS_STYLES, 
     GLASS_COLORS, 
@@ -39,17 +40,43 @@
   let pelinKierrosMaara: number = 10; // Tallennetaan kierrosmäärä
   let pelinKategoria: string | undefined = undefined; // Kategoriasuodatus
   let kaikkiPelaajat: Kayttaja[] = []; // Kaikki pelaajat näytettäväksi
+  let topPelaajat: Kayttaja[] = [];
+
+  // Helper to refresh leaderboard
+  async function refreshTopPelaajat() {
+    try {
+      topPelaajat = await peliPalvelu.haeTopPelaajat(8);
+    } catch (e) {
+      console.warn('Top-pelaajien päivitys epäonnistui:', e);
+    }
+  }
+
+    // Tilastotilamuuttuja
+    let yleisTilastot: any = null;
 
   // ===============================================
   // ELINKAARIFUNKTIOT (Lifecycle Functions)
   // ===============================================
   
+  async function lataaYleisTilastot() {
+    try {
+      yleisTilastot = await peliPalvelu.haeYleisTilastot();
+    } catch (error) {
+      console.warn('Ei voitu ladata yleisiä tilastoja:', error);
+      yleisTilastot = null;
+    }
+  }
+
   onMount(async () => {
     try {
       // Lataa kategoriat ja tilastot asynkronisesti
       kategoriat = await peliPalvelu.haeKategoriatMaarineen();
       parhaatTulokset = await peliPalvelu.haeParhaatTulokset(5);
+      // Lataa top-pelaajat
+      await refreshTopPelaajat();
       kayttajanTilastot = await peliPalvelu.haeKayttajanTilastot(kayttajaNimi);
+      // Lataa yleiset tilastot
+      await lataaYleisTilastot();
       
       // Lataa kaikki pelaajat näytettäväksi
       try {
@@ -95,6 +122,16 @@
       // Aseta oletusarvot jos tietokanta ei toimi
       kategoriat = { 'Eläimet': 0, 'Maantieto': 0, 'Värit': 0 };
     }
+    // Rekisteröi kuuntelija peli-lopetustapahtumille jotta leaderboard päivittyy reaaliaikaisesti
+    const peliLoppuiHandler = async (data: any) => {
+      console.log('🔔 peliLoppui event received:', data);
+      await refreshTopPelaajat();
+    };
+  console.log('ℹ️ Rekisteröidään peliLoppui-kuuntelija, nykyinen topPelaajat:', topPelaajat.length);
+  peliPalvelu.on('peliLoppui', peliLoppuiHandler);
+    onDestroy(() => {
+      try { peliPalvelu.off('peliLoppui', peliLoppuiHandler); } catch (e) { /* ignore */ }
+    });
   });
 
   // ===============================================
@@ -198,6 +235,11 @@
    */
   function navigoi(sivu: 'etusivu' | 'asetukset' | 'peli' | 'tilastot' | 'admin') {
     nykyinenSivu = sivu;
+    // Kun navigoidaan tilastoihin, ladataan ajantasaiset yleistilastot
+    if (sivu === 'tilastot') {
+      // ei blokata UI:ta — ladataan taustalla
+      lataaYleisTilastot().catch((e) => console.warn('Tilastojen lataus epäonnistui:', e));
+    }
   }
   
   /**
@@ -519,19 +561,82 @@
               </div>
               
               <div class="{GLASS_STYLES.card} p-6">
-                <h3 class="text-lg font-medium">🏆 Ennätykset</h3>
+                <h3 class="text-lg font-medium">🏆 Top-lista</h3>
+                <div class="mt-3 space-y-2">
+                  {#if topPelaajat && topPelaajat.length > 0}
+                    {#each topPelaajat as p, i}
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                          <div class="w-6 h-6 rounded-full" style="background-color: {p.pelaajan_vari || '#6366f1'}"></div>
+                          <div class="text-sm truncate max-w-[120px]">{i+1}. {p.nimi}</div>
+                        </div>
+                        <div class="text-sm font-semibold">{p.pisteet_yhteensa || 0}</div>
+                      </div>
+                    {/each}
+                  {:else}
+                    <div class="text-sm {GLASS_COLORS.textSecondary}">Ei pelaajia</div>
+                  {/if}
+                </div>
               </div>
             </div>
           </aside>
         </div>
       {:else if nykyinenSivu === 'tilastot'}
-        <!-- Tilastot-sivu -->
-        <div class="container mx-auto p-6">
-          <h2 class="text-3xl font-bold text-center mb-8">📊 Pelitilastot</h2>
-          <div class="text-center text-surface-600-400">
-            Tilastot-sivu tulossa pian...
+          <!-- Tilastot-sivu -->
+          <div class="container mx-auto p-6">
+            <h2 class="text-3xl font-bold text-center mb-8">📊 Pelitilastot</h2>
+            {#if yleisTilastot}
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div class="{GLASS_STYLES.card} p-6 text-center">
+                  <h3 class="text-lg font-semibold mb-2">Eniten pisteitä</h3>
+                  {#if yleisTilastot.enitenPisteet}
+                    <div class="text-2xl font-bold text-primary-500">{yleisTilastot.enitenPisteet.pelaaja?.nimi}</div>
+                    <div class="text-lg">{yleisTilastot.enitenPisteet.pisteet} pistettä</div>
+                  {:else}
+                    <div class="text-surface-600-400">Ei dataa</div>
+                  {/if}
+                </div>
+                <div class="{GLASS_STYLES.card} p-6 text-center">
+                  <h3 class="text-lg font-semibold mb-2">Eniten oikeita vastauksia</h3>
+                  {#if yleisTilastot.enitenOikeat}
+                    <div class="text-2xl font-bold text-success-500">{yleisTilastot.enitenOikeat.pelaaja?.nimi}</div>
+                    <div class="text-lg">{yleisTilastot.enitenOikeat.oikeitaVastauksia} oikeaa vastausta</div>
+                  {:else}
+                    <div class="text-surface-600-400">Ei dataa</div>
+                  {/if}
+                </div>
+                <div class="{GLASS_STYLES.card} p-6 text-center">
+                  <h3 class="text-lg font-semibold mb-2">Eniten vääriä vastauksia</h3>
+                  {#if yleisTilastot.enitenVaarat}
+                    <div class="text-2xl font-bold text-error-500">{yleisTilastot.enitenVaarat.pelaaja?.nimi}</div>
+                    <div class="text-lg">{yleisTilastot.enitenVaarat.vaariaVastauksia} väärää vastausta</div>
+                  {:else}
+                    <div class="text-surface-600-400">Ei dataa</div>
+                  {/if}
+                </div>
+                <div class="{GLASS_STYLES.card} p-6 text-center">
+                  <h3 class="text-lg font-semibold mb-2">Paras vastausprosentti</h3>
+                  {#if yleisTilastot.parasProsentti}
+                    <div class="text-2xl font-bold text-secondary-500">{yleisTilastot.parasProsentti.pelaaja?.nimi}</div>
+                    <div class="text-lg">{yleisTilastot.parasProsentti.vastausprosentti}% ({yleisTilastot.parasProsentti.oikeitaVastauksia}/{yleisTilastot.parasProsentti.yhteensaVastauksia})</div>
+                  {:else}
+                    <div class="text-surface-600-400">Ei dataa</div>
+                  {/if}
+                </div>
+                <div class="{GLASS_STYLES.card} p-6 text-center">
+                  <h3 class="text-lg font-semibold mb-2">Vaikein kategoria</h3>
+                  {#if yleisTilastot.vaikeinKategoria}
+                    <div class="text-2xl font-bold text-warning-500">{yleisTilastot.vaikeinKategoria.kategoria}</div>
+                    <div class="text-lg">{yleisTilastot.vaikeinKategoria.vaikeusprosen}% väärää ({yleisTilastot.vaikeinKategoria.vaariaVastauksia}/{yleisTilastot.vaikeinKategoria.yhteensaVastauksia})</div>
+                  {:else}
+                    <div class="text-surface-600-400">Ei dataa</div>
+                  {/if}
+                </div>
+              </div>
+            {:else}
+              <div class="text-center text-surface-600-400">Tilastoja ei voitu ladata.</div>
+            {/if}
           </div>
-        </div>
       {/if}
     </div>
 
@@ -539,7 +644,7 @@
     <footer class="{GLASS_STYLES.card} p-6 border-t border-white/20 dark:border-white/10">
       <div class="container mx-auto text-center space-y-2">
         <div class="text-sm text-surface-600-400">
-          Tehty ❤️:llä <span class="text-primary-500 font-semibold"> - Pienille ja suurille tietoviisaille</span>
+          Tehty ❤️:llä <span class="text-primary-500 font-semibold"> - Pienille ja suurille tietovisailijoille</span>
         </div>
         <div class="text-xs text-surface-500-500">
           © 2025 Kysymys-sota

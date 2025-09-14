@@ -80,8 +80,9 @@
     try {
       console.log('🔄 Päivitetään kysymykset tietokannasta...');
       
-      // Päivitä kysymykset tietokannasta
-      await paivitaKysymykset();
+  // Huom: Älä kutsu paivitaKysymykset() automaattisesti täällä
+  //       se lataa JSON-kysymykset ja saattaa ylikirjoittaa adminin lisätyt tilastot.
+  console.log('ℹ️ Haetaan kysymykset suoraan tietokannasta ilman JSON-päivitystä');
       
       // Lataa kysymykset UI:hin
       const db = await getDB();
@@ -558,6 +559,25 @@
               <span class="text-red-300">
                 {JSON.parse(kysymys.vaarat_vastaukset || '[]').join(' • ')}
               </span>
+            </div>
+            <!-- Kysymyksen tilastot: oikeat / väärät / prosentti -->
+            <div class="flex items-center gap-4 mt-3 text-sm">
+              <div class="flex items-center gap-2">
+                <span class="text-green-600 font-semibold">✓ Oikeita:</span>
+                <span class="font-medium">{kysymys.oikeita_vastauksia || 0}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-red-600 font-semibold">✗ Vääriä:</span>
+                <span class="font-medium">{kysymys.vaaria_vastauksia || 0}</span>
+              </div>
+              <div class="flex items-center gap-2 text-surface-600">
+                <span class="font-semibold">📈 Prosentti:</span>
+                <span class="font-medium">
+                  {((kysymys.oikeita_vastauksia || 0) + (kysymys.vaaria_vastauksia || 0)) > 0
+                    ? Math.round(((kysymys.oikeita_vastauksia || 0) / ((kysymys.oikeita_vastauksia || 0) + (kysymys.vaaria_vastauksia || 0))) * 1000) / 10 + '%'
+                    : '—'}
+                </span>
+              </div>
             </div>
           </div>
         </div>

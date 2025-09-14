@@ -49,6 +49,11 @@
   let sekoitetutPelaajat: Kayttaja[] = []; // Satunnaisessa järjestyksessä pelaajat
   let kysytytKysymykset: Set<number> = new Set(); // Seuraa kysyttyjä kysymyksiä ID:n perusteella
   let peliPysaytetty = false; // Pelin pysäytystila
+  
+  // DB / peliseuranta
+  let pelaajaPelit: Map<number, number> = new Map(); // kayttajaId -> peliId
+  let pelaajanKysymysCount: Record<number, number> = {};
+  let kysymysAloitettu = 0;
 
   // ===============================================
   // ELINKAARIFUNKTIOT (Lifecycle Functions)
@@ -187,6 +192,18 @@
       // Hae kysymys suoraan tietokannasta pelaajan vaikeustasolle
       const db = await getDB();
 
+      // Varmista että pelaajalle on luotu peli tietokantaan
+      if (nykyinenPelaaja.id !== undefined && !pelaajaPelit.has(nykyinenPelaaja.id)) {
+        try {
+          const uusiPeliId = await db.aloitaPeli(nykyinenPelaaja.id);
+          pelaajaPelit.set(nykyinenPelaaja.id, uusiPeliId);
+          pelaajanKysymysCount[nykyinenPelaaja.id] = 0;
+          console.log('🎮 Luotu peli pelaajalle', nykyinenPelaaja.nimi, 'peliId=', uusiPeliId);
+        } catch (err) {
+          console.warn('⚠️ Pelin luonti epäonnistui tietokantaan:', err);
+        }
+      }
+
       // Yritä löytää kysymys jota ei ole vielä kysytty
       let kysymys: Kysymys | undefined = undefined;
       let yritykset = 0;
@@ -216,6 +233,8 @@
 
       if (kysymys) {
         nykyinenKysymys = kysymys;
+        // Merkitse aloitusaika vastausta varten
+        kysymysAloitettu = Date.now();
 
         // Merkitse kysymys kysytyksi
         if (kysymys.id) {
@@ -394,7 +413,7 @@
    */
   async function tarkistaVastaus(vastaus: string | null) {
     pisteytys = true;
-
+    const db = await getDB();
     const nykyinenPelaaja = sekoitetutPelaajat[pelaajaIndex];
 
     // Tarkista vastaus suoraan kysymyksestä
@@ -402,6 +421,8 @@
 
     // Valitse satunnainen pisteytysviesti
     pisteytysViesti = valitseSatunnainenViesti(oikea);
+
+    const vastausaikaMs = kysymysAloitettu ? Date.now() - kysymysAloitettu : 0;
 
     if (oikea && nykyinenKysymys) {
       // Käytä kysymyksen omia pisteitä
@@ -414,10 +435,36 @@
       saatuPisteet = 0; // Ei pisteitä väärästä vastauksesta
     }
 
+    // Tallenna vastaus tietokantaan, jos peli-id löytyy
+    try {
+      const kayttajaId = nykyinenPelaaja.id;
+      const peliId = kayttajaId !== undefined ? pelaajaPelit.get(kayttajaId) : undefined;
+      if (peliId && nykyinenKysymys && nykyinenKysymys.id) {
+        await db.tallennaPeliVastaus(
+          peliId,
+          nykyinenKysymys.id,
+          vastaus || '',
+          oikea,
+          vastausaikaMs,
+          nykyinenKysymys.kategoria
+        );
+        console.log('✅ Vastaus tallennettu tietokantaan:', { peliId, kysymysId: nykyinenKysymys.id, oikea, vastausaikaMs });
+
+        // Kasvata pelaajan vastauslaskuria
+        if (kayttajaId !== undefined) {
+          pelaajanKysymysCount[kayttajaId] = (pelaajanKysymysCount[kayttajaId] || 0) + 1;
+        }
+      } else {
+        console.warn('⚠️ PeliId tai kysymys puuttuu, vastausta ei tallennettu');
+      }
+    } catch (err) {
+      console.error('❌ Vastausta tallennettaessa tapahtui virhe:', err);
+    }
+
     // Näytä tulos hetki ja siirry seuraavaan
     setTimeout(() => {
       seuraavaKysymys();
-    }, 2000);
+    }, 500);
   }
 
   /**
@@ -449,6 +496,60 @@
   function naytaTulokset() {
     // Tulokset näytetään komponentissa
     nykyinenKysymys = null;
+    // Kun peli päättyy, tallenna pelien lopetus ja tilastot
+    (async () => {
+      try {
+        const db = await getDB();
+        for (const [kayttajaId, peliId] of pelaajaPelit.entries()) {
+          const pisteet = pelaajanPisteet[sekoitetutPelaajat.find(p => p.id === kayttajaId)?.nimi || ''] || 0;
+          const vastaukset = await db.haePeliVastauksetByPeliId(peliId);
+          const oikeita = vastaukset.filter(v => v.oikein).length;
+          const vaaria = vastaukset.filter(v => !v.oikein).length;
+          const yhteensa = vastaukset.length;
+          const vastausprosentti = yhteensa > 0 ? (oikeita / yhteensa) * 100 : 0;
+          const kategoriat: Record<string, { oikeita: number; vaaria: number }> = {};
+          for (const v of vastaukset) {
+            const k = v.kategoria || 'Tuntematon';
+            if (!kategoriat[k]) kategoriat[k] = { oikeita: 0, vaaria: 0 };
+            if (v.oikein) kategoriat[k].oikeita++;
+            else kategoriat[k].vaaria++;
+          }
+
+          console.log('📊 Tallennetaan lopputilastot pelaajalle', kayttajaId, { pisteet, oikeita, vaaria, yhteensa, vastausprosentti, kategoriat });
+
+          // Päivitä peli ja pelaajan pisteet
+          try {
+            await db.lopetaPeli(peliId, pisteet, pelaajanKysymysCount[kayttajaId] || yhteensa);
+          } catch (err) {
+            console.warn('⚠️ lopetaPeli epäonnistui:', err);
+          }
+
+          try {
+            await db.paivitaKayttajanPisteet(kayttajaId, pisteet);
+          } catch (err) {
+            console.warn('⚠️ paivitaKayttajanPisteet epäonnistui:', err);
+          }
+
+          // Tallenna tilasto
+          try {
+            await db.tallennaTilasto({
+              kayttaja_id: kayttajaId,
+              pelatut_pelit: 1,
+              kokonais_pisteet: pisteet,
+              oikeita_vastauksia: oikeita,
+              vaaria_vastauksia: vaaria,
+              vastausprosentti,
+              kategoriatilastot: kategoriat,
+              paivays: new Date().toISOString(),
+            });
+          } catch (err) {
+            console.warn('⚠️ tallennaTilasto epäonnistui:', err);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Virhe tallennettaessa lopputilastoja:', error);
+      }
+    })();
   }
 
   /**
