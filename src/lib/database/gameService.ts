@@ -391,6 +391,7 @@ export class PeliPalvelu {
       const pelaajat = await db.haeKaikkiKayttajat();
       if (!pelaajat || pelaajat.length === 0) return [];
       const sorted = pelaajat.sort((a: any, b: any) => (b.pisteet_yhteensa || 0) - (a.pisteet_yhteensa || 0));
+      console.log('\ud83c\udfc6 haeTopPelaajat - pelaajia haettu:', pelaajat.length, 'top-1:', sorted[0] ? { nimi: sorted[0].nimi, pisteet_yhteensa: sorted[0].pisteet_yhteensa } : null);
       return sorted.slice(0, raja);
     } catch (error) {
       console.error('Virhe top-pelaajien haussa:', error);
@@ -416,6 +417,22 @@ export class PeliPalvelu {
     this.listeners[event] = this.listeners[event].filter(f => f !== fn);
   }
 
+  /**
+   * Julkinen emit-metodi, jotta muut komponentit voivat laukaista tapahtumia
+   * @param event - tapahtuman nimi
+   * @param payload - tapahtuman data
+   */
+  public emit(event: string, payload?: any) {
+    try {
+      console.log('\ud83d\udd14 peliPalvelu.emit called:', event, payload, 'listeners:', (this.listeners[event] || []).length);
+      (this.listeners[event] || []).forEach(fn => {
+        try { fn(payload); } catch (e) { console.warn('Listener error', e); }
+      });
+    } catch (e) {
+      console.warn('Error emitting event', e);
+    }
+  }
+
   // ===============================================
   // TILASTOFUNKTIOT (Statistics Functions)
   // ===============================================
@@ -426,26 +443,276 @@ export class PeliPalvelu {
    */
   public async haePelaajaEnitenPisteilla() {
     const db = await this.varmistaTietokanta();
-    
-    try {
-      const tilastot = await db.haeTilastot();
-      if (!tilastot || tilastot.length === 0) return null;
 
-      // Järjestä pisteiden mukaan laskevasti
-      const sorted = tilastot.sort((a: any, b: any) => (b.kokonais_pisteet || 0) - (a.kokonais_pisteet || 0));
-      
-      if (sorted.length > 0 && sorted[0].kokonais_pisteet > 0) {
-        // Hae pelaajan tiedot
-        const pelaaja = await db.haeKayttajaById(sorted[0].kayttaja_id);
+    try {
+      // Prefer using persistent user totals (kayttajat.pisteet_yhteensa) for overall leaderboard
+      const pelaajat = await db.haeKaikkiKayttajat();
+      if (!pelaajat || pelaajat.length === 0) return null;
+
+      const sorted = pelaajat.sort((a: any, b: any) => (b.pisteet_yhteensa || 0) - (a.pisteet_yhteensa || 0));
+      const top = sorted[0];
+      if (top && (top.pisteet_yhteensa || 0) > 0) {
         return {
-          pelaaja,
-          pisteet: sorted[0].kokonais_pisteet
+          pelaaja: top,
+          pisteet: top.pisteet_yhteensa || 0,
         };
       }
-      
+
+      // Fallback: if no kayttajat totals, try tilastot summary
+      const tilastot = await db.haeTilastot();
+      if (tilastot && tilastot.length > 0) {
+        const sortedTilastot = tilastot.sort((a: any, b: any) => (b.kokonais_pisteet || 0) - (a.kokonais_pisteet || 0));
+        if (sortedTilastot.length > 0 && sortedTilastot[0].kokonais_pisteet > 0) {
+          const pelaaja = await db.haeKayttajaById(sortedTilastot[0].kayttaja_id);
+          return {
+            pelaaja,
+            pisteet: sortedTilastot[0].kokonais_pisteet,
+          };
+        }
+      }
+
       return null;
     } catch (error) {
       console.error('Virhe eniten pisteitä haettaessa:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Hae peli jolla on eniten pisteitä, mutta suosii pelejä joissa oli vähemmän
+   * kysymyksiä tie-breakerina. Käytännössä valitsee pelin jolla on korkein
+   * pisteet; jos useita yhtä suuria pisteitä, palautetaan se jonka
+   * kysymysten_maara on pienin.
+   */
+  public async haeEnitenPisteitaVahimmillaKysymyksilla() {
+    const db = await this.varmistaTietokanta();
+    try {
+      const pelit = await db.haeKaikkiPelit();
+      if (!pelit || pelit.length === 0) return null;
+      const finished = pelit.filter((p: any) => p.lopetettu);
+      if (finished.length === 0) return null;
+
+      // Sort by points desc, then by kysymysten_maara asc
+      finished.sort((a: any, b: any) => {
+        const pa = a.pisteet || 0;
+        const pb = b.pisteet || 0;
+        if (pb !== pa) return pb - pa; // higher points first
+        const ka = a.kysymysten_maara || Number.MAX_SAFE_INTEGER;
+        const kb = b.kysymysten_maara || Number.MAX_SAFE_INTEGER;
+        return ka - kb; // fewer questions first
+      });
+
+      const top = finished[0];
+      const pelaaja = await db.haeKayttajaById(top.kayttaja_id);
+      return {
+        peli: top,
+        pelaaja,
+        pisteet: top.pisteet,
+        kysymysten_maara: top.kysymysten_maara || null,
+      };
+    } catch (error) {
+      console.error('Virhe haettaessa eniten pisteitä vähimmillä kysymyksillä:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Laske eniten kysytty aihe (kategoriat perustuen peli_vastaukset)
+   */
+  public async haeEnitenKysyttyaAihe() {
+    const db = await this.varmistaTietokanta();
+    try {
+      const vastaukset = await db.haePeliVastaukset();
+      if (!vastaukset || vastaukset.length === 0) return null;
+      const counts: Record<string, number> = {};
+      for (const v of vastaukset) {
+        const k = v.kategoria || 'Tuntematon';
+        counts[k] = (counts[k] || 0) + 1;
+      }
+      let topK = null;
+      let topCount = 0;
+      for (const [k, c] of Object.entries(counts)) {
+        if (c > topCount) {
+          topCount = c;
+          topK = k;
+        }
+      }
+      return { kategoria: topK, maara: topCount };
+    } catch (error) {
+      console.error('Virhe haettaessa eniten kysyttyä aihetta:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Pelaaja jolla on eniten peräkkäisiä oikeita vastauksia (putki)
+   */
+  public async haeSuurinPutkiOikeita() {
+    const db = await this.varmistaTietokanta();
+    try {
+      const vastaukset = await db.haePeliVastaukset();
+      if (!vastaukset || vastaukset.length === 0) return null;
+
+      // Oletetaan että vastaukset eivät ole välttämättä järjestyksessä, joten järjestä: pelaaja_id, peli_id, id
+      vastaukset.sort((a: any, b: any) => {
+        const pa = a.kayttaja_id || a.pelaaja_id || 0;
+        const pb = b.kayttaja_id || b.pelaaja_id || 0;
+        if (pa !== pb) return pa - pb;
+        const ppi = a.peli_id || a.peliId || 0;
+        const ppj = b.peli_id || b.peliId || 0;
+        if (ppi !== ppj) return ppi - ppj;
+        return (a.id || 0) - (b.id || 0);
+      });
+
+      const maksimit: Record<number, number> = {};
+      const nykyinen: Record<number, number> = {};
+
+      for (const v of vastaukset) {
+        const pid = v.kayttaja_id ?? v.pelaaja_id ?? v.kayttaja ?? null;
+        if (!pid) continue;
+        const onOikein = v.oikein ?? v.on_oikein ?? false;
+        if (onOikein) {
+          nykyinen[pid] = (nykyinen[pid] || 0) + 1;
+          maksimit[pid] = Math.max(maksimit[pid] || 0, nykyinen[pid]);
+        } else {
+          nykyinen[pid] = 0;
+        }
+      }
+
+      // Etsi paras pelaaja
+      let topId: number | null = null;
+      let topVal = 0;
+      for (const [k, v] of Object.entries(maksimit)) {
+        const id = Number(k);
+        if (v > topVal) {
+          topVal = v;
+          topId = id;
+        }
+      }
+      if (!topId) return null;
+      const pelaaja = await db.haeKayttajaById(topId);
+      return { pelaaja, putki: topVal };
+    } catch (error) {
+      console.error('Virhe suurinta putkea haettaessa:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Pelaaja jolla on eniten peräkkäisiä vääriä vastauksia
+   */
+  public async haeSuurinPutkiVaaria() {
+    const db = await this.varmistaTietokanta();
+    try {
+      const vastaukset = await db.haePeliVastaukset();
+      if (!vastaukset || vastaukset.length === 0) return null;
+
+      vastaukset.sort((a: any, b: any) => {
+        const pa = a.kayttaja_id || a.pelaaja_id || 0;
+        const pb = b.kayttaja_id || b.pelaaja_id || 0;
+        if (pa !== pb) return pa - pb;
+        const ppi = a.peli_id || a.peliId || 0;
+        const ppj = b.peli_id || b.peliId || 0;
+        if (ppi !== ppj) return ppi - ppj;
+        return (a.id || 0) - (b.id || 0);
+      });
+
+      const maksimit: Record<number, number> = {};
+      const nykyinen: Record<number, number> = {};
+
+      for (const v of vastaukset) {
+        const pid = v.kayttaja_id ?? v.pelaaja_id ?? v.kayttaja ?? null;
+        if (!pid) continue;
+        const onOikein = v.oikein ?? v.on_oikein ?? false;
+        if (!onOikein) {
+          nykyinen[pid] = (nykyinen[pid] || 0) + 1;
+          maksimit[pid] = Math.max(maksimit[pid] || 0, nykyinen[pid]);
+        } else {
+          nykyinen[pid] = 0;
+        }
+      }
+
+      let topId: number | null = null;
+      let topVal = 0;
+      for (const [k, v] of Object.entries(maksimit)) {
+        const id = Number(k);
+        if (v > topVal) {
+          topVal = v;
+          topId = id;
+        }
+      }
+      if (!topId) return null;
+      const pelaaja = await db.haeKayttajaById(topId);
+      return { pelaaja, putkiVaaria: topVal };
+    } catch (error) {
+      console.error('Virhe suurinta vääriä putkea haettaessa:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Eniten vastauksia "viimeisellä sekunnilla" - määritelty tässä 9000-10000ms
+   */
+  public async haeEnitenVastauksiaViimeisellaSekunnilla() {
+    const db = await this.varmistaTietokanta();
+    try {
+      const vastaukset = await db.haePeliVastaukset();
+      if (!vastaukset || vastaukset.length === 0) return null;
+      const threshold = 9000; // ms
+      const counts: Record<number, number> = {};
+      for (const v of vastaukset) {
+        const pid = v.kayttaja_id ?? v.pelaaja_id ?? v.kayttaja ?? null;
+        const aika = v.vastausaika_ms ?? v.vastausaika ?? null;
+        if (!pid || typeof aika !== 'number') continue;
+        if (aika >= threshold) counts[pid] = (counts[pid] || 0) + 1;
+      }
+      let topId: number | null = null;
+      let topVal = 0;
+      for (const [k, v] of Object.entries(counts)) {
+        const id = Number(k);
+        if (v > topVal) {
+          topVal = v;
+          topId = id;
+        }
+      }
+      if (!topId) return null;
+      const pelaaja = await db.haeKayttajaById(topId);
+      return { pelaaja, maara: topVal };
+    } catch (error) {
+      console.error('Virhe haettaessa vastauksia viimeisellä sekunnilla:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Pelaaja joka on pelannut eniten pelejä
+   */
+  public async haePelaajaEnitenPelia() {
+    const db = await this.varmistaTietokanta();
+    try {
+      const pelit = await db.haeKaikkiPelit();
+      if (!pelit || pelit.length === 0) return null;
+      const counts: Record<number, number> = {};
+      for (const p of pelit) {
+        if (!p.lopetettu) continue;
+        const pid = p.kayttaja_id;
+        if (!pid) continue;
+        counts[pid] = (counts[pid] || 0) + 1;
+      }
+      let topId: number | null = null;
+      let topVal = 0;
+      for (const [k, v] of Object.entries(counts)) {
+        const id = Number(k);
+        if (v > topVal) {
+          topVal = v;
+          topId = id;
+        }
+      }
+      if (!topId) return null;
+      const pelaaja = await db.haeKayttajaById(topId);
+      return { pelaaja, pelit: topVal };
+    } catch (error) {
+      console.error('Virhe haettaessa pelaajaa joka on pelannut eniten pelejä:', error);
       return null;
     }
   }
@@ -616,6 +883,226 @@ export class PeliPalvelu {
   }
 
   /**
+   * Hae pelissä saadut korkeimmat pisteet yhdestä pelistä
+   */
+  public async haeEnitenPisteitaYhdessaPeli() {
+    const db = await this.varmistaTietokanta();
+    try {
+      const pelit = await db.haeKaikkiPelit();
+      if (!pelit || pelit.length === 0) return null;
+      const finished = pelit.filter((p: any) => p.lopetettu);
+      if (finished.length === 0) return null;
+      const maxPeli = finished.reduce((prev: any, cur: any) => (cur.pisteet > (prev.pisteet || 0) ? cur : prev), finished[0]);
+      const pelaaja = await db.haeKayttajaById(maxPeli.kayttaja_id);
+      return {
+        peli: maxPeli,
+        pelaaja,
+        pisteet: maxPeli.pisteet,
+        kysymysten_maara: maxPeli.kysymysten_maara || null,
+      };
+    } catch (error) {
+      console.error('Virhe eniten pisteitä yhdessä pelissä haettaessa:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Hae nopein vastaaja (keskiarvo vastausaikojen perusteella). Jos ei vastausaikoja,
+   * palauttaa null.
+   */
+  public async haeNopeinVastaaja() {
+    const db = await this.varmistaTietokanta();
+    try {
+      const vastaukset = await db.haePeliVastaukset();
+      if (!vastaukset || vastaukset.length === 0) return null;
+
+      // Ryhmittele pelaajittain ja laske keskiarvo vastausajoista (oikeat ensin, muuten kaikki)
+      const pelaajaAikataulut: Record<number, number[]> = {};
+      for (const v of vastaukset) {
+        // Vastausaika kentässä `vastausaika_ms` käytössä
+        const pid = v.kayttaja_id || v.pelaaja_id || v.kayttaja || v.peli_id && null;
+        // We don't always have player id on peli_vastaukset in some formats; try to use kayttaja_id if present
+        const kayttajaId = v.kayttaja_id ?? v.kayttaja ?? null;
+        const aika = v.vastausaika_ms ?? v.vastausaika ?? null;
+        if (!kayttajaId || typeof aika !== 'number') continue;
+        if (!pelaajaAikataulut[kayttajaId]) pelaajaAikataulut[kayttajaId] = [];
+        pelaajaAikataulut[kayttajaId].push(aika);
+      }
+
+      const keskiarvot: Array<{ id: number; avg: number }> = [];
+      for (const [idStr, arr] of Object.entries(pelaajaAikataulut)) {
+        if (!arr || arr.length === 0) continue;
+        const id = Number(idStr);
+        const avg = arr.reduce((s, a) => s + a, 0) / arr.length;
+        keskiarvot.push({ id, avg });
+      }
+
+      if (keskiarvot.length === 0) return null;
+      keskiarvot.sort((a, b) => a.avg - b.avg);
+      const paras = keskiarvot[0];
+      const pelaaja = await db.haeKayttajaById(paras.id);
+      return {
+        pelaaja,
+        keskimaarainenVastausaikaMs: Math.round(paras.avg),
+      };
+    } catch (error) {
+      console.error('Virhe nopeimman vastaajan haussa:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Kaikkien pelaajien yhteispisteet
+   */
+  public async haeKaikkienPelaajienYhteispisteet() {
+    const db = await this.varmistaTietokanta();
+    try {
+      const pelaajat = await db.haeKaikkiKayttajat();
+      if (!pelaajat || pelaajat.length === 0) return 0;
+      return pelaajat.reduce((s: number, p: any) => s + (p.pisteet_yhteensa || 0), 0);
+    } catch (error) {
+      console.error('Virhe kaikkien pelaajien yhteispisteiden haussa:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Kategoria-läpäisyprosentit ja eniten käytetty kategoria
+   */
+  public async haeKategoriaTilastot() {
+    const db = await this.varmistaTietokanta();
+    try {
+      const vastaukset = await db.haePeliVastaukset();
+      if (!vastaukset || vastaukset.length === 0) return { kategorioittain: {}, enitenKaytetty: null };
+
+      const kategoriat: Record<string, { oikeat: number; kaikki: number }> = {};
+      for (const v of vastaukset) {
+        const k = v.kategoria || 'Tuntematon';
+        if (!kategoriat[k]) kategoriat[k] = { oikeat: 0, kaikki: 0 };
+        kategoriat[k].kaikki += 1;
+        const onOikein = v.oikein ?? v.on_oikein ?? false;
+        if (onOikein) kategoriat[k].oikeat += 1;
+      }
+
+      const kategorioittain: Record<string, { oikeat: number; kaikki: number; prosentti: number }> = {};
+      let enitenKaytetty = null;
+      let enitenKaytettyMaara = 0;
+      for (const [k, stats] of Object.entries(kategoriat)) {
+        const prosentti = stats.kaikki > 0 ? Math.round((stats.oikeat / stats.kaikki) * 1000) / 10 : 0;
+        kategorioittain[k] = { oikeat: stats.oikeat, kaikki: stats.kaikki, prosentti };
+        if (stats.kaikki > enitenKaytettyMaara) {
+          enitenKaytettyMaara = stats.kaikki;
+          enitenKaytetty = k;
+        }
+      }
+
+      return { kategorioittain, enitenKaytetty };
+    } catch (error) {
+      console.error('Virhe kategoria-tilastojen haussa:', error);
+      return { kategorioittain: {}, enitenKaytetty: null };
+    }
+  }
+
+  /**
+   * Placeholder: Eniten tuplapisteitä saatu (erikoiskortit)
+   */
+  public async haeEnitenTuplapisteita() {
+    // Placeholder - ei vielä tallenneta erikoiskortteja
+    return null;
+  }
+
+  /**
+   * Hae pelaaja jolla on eniten oikeita vastauksia (kokonaistilasto, summattu)
+   */
+  public async haePelaajaEnitenOikeitaKokonaistilasto() {
+    const db = await this.varmistaTietokanta();
+    try {
+      const tilastot = await db.haeTilastot();
+      if (!tilastot || tilastot.length === 0) return null;
+      const counts: Record<number, number> = {};
+      for (const t of tilastot) {
+        const id = t.kayttaja_id;
+        counts[id] = (counts[id] || 0) + (t.oikeat_vastaukset || 0);
+      }
+      let topId: number | null = null;
+      let topVal = 0;
+      for (const [k, v] of Object.entries(counts)) {
+        const id = Number(k);
+        if (v > topVal) { topVal = v; topId = id; }
+      }
+      if (!topId) return null;
+      const pelaaja = await db.haeKayttajaById(topId);
+      return { pelaaja, oikeitaVastauksia: topVal };
+    } catch (e) {
+      console.error('Virhe haettaessa pelaajaa eniten oikeita (kokonais):', e);
+      return null;
+    }
+  }
+
+  /**
+   * Hae pelaaja jolla on eniten vääriä vastauksia (kokonaistilasto, summattu)
+   */
+  public async haePelaajaEnitenVaariaKokonaistilasto() {
+    const db = await this.varmistaTietokanta();
+    try {
+      const tilastot = await db.haeTilastot();
+      if (!tilastot || tilastot.length === 0) return null;
+      const counts: Record<number, number> = {};
+      for (const t of tilastot) {
+        const id = t.kayttaja_id;
+        counts[id] = (counts[id] || 0) + (t.vaarat_vastaukset || 0);
+      }
+      let topId: number | null = null;
+      let topVal = 0;
+      for (const [k, v] of Object.entries(counts)) {
+        const id = Number(k);
+        if (v > topVal) { topVal = v; topId = id; }
+      }
+      if (!topId) return null;
+      const pelaaja = await db.haeKayttajaById(topId);
+      return { pelaaja, vaariaVastauksia: topVal };
+    } catch (e) {
+      console.error('Virhe haettaessa pelaajaa eniten vääriä (kokonais):', e);
+      return null;
+    }
+  }
+
+  /**
+   * Hae nopein yksittäinen vastaus (min vastausaika ms)
+   */
+  public async haeNopeinYksittainenVastaus() {
+    const db = await this.varmistaTietokanta();
+    try {
+      const vastaukset = await db.haePeliVastaukset();
+      if (!vastaukset || vastaukset.length === 0) return null;
+      let top = null;
+      let topMs = Number.MAX_SAFE_INTEGER;
+      for (const v of vastaukset) {
+        const aika = v.vastausaika_ms ?? v.vastausaika ?? null;
+        if (typeof aika !== 'number') continue;
+        if (aika < topMs) { topMs = aika; top = v; }
+      }
+      if (!top) return null;
+      const pelaajaId = top.kayttaja_id ?? top.pelaaja_id ?? top.kayttaja ?? null;
+      const pelaaja = pelaajaId ? await db.haeKayttajaById(pelaajaId) : null;
+      return { pelaaja, ms: topMs, vastaus: top.annettu_vastaus };
+    } catch (e) {
+      console.error('Virhe haettaessa nopeinta yksittäistä vastausta:', e);
+      return null;
+    }
+  }
+
+
+  /**
+   * Placeholder: Eniten käytetty erikoiskortti
+   */
+  public async haeEnitenKaytettyErikoiskortti() {
+    // Placeholder - ei vielä tallenneta erikoiskortteja
+    return null;
+  }
+
+
+  /**
    * Hae kaikki tilastot yhtenä objektina (yleiskatsaus)
    * @returns Yhteenveto kaikista tilastoista
    */
@@ -635,13 +1122,60 @@ export class PeliPalvelu {
         this.haeVaikeinKategoria()
       ]);
 
-      return {
-        enitenPisteet,
-        enitenOikeat,
-        enitenVaarat,
-        parasProsentti,
-        vaikeinKategoria
+      // Fetch additional aggregated stats
+      const [
+        enitenYhdessaPeli,
+        nopeinVastaaja,
+        kaikkienPisteet,
+        kategoriaTilastot,
+        enitenTuplat,
+        enitenErikoiskortti,
+        suurinPutkiOikeita,
+        suurinPutkiVaaria,
+        vastauksiaViimeSekunnilla,
+        enitenPelia,
+        enitenOikeitaKokonaistilasto,
+        enitenVaariaKokonaistilasto,
+        nopeinYksittainen
+      ] = await Promise.all([
+        this.haeEnitenPisteitaYhdessaPeli(),
+        this.haeNopeinVastaaja(),
+        this.haeKaikkienPelaajienYhteispisteet(),
+          this.haeKategoriaTilastot(),
+          this.haeEnitenTuplapisteita(),
+          this.haeEnitenKaytettyErikoiskortti(),
+          this.haeSuurinPutkiOikeita(),
+          this.haeSuurinPutkiVaaria(),
+          this.haeEnitenVastauksiaViimeisellaSekunnilla(),
+          this.haePelaajaEnitenPelia(),
+          this.haePelaajaEnitenOikeitaKokonaistilasto(),
+          this.haePelaajaEnitenVaariaKokonaistilasto(),
+          this.haeNopeinYksittainenVastaus()
+      ]);
+
+      // Normalize and provide placeholders for UI
+      const normalized = {
+        enitenPisteet: enitenPisteet || { pelaaja: null, pisteet: '-' },
+        enitenOikeat: enitenOikeat || { pelaaja: null, oikeitaVastauksia: '-' },
+        enitenVaarat: enitenVaarat || { pelaaja: null, vaariaVastauksia: '-' },
+        parasProsentti: parasProsentti || null,
+        vaikeinKategoria: vaikeinKategoria || null,
+        enitenYhdessaPeli: enitenYhdessaPeli || null,
+        nopeinVastaaja: nopeinVastaaja || null,
+        kaikkienPisteet: typeof kaikkienPisteet === 'number' ? kaikkienPisteet : 0,
+        kategoriaTilastot: kategoriaTilastot || { kategorioittain: {}, enitenKaytetty: null },
+        enitenTuplat: enitenTuplat || { message: 'Ei tallennettu' },
+        enitenErikoiskortti: enitenErikoiskortti || { nimi: 'Ei dataa', maara: '-' },
+        suurinPutkiOikeita: suurinPutkiOikeita || { pelaaja: null, putki: '-' },
+        suurinPutkiVaaria: suurinPutkiVaaria || { pelaaja: null, putkiVaaria: '-' },
+        vastauksiaViimeSekunnilla: vastauksiaViimeSekunnilla || { pelaaja: null, maara: '-' },
+        enitenPelia: enitenPelia || { pelaaja: null, pelit: '-' },
+        enitenOikeitaKokonaistilasto: enitenOikeitaKokonaistilasto || { pelaaja: null, oikeitaVastauksia: '-' },
+        enitenVaariaKokonaistilasto: enitenVaariaKokonaistilasto || { pelaaja: null, vaariaVastauksia: '-' },
+        nopeinYksittainen: nopeinYksittainen || { pelaaja: null, ms: '-' }
       };
+
+      return normalized;
     } catch (error) {
       console.error('Virhe yleistilastojen haussa:', error);
       return null;

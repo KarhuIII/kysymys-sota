@@ -110,6 +110,9 @@
     } catch (error) {
       console.error("❌ Virhe pisteytysviestien latauksessa:", error);
       // Käytä oletusviestejä
+          
+          
+
       pisteytysViestit = {
         oikeat_vastaukset: ["🎉 Loistavaa!", "⭐ Mahtavaa!", "🔥 Erinomaista!"],
         vaarat_vastaukset: ["😞 Väärin!", "😔 Ei osuma!", "😕 Huti!"]
@@ -542,6 +545,14 @@
               kategoriatilastot: kategoriat,
               paivays: new Date().toISOString(),
             });
+            // Emit peliLoppui for this player so listeners (App) can refresh leaderboard
+            try {
+              const payload = { kayttajaId, pisteet, peliId };
+              console.log('\ud83d\udd14 PeliIkkuna emitting peliLoppui (from naytaTulokset):', payload);
+              (peliPalvelu as any).emit && (peliPalvelu as any).emit('peliLoppui', payload);
+            } catch (e) {
+              console.warn('Emit peliLoppui failed:', e);
+            }
           } catch (err) {
             console.warn('⚠️ tallennaTilasto epäonnistui:', err);
           }
@@ -641,7 +652,7 @@
         >
           <div class="flex flex-col items-center">
             <span class="text-3xl mb-2">🎭</span>
-            <span class="text-blue-400 font-medium">Kysymyksen vaihto</span>
+            <span class="text-blue-400 font-medium">Kysymyksen vaihto - 💎10</span>
           </div>
         </button>
         
@@ -652,7 +663,7 @@
         >
           <div class="flex flex-col items-center">
             <span class="text-3xl mb-2">🕑</span>
-            <span class="text-cyan-400 font-medium">Aikalisä</span>
+            <span class="text-cyan-400 font-medium">Aikalisä - 5💎</span>
           </div>
         </button>
         
@@ -663,7 +674,7 @@
         >
           <div class="flex flex-col items-center">
             <span class="text-3xl mb-2">🎯</span>
-            <span class="text-teal-400 font-medium">Tuplapisteet</span>
+            <span class="text-teal-400 font-medium">Tuplapisteet - 💎5</span>
           </div>
         </button>
         
@@ -674,7 +685,7 @@
         >
           <div class="flex flex-col items-center">
             <span class="text-3xl mb-2">🪄</span>
-            <span class="text-indigo-400 font-medium">Puolitus</span>
+            <span class="text-indigo-400 font-medium">Puolitus - 💎10</span>
           </div>
         </button>
       </div>
@@ -1032,7 +1043,7 @@
         >
           <div class="flex flex-col items-center">
             <span class="text-3xl mb-2">📦</span>
-            <span class="text-primary-400 font-medium">Pakota vaihto</span>
+            <span class="text-primary-400 font-medium">Pakota vaihto - 💎5</span>
           </div>
         </button>
         
@@ -1043,7 +1054,7 @@
         >
           <div class="flex flex-col items-center">
             <span class="text-3xl mb-2">🌀</span>
-            <span class="text-purple-400 font-medium">Nollaus</span>
+            <span class="text-purple-400 font-medium">Nollaus - 💎10</span>
           </div>
         </button>
         
@@ -1054,7 +1065,7 @@
         >
           <div class="flex flex-col items-center">
             <span class="text-3xl mb-2">🌪️</span>
-            <span class="text-emerald-400 font-medium">Sekoitus</span>
+            <span class="text-emerald-400 font-medium">Sekoitus - 💎5</span>
           </div>
         </button>
         
@@ -1065,7 +1076,7 @@
         >
           <div class="flex flex-col items-center">
             <span class="text-3xl mb-2">⭐</span>
-            <span class="text-orange-400 font-medium">Bonus</span>
+            <span class="text-orange-400 font-medium">Bonus - 💎10</span>
           </div>
         </button>
       </div>

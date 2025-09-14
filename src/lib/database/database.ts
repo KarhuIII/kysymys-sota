@@ -835,37 +835,52 @@ export class KysymyssotaDB {
   public async haeParhaatTulokset(raja: number = 10): Promise<any[]> {
     if (!this.db) return [];
 
-    const transaction = this.db.transaction(["pelit", "kayttajat"], "readonly");
-    const pelitStore = transaction.objectStore("pelit");
-    const kayttajatStore = transaction.objectStore("kayttajat");
+    // Iterate pelit with a cursor but do not perform async awaits inside
+    // the onsuccess handler. Collect finished pelit first, then fetch
+    // kayttaja records afterwards to avoid TransactionInactiveError.
+    const pelitTransaction = this.db.transaction(["pelit"], "readonly");
+    const pelitStore = pelitTransaction.objectStore("pelit");
 
     return new Promise((resolve, reject) => {
-      const tulokset: any[] = [];
+      const pelit: Peli[] = [];
       const request = pelitStore.openCursor();
 
-      request.onsuccess = async (event) => {
+      request.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
         if (cursor) {
           const peli = cursor.value as Peli;
-          if (peli.lopetettu) {
-            try {
-              const kayttaja = await this.haeKayttaja(peli.kayttaja_id);
-              if (kayttaja) {
-                tulokset.push({
-                  nimi: kayttaja.nimi,
-                  pisteet: peli.pisteet,
-                  lopetettu: peli.lopetettu,
-                });
-              }
-            } catch (error) {
-              console.error("Virhe käyttäjän haussa:", error);
-            }
-          }
+          if (peli.lopetettu) pelit.push(peli);
           cursor.continue();
         } else {
-          // Järjestä pisteiden mukaan ja rajaa
-          tulokset.sort((a, b) => b.pisteet - a.pisteet);
-          resolve(tulokset.slice(0, raja));
+          // After collecting finished pelit, fetch kayttaja records in parallel
+          (async () => {
+            try {
+              const tulokset: any[] = [];
+              const promises = pelit.map(async (p) => {
+                try {
+                  const kayttaja = await this.haeKayttaja(p.kayttaja_id);
+                  if (kayttaja) {
+                    return {
+                      nimi: kayttaja.nimi,
+                      pisteet: p.pisteet,
+                      lopetettu: p.lopetettu,
+                    };
+                  }
+                } catch (err) {
+                  console.error("Virhe käyttäjän haussa (jälkeen):", err);
+                }
+                return null;
+              });
+
+              const resolved = await Promise.all(promises);
+              for (const r of resolved) if (r) tulokset.push(r);
+
+              tulokset.sort((a, b) => b.pisteet - a.pisteet);
+              resolve(tulokset.slice(0, raja));
+            } catch (err) {
+              reject(err);
+            }
+          })();
         }
       };
 

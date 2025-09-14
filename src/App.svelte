@@ -41,11 +41,17 @@
   let pelinKategoria: string | undefined = undefined; // Kategoriasuodatus
   let kaikkiPelaajat: Kayttaja[] = []; // Kaikki pelaajat näytettäväksi
   let topPelaajat: Kayttaja[] = [];
+  // Event handler reference for peliLoppui; declared in module scope so onDestroy
+  // can clean it up. Assigned inside onMount.
+  let peliLoppuiHandler: ((data: any) => void) | null = null;
 
   // Helper to refresh leaderboard
   async function refreshTopPelaajat() {
     try {
       topPelaajat = await peliPalvelu.haeTopPelaajat(8);
+        console.log('\ud83d\udd0d refreshTopPelaajat called - fetching top players...');
+        topPelaajat = await peliPalvelu.haeTopPelaajat(8);
+        console.log('\ud83c\udfc6 refreshTopPelaajat result:', topPelaajat.map(p => ({ id: p.id, nimi: p.nimi, pisteet: p.pisteet_yhteensa })));
     } catch (e) {
       console.warn('Top-pelaajien päivitys epäonnistui:', e);
     }
@@ -123,15 +129,20 @@
       kategoriat = { 'Eläimet': 0, 'Maantieto': 0, 'Värit': 0 };
     }
     // Rekisteröi kuuntelija peli-lopetustapahtumille jotta leaderboard päivittyy reaaliaikaisesti
-    const peliLoppuiHandler = async (data: any) => {
+    peliLoppuiHandler = async (data: any) => {
       console.log('🔔 peliLoppui event received:', data);
       await refreshTopPelaajat();
     };
-  console.log('ℹ️ Rekisteröidään peliLoppui-kuuntelija, nykyinen topPelaajat:', topPelaajat.length);
-  peliPalvelu.on('peliLoppui', peliLoppuiHandler);
-    onDestroy(() => {
+    console.log('ℹ️ Rekisteröidään peliLoppui-kuuntelija, nykyinen topPelaajat:', topPelaajat.length);
+    peliPalvelu.on('peliLoppui', peliLoppuiHandler);
+  });
+
+  // Cleanup: remove the peliLoppui listener when component is destroyed.
+  onDestroy(() => {
+    if (peliLoppuiHandler) {
       try { peliPalvelu.off('peliLoppui', peliLoppuiHandler); } catch (e) { /* ignore */ }
-    });
+      peliLoppuiHandler = null;
+    }
   });
 
   // ===============================================
@@ -323,6 +334,15 @@
   
   function vaihdaTeema() {
     // Demo toiminto teeman vaihtamiseen
+  }
+
+  // Helper to safely access kategoria stats in template
+  function formatKategoriaStat(k: string) {
+    try {
+      return (yleisTilastot && yleisTilastot.kategoriaTilastot && yleisTilastot.kategoriaTilastot.kategorioittain && (yleisTilastot.kategoriaTilastot.kategorioittain as any)[k]) || { prosentti: 0, oikeat: 0, kaikki: 0 };
+    } catch (e) {
+      return { prosentti: 0, oikeat: 0, kaikki: 0 };
+    }
   }
 </script>
 
@@ -586,51 +606,131 @@
           <div class="container mx-auto p-6">
             <h2 class="text-3xl font-bold text-center mb-8">📊 Pelitilastot</h2>
             {#if yleisTilastot}
-              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                <div class="{GLASS_STYLES.card} p-6 text-center">
-                  <h3 class="text-lg font-semibold mb-2">Eniten pisteitä</h3>
-                  {#if yleisTilastot.enitenPisteet}
-                    <div class="text-2xl font-bold text-primary-500">{yleisTilastot.enitenPisteet.pelaaja?.nimi}</div>
-                    <div class="text-lg">{yleisTilastot.enitenPisteet.pisteet} pistettä</div>
-                  {:else}
-                    <div class="text-surface-600-400">Ei dataa</div>
-                  {/if}
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- enitenPisteet -->
+                <div class="{GLASS_STYLES.card} p-4 patch-1">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Eniten pisteitä</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.enitenPisteet?.pelaaja?.nimi || 'Ei dataa'}</div>
+                  <div class="text-sm mt-1">{yleisTilastot.enitenPisteet?.pisteet || '-' } pistettä</div>
                 </div>
-                <div class="{GLASS_STYLES.card} p-6 text-center">
-                  <h3 class="text-lg font-semibold mb-2">Eniten oikeita vastauksia</h3>
-                  {#if yleisTilastot.enitenOikeat}
-                    <div class="text-2xl font-bold text-success-500">{yleisTilastot.enitenOikeat.pelaaja?.nimi}</div>
-                    <div class="text-lg">{yleisTilastot.enitenOikeat.oikeitaVastauksia} oikeaa vastausta</div>
-                  {:else}
-                    <div class="text-surface-600-400">Ei dataa</div>
-                  {/if}
+
+                <!-- enitenOikeat -->
+                <div class="{GLASS_STYLES.card} p-4 patch-2">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Eniten oikeita vastauksia</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.enitenOikeat?.pelaaja?.nimi || 'Ei dataa'}</div>
+                  <div class="text-sm mt-1">{yleisTilastot.enitenOikeat?.oikeitaVastauksia || '-' } kpl</div>
                 </div>
-                <div class="{GLASS_STYLES.card} p-6 text-center">
-                  <h3 class="text-lg font-semibold mb-2">Eniten vääriä vastauksia</h3>
-                  {#if yleisTilastot.enitenVaarat}
-                    <div class="text-2xl font-bold text-error-500">{yleisTilastot.enitenVaarat.pelaaja?.nimi}</div>
-                    <div class="text-lg">{yleisTilastot.enitenVaarat.vaariaVastauksia} väärää vastausta</div>
-                  {:else}
-                    <div class="text-surface-600-400">Ei dataa</div>
-                  {/if}
+
+                <!-- enitenVaarat -->
+                <div class="{GLASS_STYLES.card} p-4 patch-3">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Eniten vääriä vastauksia</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.enitenVaarat?.pelaaja?.nimi || 'Ei dataa'}</div>
+                  <div class="text-sm mt-1">{yleisTilastot.enitenVaarat?.vaariaVastauksia || '-' } kpl</div>
                 </div>
-                <div class="{GLASS_STYLES.card} p-6 text-center">
-                  <h3 class="text-lg font-semibold mb-2">Paras vastausprosentti</h3>
-                  {#if yleisTilastot.parasProsentti}
-                    <div class="text-2xl font-bold text-secondary-500">{yleisTilastot.parasProsentti.pelaaja?.nimi}</div>
-                    <div class="text-lg">{yleisTilastot.parasProsentti.vastausprosentti}% ({yleisTilastot.parasProsentti.oikeitaVastauksia}/{yleisTilastot.parasProsentti.yhteensaVastauksia})</div>
-                  {:else}
-                    <div class="text-surface-600-400">Ei dataa</div>
-                  {/if}
+
+                <!-- parasProsentti -->
+                <div class="{GLASS_STYLES.card} p-4 patch-4">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Paras vastausprosentti</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.parasProsentti?.pelaaja?.nimi || 'Ei dataa'}</div>
+                  <div class="text-sm mt-1">{yleisTilastot.parasProsentti?.vastausprosentti ? yleisTilastot.parasProsentti.vastausprosentti + '%' : '-'}</div>
                 </div>
-                <div class="{GLASS_STYLES.card} p-6 text-center">
-                  <h3 class="text-lg font-semibold mb-2">Vaikein kategoria</h3>
-                  {#if yleisTilastot.vaikeinKategoria}
-                    <div class="text-2xl font-bold text-warning-500">{yleisTilastot.vaikeinKategoria.kategoria}</div>
-                    <div class="text-lg">{yleisTilastot.vaikeinKategoria.vaikeusprosen}% väärää ({yleisTilastot.vaikeinKategoria.vaariaVastauksia}/{yleisTilastot.vaikeinKategoria.yhteensaVastauksia})</div>
-                  {:else}
-                    <div class="text-surface-600-400">Ei dataa</div>
-                  {/if}
+
+                <!-- vaikeinKategoria -->
+                <div class="{GLASS_STYLES.card} p-4 patch-5">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Vaikein kategoria</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.vaikeinKategoria?.kategoria || 'Ei dataa'}</div>
+                  <div class="text-sm mt-1">{yleisTilastot.vaikeinKategoria?.vaikeusprosen ? yleisTilastot.vaikeinKategoria.vaikeusprosen + '%' : '-'}</div>
+                </div>
+
+                <!-- enitenYhdessaPeli -->
+                <div class="{GLASS_STYLES.card} p-4 patch-6">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Piste-ennätys yhdessä pelissä</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.enitenYhdessaPeli?.pelaaja?.nimi || 'Ei dataa'}</div>
+                  <div class="text-sm mt-1">{yleisTilastot.enitenYhdessaPeli?.pisteet || '-'} pistettä</div>
+                </div>
+
+                <!-- nopeinVastaaja -->
+                <div class="{GLASS_STYLES.card} p-4 patch-7">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Nopein vastaaja (keskiarvo)</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.nopeinVastaaja?.pelaaja?.nimi || 'Ei dataa'}</div>
+                  <div class="text-sm mt-1">{yleisTilastot.nopeinVastaaja?.keskimaarainenVastausaikaMs ? yleisTilastot.nopeinVastaaja.keskimaarainenVastausaikaMs + ' ms' : '-'}</div>
+                </div>
+
+                <!-- kaikkienPisteet -->
+                <div class="{GLASS_STYLES.card} p-4 patch-8">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Yhteispisteet kaikilta pelaajilta</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.kaikkienPisteet || 0}</div>
+                  <div class="text-sm mt-1">Kaikki pelaajat yhteensä</div>
+                </div>
+
+                <!-- kategoriaTilastot -->
+                <div class="{GLASS_STYLES.card} p-4 patch-9">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Läpäisyprosentti kategorioittain</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.kategoriaTilastot?.enitenKaytetty || 'Ei dataa'}</div>
+                  <div class="text-sm mt-1">Näytä kategorioiden läpäisyprosentit</div>
+                </div>
+
+                <!-- enitenTuplat (placeholder) -->
+                <div class="{GLASS_STYLES.card} p-4 patch-1">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Eniten tuplapisteitä</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.enitenTuplat?.message || 'Ei tallennettu'}</div>
+                  <div class="text-sm mt-1">Placeholder</div>
+                </div>
+
+                <!-- enitenErikoiskortti (placeholder) -->
+                <div class="{GLASS_STYLES.card} p-4 patch-2">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Eniten käytetty erikoiskortti</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.enitenErikoiskortti?.nimi || 'Ei dataa'}</div>
+                  <div class="text-sm mt-1">{yleisTilastot.enitenErikoiskortti?.maara || '-'}</div>
+                </div>
+
+                <!-- suurinPutkiOikeita -->
+                <div class="{GLASS_STYLES.card} p-4 patch-3">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Eniten peräkkäisiä oikeita</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.suurinPutkiOikeita?.pelaaja?.nimi || 'Ei dataa'}</div>
+                  <div class="text-sm mt-1">{yleisTilastot.suurinPutkiOikeita?.putki || '-'}</div>
+                </div>
+
+                <!-- suurinPutkiVaaria -->
+                <div class="{GLASS_STYLES.card} p-4 patch-4">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Eniten peräkkäisiä vääriä</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.suurinPutkiVaaria?.pelaaja?.nimi || 'Ei dataa'}</div>
+                  <div class="text-sm mt-1">{yleisTilastot.suurinPutkiVaaria?.putkiVaaria || '-'}</div>
+                </div>
+
+                <!-- vastauksiaViimeSekunnilla -->
+                <div class="{GLASS_STYLES.card} p-4 patch-5">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Eniten vastauksia viimeisellä sekunnilla</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.vastauksiaViimeSekunnilla?.pelaaja?.nimi || 'Ei dataa'}</div>
+                  <div class="text-sm mt-1">{yleisTilastot.vastauksiaViimeSekunnilla?.maara || '-'}</div>
+                </div>
+
+                <!-- enitenPelia -->
+                <div class="{GLASS_STYLES.card} p-4 patch-6">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Eniten pelejä pelannut pelaaja</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.enitenPelia?.pelaaja?.nimi || 'Ei dataa'}</div>
+                  <div class="text-sm mt-1">{yleisTilastot.enitenPelia?.pelit || '-' } peliä</div>
+                </div>
+
+                <!-- enitenOikeitaKokonaistilasto -->
+                <div class="{GLASS_STYLES.card} p-4 patch-7">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Eniten oikeita (kokonais)</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.enitenOikeitaKokonaistilasto?.pelaaja?.nimi || 'Ei dataa'}</div>
+                  <div class="text-sm mt-1">{yleisTilastot.enitenOikeitaKokonaistilasto?.oikeitaVastauksia || '-'}</div>
+                </div>
+
+                <!-- enitenVaariaKokonaistilasto -->
+                <div class="{GLASS_STYLES.card} p-4 patch-8">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Eniten vääriä (kokonais)</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.enitenVaariaKokonaistilasto?.pelaaja?.nimi || 'Ei dataa'}</div>
+                  <div class="text-sm mt-1">{yleisTilastot.enitenVaariaKokonaistilasto?.vaariaVastauksia || '-'}</div>
+                </div>
+
+                <!-- nopeinYksittainen -->
+                <div class="{GLASS_STYLES.card} p-4 patch-9">
+                  <div class="text-xs {GLASS_COLORS.textSecondary}">Nopein yksittäinen vastaus</div>
+                  <div class="text-lg font-bold mt-1">{yleisTilastot.nopeinYksittainen?.pelaaja?.nimi || 'Ei dataa'}</div>
+                  <div class="text-sm mt-1">{yleisTilastot.nopeinYksittainen?.ms ? yleisTilastot.nopeinYksittainen.ms + ' ms' : '-'}</div>
                 </div>
               </div>
             {:else}
