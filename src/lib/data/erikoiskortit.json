@@ -1,0 +1,157 @@
+[
+  {
+    "id": 1,
+    "key": "kysymyksen_vaihto",
+    "nimi": "Kysymyksen vaihto",
+    "emoji": "🎭",
+    "kustannus": 10,
+    "sivu": "puolustus",
+    "kuvaus": "Vaihda nykyinen kysymys uuteen satunnaiseen kysymykseen ilman pisteytystä.",
+    "tyyppi": "vaihda_kysymys",
+    "kohde": "itse",
+    "parametrit": {
+      "maksimiYritykset": 3
+    },
+    "kayttorajoitus": {
+      "perPeli": 3,
+      "cooldownSekunneissa": 0
+    },
+    "huom": "Poistaa nykyisen kysymyksen ja hakee uuden; ei vaikuta pelaajan pisteisiin suoraan."
+  },
+  {
+    "id": 2,
+    "key": "ajan_puolitus",
+    "nimi": "Ajan puolitus",
+    "emoji": "⏱️",
+    "kustannus": 5,
+    "sivu": "taistelu",
+    "kuvaus": "Seuraavalla pelaajalla on vain 15 sekuntia vastata (ajan puolitus).",
+    "tyyppi": "ajan_puolitus",
+    "kohde": "toinen_pelaaja",
+    "parametrit": {
+      "puolitusSekunteina": 15,
+      "kestoKysymyksina": 1
+    },
+    "kayttorajoitus": {
+      "perPeli": 2,
+      "cooldownSekunneissa": 0
+    },
+    "huom": "Asettaa valitun pelaajan seuraavan kysymyksen ajan 15 sekuntiin; kestää yhden kysymyksen."
+  },
+  {
+    "id": 3,
+    "key": "tuplapisteet",
+    "nimi": "Tuplapisteet",
+    "emoji": "🎯",
+    "kustannus": 5,
+    "sivu": "puolustus",
+    "kuvaus": "Seuraava oikea vastaus antaa kaksinkertaiset pisteet.",
+    "tyyppi": "tupla_seuraava",
+    "kohde": "itse",
+    "parametrit": {
+      "kerroin": 2,
+      "kestoKysymyksina": 1
+    },
+    "kayttorajoitus": {
+      "perPeli": 3,
+      "cooldownSekunneissa": 0
+    },
+    "huom": "Kerää tuplapisteet vain seuraavasta oikeasta vastauksesta."
+  },
+  {
+    "id": 4,
+    "key": "puolitus",
+    "nimi": "Puolitus (50/50)",
+    "emoji": "🪄",
+    "kustannus": 10,
+    "sivu": "puolustus",
+    "kuvaus": "Poistaa kaksi väärää vastausvaihtoehtoa (jos mahdollista).",
+    "tyyppi": "poista_vaihtoehdot",
+    "kohde": "itse",
+    "parametrit": {
+      "poistettavat": 2
+    },
+    "kayttorajoitus": {
+      "perPeli": 2,
+      "cooldownSekunneissa": 0
+    },
+    "huom": "Ei poista oikeaa vastausta; jos vähemmän kuin 3 väärää, poistaa kaikki mahdolliset väärät."
+  },
+  {
+    "id": 5,
+    "key": "pakota_vaihto",
+    "nimi": "Pakota vaihto",
+    "emoji": "📦",
+    "kustannus": 5,
+    "sivu": "taistelu",
+    "kuvaus": "Pakota toinen pelaaja vaihtamaan kysymys kanssasi (ottaa heidän kysymyksensä ja annat oman).",
+    "tyyppi": "pakota_vaihto",
+    "kohde": "toinen_pelaaja",
+    "parametrit": {
+      "valittavaPelaaja": true
+    },
+    "kayttorajoitus": {
+      "perPeli": 1,
+      "cooldownSekunneissa": 0
+    },
+    "huom": "Valittu pelaaja menettää nykyisen kysymyksen ja saa sinun; toisaalta saat heidän kysymyksensä."
+  },
+  {
+    "id": 6,
+    "key": "nollaus",
+    "nimi": "Nollaus",
+    "emoji": "🌀",
+    "kustannus": 10,
+    "sivu": "taistelu",
+    "kuvaus": "Nollaa (poistaa) valitun pelaajan viimeisimmän pistelisäyksen.",
+    "tyyppi": "nollaa_pisteet",
+    "kohde": "toinen_pelaaja",
+    "parametrit": {
+      "viimeisetPisteet": 1
+    },
+    "kayttorajoitus": {
+      "perPeli": 1,
+      "cooldownSekunneissa": 0
+    },
+    "huom": "Toteuttaa pelitilanteen mukaan; jos pelaajalla ei ole viimeisimmällä vuorolla pisteitä, vaikutus voi olla nolla."
+  },
+  {
+    "id": 7,
+    "key": "sekoitus",
+    "nimi": "Sekoitus",
+    "emoji": "🌪️",
+    "kustannus": 5,
+    "sivu": "taistelu",
+    "kuvaus": "Sekoittaa kaikkien pelaajien seuraavat kysymykset satunnaisesti.",
+    "tyyppi": "sekoita_seuraavat",
+    "kohde": "kaikki",
+    "parametrit": {
+      "vaikutusKysymyksina": 1
+    },
+    "kayttorajoitus": {
+      "perPeli": 1,
+      "cooldownSekunneissa": 0
+    },
+    "huom": "Toteutus voi sekoittaa kysymysjonon tai merkitä seuraavan kysymyksen satunnaiseksi."
+  },
+  {
+    "id": 8,
+    "key": "bonus",
+    "nimi": "Bonus",
+    "emoji": "⭐",
+    "kustannus": 10,
+    "sivu": "puolustus",
+    "kuvaus": "Jos vastaat oikein, saat heti toisen kysymyksen (ylimääräinen vuoro).",
+    "tyyppi": "anna_lisa_vuoro",
+    "kohde": "itse",
+    "parametrit": {
+      "lisaVuoro": 1,
+      "kestoKysymyksina": 1
+    },
+    "kayttorajoitus": {
+      "perPeli": 2,
+      "cooldownSekunneissa": 0
+    },
+    "huom": "Lisävuo ro toimii vain jos vastaus oli oikein; ei siirrä kysymyksiä muille."
+  }
+]

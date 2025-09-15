@@ -8,6 +8,7 @@ export interface Kayttaja {
   id?: number; // Automaattinen tunniste
   nimi: string; // Pelaajan nimi
   ika?: number; // Pelaajan ikä (määrittää sopivat kysymykset)
+  // Huom: valuutta on pisteet pelin aikana — erillistä valuutta-kenttää ei ole
   vaikeustaso_min?: "oppipoika" | "taitaja" | "mestari" | "kuningas" | "suurmestari"; // Minimi vaikeustaso pelaajalle
   vaikeustaso_max?: "oppipoika" | "taitaja" | "mestari" | "kuningas" | "suurmestari"; // Maksimi vaikeustaso pelaajalle
   pelaajan_vari?: string; // Pelaajan värikoodi (esim. #3b82f6)

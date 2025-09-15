@@ -53,3 +53,25 @@ body {
     #292e6e
   );
 }
+
+/* Enforce z-index and fixed positioning for the target-selection overlay/modal */
+[data-targetpicker-overlay] {
+  position: fixed !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(0,0,0,0.6) !important;
+  z-index: 9998 !important;
+}
+
+[data-targetpicker-overlay] > [data-targetpicker-card],
+[data-targetpicker-overlay] [data-targetpicker-card] {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%,-50%) !important;
+  z-index: 9999 !important;
+  max-height: 85vh !important;
+  overflow: auto !important;
+}

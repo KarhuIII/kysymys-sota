@@ -29,6 +29,34 @@
   let pisteytys = false;
   let saatuPisteet = 0; // Viimeksi saadut pisteet animaatiota varten
   let pisteytysViesti = ""; // Satunnainen pisteytysviesti
+  // Modal / notification
+  let modalVisible = false;
+  let modalMessage = "";
+  let modalTimeout: number | null = null;
+
+  function showModal(message: string, ms = 2500) {
+    modalMessage = message;
+    modalVisible = true;
+    if (modalTimeout) window.clearTimeout(modalTimeout);
+    modalTimeout = window.setTimeout(() => {
+      modalVisible = false;
+      modalTimeout = null;
+    }, ms);
+  }
+
+  function hideModal() {
+    modalVisible = false;
+    if (modalTimeout) {
+      window.clearTimeout(modalTimeout);
+      modalTimeout = null;
+    }
+  }
+
+    // Erikoiskortit (data)
+    import erikoiskortit from "../data/erikoiskortit.json";
+
+    // In-memory aktiiviset erikoiskorttiefektit (pelaajaId -> efektit)
+    const activeCardEffects: Record<number, any> = {};
 
   // Pisteytysviestit
   let pisteytysViestit: { oikeat_vastaukset: string[]; vaarat_vastaukset: string[] } = {
@@ -54,6 +82,167 @@
   let pelaajaPelit: Map<number, number> = new Map(); // kayttajaId -> peliId
   let pelaajanKysymysCount: Record<number, number> = {};
   let kysymysAloitettu = 0;
+  // Pelaajan pisteet lasketaan pelin aikana (käytetään valuuttana erikoiskortteihin)
+  // Pelaajan pisteet näkyvät jo `pelaajanPisteet`-objektissa (nimi -> pisteet)
+
+  // Palauttaa pelaajan id nykyisestä indeksistä (tai undefined)
+  function nykyinenPelaajaId(): number | undefined {
+    const p = sekoitetutPelaajat[pelaajaIndex];
+    return p && typeof p.id !== 'undefined' ? p.id : undefined;
+  }
+
+  // Estää kortin käytön kun pelaaja on jo vastannut nykyiseen kysymykseen (odotusaika / pisteytys)
+  function canUseKortti(): boolean {
+    if (valittuVastaus !== null || pisteytys) {
+      showModal('Et voi käyttää kortteja sen jälkeen kun olet vastannut.');
+      return false;
+    }
+    return true;
+  }
+
+  // Target selection state for attack cards
+  let targetSelectionVisible = false;
+  let pendingKortti: any = null;
+  let selectedTarget: Kayttaja | null = null;
+  let showConfirmForTarget = false;
+
+  import { targetPicker } from '../stores/targetPicker';
+
+  // Open the target picker for an attack card key (delegate UI to app-level overlay)
+  function openTargetSelection(korttiKey: string) {
+    if (!canUseKortti()) return;
+    const kortti = (erikoiskortit as any).find((k: any) => k.key === korttiKey);
+    if (!kortti) return showModal('Korttia ei loydy');
+
+    const nykyinenPelaaja = sekoitetutPelaajat[pelaajaIndex];
+    if (!nykyinenPelaaja || typeof nykyinenPelaaja.id === 'undefined') return showModal('Pelaaja ei tunnistettu');
+    const kustannus = Number(kortti.kustannus || 0);
+    const nimi = nykyinenPelaaja.nimi;
+    const nykyisetPisteet = pelaajanPisteet[nimi] || 0;
+    if (isNaN(kustannus)) { showModal('Kortin kustannus ei ole kelvollinen'); return; }
+    if (nykyisetPisteet < kustannus) return showModal('Ei tarpeeksi pisteitä');
+
+    // Deduct cost locally and persist usage immediately (as before)
+    pelaajanPisteet[nimi] = nykyisetPisteet - kustannus;
+    (async () => {
+      try {
+        const db = await getDB();
+        const peliId = typeof nykyinenPelaaja.id !== 'undefined' ? (pelaajaPelit.get(nykyinenPelaaja.id) || null) : null;
+        await db.tallennaKortinKaytto({
+          peli_id: peliId,
+          kayttaja_id: nykyinenPelaaja.id,
+          kortti_key: kortti.key,
+          kustannus: kustannus,
+          parametrit: kortti.parametrit || {}
+        });
+      } catch (e) {
+        console.warn('Kortin tallennus epäonnistui:', e);
+      }
+    })();
+
+    // Open the top-level overlay, pass players and a confirm callback
+    targetPicker.open(kortti, sekoitetutPelaajat, async (target) => {
+      // On confirm: apply card effects to the selected target
+      try {
+        const tid = Number(target.id);
+        if (kortti.key === 'ajan_puolitus') {
+          activeCardEffects[tid] = activeCardEffects[tid] || {};
+          activeCardEffects[tid].ajan_puolitus = Number(kortti.parametrit?.puolitusSekunteina || 15);
+          activeCardEffects[tid].ajan_puolitus_remainingQuestions = Number(kortti.parametrit?.kestoKysymyksina || 1);
+          showModal(`Ajan puolitus aktivoitu: ${target.nimi} saa seuraavaksi vain ${activeCardEffects[tid].ajan_puolitus}s`);
+        } else if (kortti.key === 'pakota_vaihto') {
+          showModal(`Pakota vaihto aktivoitu kohteelle ${target.nimi}`);
+        } else if (kortti.key === 'nollaus') {
+          showModal(`Nollaus aktivoitu kohteelle ${target.nimi}`);
+        } else {
+          showModal(`${kortti.nimi} aktivoitu kohteelle ${target.nimi}`);
+        }
+      } catch (err) {
+        console.error('Kortin kaytto epäonnistui:', err);
+        showModal('Kortin käyttö epäonnistui');
+      }
+    });
+  }
+
+  // Perform the pending attack card on selected target player
+  async function performPendingAttackOn(target: Kayttaja) {
+    if (!pendingKortti) return;
+    try {
+      const kortti = pendingKortti;
+      const nykyinenPelaaja = sekoitetutPelaajat[pelaajaIndex];
+      if (!nykyinenPelaaja || typeof nykyinenPelaaja.id === 'undefined') return showModal('Pelaaja ei tunnistettu');
+      const db = await getDB();
+      const kustannus = Number(kortti.kustannus || 0);
+      const nimi = nykyinenPelaaja.nimi;
+
+      // Deduct cost locally and persist usage
+      pelaajanPisteet[nimi] = (pelaajanPisteet[nimi] || 0) - kustannus;
+      await db.tallennaKortinKaytto({
+        peli_id: pelaajaPelit.get(nykyinenPelaaja.id) || null,
+        kayttaja_id: nykyinenPelaaja.id,
+        kortti_key: kortti.key,
+        kustannus: kustannus,
+        parametrit: kortti.parametrit || {}
+      });
+
+      const tid = Number(target.id);
+      // Apply card-specific effects for attack cards
+      if (kortti.key === 'ajan_puolitus') {
+        activeCardEffects[tid] = activeCardEffects[tid] || {};
+        activeCardEffects[tid].ajan_puolitus = Number(kortti.parametrit?.puolitusSekunteina || 15);
+        activeCardEffects[tid].ajan_puolitus_remainingQuestions = Number(kortti.parametrit?.kestoKysymyksina || 1);
+        showModal(`Ajan puolitus aktivoitu: ${target.nimi} saa seuraavaksi vain ${activeCardEffects[tid].ajan_puolitus}s`);
+      } else if (kortti.key === 'pakota_vaihto') {
+        // Minimal: persist and notify. Full swap logic is game-state heavy.
+        showModal(`Pakota vaihto aktivoitu kohteelle ${target.nimi}`);
+      } else if (kortti.key === 'nollaus') {
+        // Minimal: persist and notify. Implement zeroing logic elsewhere if needed.
+        showModal(`Nollaus aktivoitu kohteelle ${target.nimi}`);
+      } else {
+        // Fallback: just notify
+        showModal(`${kortti.nimi} aktivoitu kohteelle ${target.nimi}`);
+      }
+    } catch (err) {
+      console.error('Kortin kaytto epäonnistui:', err);
+      showModal('Kortin käyttö epäonnistui');
+    } finally {
+      pendingKortti = null;
+      targetSelectionVisible = false;
+    }
+  }
+
+  // Helper called by Confirm button to ensure non-null target
+  function performConfirmIfSelected() {
+    if (selectedTarget) {
+      // cast non-nullable
+      performPendingAttackOn(selectedTarget as Kayttaja);
+    }
+  }
+
+  // Hae kortin kustannus erikoiskortit datasta
+  function kortinKustannus(key: string): number {
+    try {
+      const k = (erikoiskortit as any).find((it: any) => it.key === key);
+      return Number(k?.kustannus || 0);
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  // Tarkistaa onko pelaajalla riittävästi pisteitä (valuutta = pisteet)
+  function pelaajallaOnRiittavasti(kayttajaId: number | undefined, kustannus: number) {
+    // Jos kayttajaId puuttuu (esim. guest-tila), käytä nykyistä pelaajaa indeksin avulla
+    let pelaaja: Kayttaja | undefined;
+    if (typeof kayttajaId !== 'undefined') {
+      pelaaja = sekoitetutPelaajat.find(p => p.id === kayttajaId);
+    }
+    if (!pelaaja) {
+      pelaaja = sekoitetutPelaajat[pelaajaIndex];
+    }
+    if (!pelaaja) return false;
+    const nimi = pelaaja.nimi;
+    return (pelaajanPisteet[nimi] || 0) >= kustannus;
+  }
 
   // ===============================================
   // ELINKAARIFUNKTIOT (Lifecycle Functions)
@@ -77,6 +266,10 @@
       console.log("🎮 Uusi peli aloitettu - kysytyt kysymykset nollattu");
 
       await aloitaUusiKysymys();
+      // Aloitustila: pelaajan pisteet nollataan komponentin sisäisesti
+      sekoitetutPelaajat.forEach(p => {
+        pelaajanPisteet[p.nimi] = 0;
+      });
     }
   });
 
@@ -251,8 +444,34 @@
         // Generoi 4 vaihtoehtoa (1 oikea + 3 väärää)
         vastausVaihtoehdot = generoiVastausVaihtoehdot(nykyinenKysymys);
 
-        // Aloita ajastin
-        aloitaAjastin();
+        // Aloita ajastin: käytä local startSeconds jotta edellisen pelaajan jäljellä oleva 'aika' ei vuoda
+        let startSeconds = 30;
+        try {
+          const nykyinen = sekoitetutPelaajat[pelaajaIndex];
+          if (nykyinen && typeof nykyinen.id !== 'undefined') {
+            const pid = Number(nykyinen.id);
+            const efekti = activeCardEffects[pid];
+            if (efekti && typeof efekti.ajan_puolitus === 'number') {
+              // Apply reduced time for this player's question
+              startSeconds = Number(efekti.ajan_puolitus) || 15;
+              // Consume lifetime
+              if (typeof efekti.ajan_puolitus_remainingQuestions === 'number') {
+                efekti.ajan_puolitus_remainingQuestions = Math.max(0, efekti.ajan_puolitus_remainingQuestions - 1);
+                if (efekti.ajan_puolitus_remainingQuestions <= 0) delete efekti.ajan_puolitus_remainingQuestions;
+              }
+              // Remove the direct effect value so it doesn't apply again
+              delete efekti.ajan_puolitus;
+              const hasAny = Object.keys(efekti).some(k => !!efekti[k]);
+              if (!hasAny) delete activeCardEffects[pid];
+              console.log(`⏱️ Ajan puolitus applied for playerId=${pid}, time=${startSeconds}`);
+            }
+          }
+        } catch (e) {
+          console.warn('⚠️ Virhe ajan_puolitus effectin soveltamisessa:', e);
+        }
+
+        // Start timer with the computed local startSeconds
+        aloitaAjastin(startSeconds);
       } else {
         // Jos ei löydy kysymyksiä, siirry seuraavaan
         console.warn(
@@ -329,10 +548,15 @@
   /**
    * Aloita ajastin
    */
-  function aloitaAjastin() {
+  function aloitaAjastin(startSeconds?: number) {
     if (peliPysaytetty) return; // Älä aloita ajastinta jos peli on pysäytetty
 
-    aika = 30;
+    // If a startSeconds was provided, use it; otherwise default to 30
+    if (typeof startSeconds === 'number') {
+      aika = startSeconds;
+    } else if (!aika || typeof aika !== 'number') {
+      aika = 30;
+    }
     putoaaAika = false;
     kellon_vari = "#10b981"; // Vihreä
 
@@ -377,7 +601,7 @@
     peliPysaytetty = false;
     if (nykyinenKysymys && !pisteytys && !valittuVastaus) {
       // Jatka ajastinta vain jos kysymys on aktiivinen
-      aloitaAjastin();
+      aloitaAjastin(aika);
     }
   }
 
@@ -415,6 +639,11 @@
    * Tarkista vastaus ja anna pisteet
    */
   async function tarkistaVastaus(vastaus: string | null) {
+    // Prevent double-processing (calls from both click and timeout)
+    if (pisteytys) {
+      console.warn('tarkistaVastaus called but scoring already in progress');
+      return;
+    }
     pisteytys = true;
     const db = await getDB();
     const nykyinenPelaaja = sekoitetutPelaajat[pelaajaIndex];
@@ -427,13 +656,28 @@
 
     const vastausaikaMs = kysymysAloitettu ? Date.now() - kysymysAloitettu : 0;
 
-    if (oikea && nykyinenKysymys) {
+  if (oikea && nykyinenKysymys) {
       // Käytä kysymyksen omia pisteitä
-      const pisteet = nykyinenKysymys.pistemaara_perus;
-      pelaajanPisteet[nykyinenPelaaja.nimi] += pisteet;
-      saatuPisteet = pisteet; // Tallenna animaatiota varten
-
-      // Pisteet tallentuvat vain pelaajanPisteet-objektiin, ei tietokantaan tässä vaiheessa
+      let pisteet = nykyinenKysymys.pistemaara_perus;
+      // Tarkista onko pelaajalla aktiivisia erikoiskorttiefektejä (esim. tuplapisteet)
+      if (nykyinenPelaaja && typeof nykyinenPelaaja.id !== 'undefined') {
+        const pid = Number(nykyinenPelaaja.id);
+        const efekti = activeCardEffects[pid];
+        if (efekti && typeof efekti.tuplapisteet === 'number' && efekti.tuplapisteet > 0) {
+          console.log(`🔍 Tuplapisteet before consumption for playerId=${pid}:`, efekti.tuplapisteet);
+          pisteet = pisteet * 2;
+          // Kuluta yksi tuplapisteen käyttö safely
+          efekti.tuplapisteet = Math.max(0, efekti.tuplapisteet - 1);
+          console.log(`🔍 Tuplapisteet after consumption for playerId=${pid}:`, efekti.tuplapisteet);
+        }
+      }
+  // Debug: log before changing points to detect unexpected increments
+  const playerName = (nykyinenPelaaja && nykyinenPelaaja.nimi) ? nykyinenPelaaja.nimi : 'tuntematon';
+  const beforePoints = pelaajanPisteet[playerName] || 0;
+  console.log('🏷️ Awarding points:', { player: playerName, before: beforePoints, add: pisteet, efekt: activeCardEffects[nykyinenPelaaja?.id ?? -1] });
+  pelaajanPisteet[playerName] = beforePoints + pisteet;
+  saatuPisteet = pisteet; // Tallenna animaatiota varten
+  console.log('✅ Points after award:', { player: playerName, after: pelaajanPisteet[playerName] });
     } else {
       saatuPisteet = 0; // Ei pisteitä väärästä vastauksesta
     }
@@ -464,16 +708,55 @@
       console.error('❌ Vastausta tallennettaessa tapahtui virhe:', err);
     }
 
-    // Näytä tulos hetki ja siirry seuraavaan
+    // Näytä tulos hetki ja päätä pitääkö pelaaja saada lisävuoro (Bonus)
+    let keepTurn = false;
+    try {
+      if (oikea && nykyinenPelaaja && typeof nykyinenPelaaja.id !== 'undefined') {
+        const pid = Number(nykyinenPelaaja.id);
+        const efekti = activeCardEffects[pid];
+        if (efekti && typeof efekti.bonus === 'number' && efekti.bonus > 0) {
+          console.log(`⭐ Bonus consumed for playerId=${pid}: before=${efekti.bonus}`);
+          // Consume one bonus use
+          efekti.bonus = Math.max(0, efekti.bonus - 1);
+          // Decrement lifetime if present
+          if (typeof efekti.bonus_remainingQuestions === 'number') {
+            efekti.bonus_remainingQuestions = Math.max(0, efekti.bonus_remainingQuestions - 1);
+            if (efekti.bonus_remainingQuestions <= 0) delete efekti.bonus_remainingQuestions;
+          }
+          if (efekti.bonus <= 0) delete efekti.bonus;
+
+          // If no other keys remain, remove the whole effect object
+          const hasAny = efekti && Object.keys(efekti).some(k => !!efekti[k]);
+          if (!hasAny) {
+            delete activeCardEffects[pid];
+            console.log(`🗑️ Poistettu kaikki efektit pelaajalta ${pid} (bonus kulutettu)`);
+          }
+
+          keepTurn = true;
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ Virhe bonuksen kulutuksessa tarkistaVastaus:', e);
+    }
+
     setTimeout(() => {
-      seuraavaKysymys();
-    }, 500);
+      if (keepTurn) {
+        showModal('Bonus: saat lisävuoron!');
+        // Start a new question for the same player (do not advance index)
+        aloitaUusiKysymys();
+      } else {
+        seuraavaKysymys();
+      }
+    }, 3500);
   }
 
   /**
    * Siirry seuraavaan kysymykseen tai pelaajaan
    */
   function seuraavaKysymys() {
+    // Muista pelaaja, joka juuri vastasi (hänen efektinsä voivat vanhentua)
+    const juuriVastannut = sekoitetutPelaajat[pelaajaIndex];
+
     // Siirry seuraavaan pelaajaan jokaiseen kysymyksen jälkeen
     pelaajaIndex++;
 
@@ -490,7 +773,55 @@
       }
     }
 
-    aloitaUusiKysymys();
+      // Kun pelaajan vuoro loppuu, laske hänen aktiivisten korttiefektien jäljellä oleva kesto
+      try {
+        if (juuriVastannut && typeof juuriVastannut.id !== 'undefined') {
+          const pid = Number(juuriVastannut.id);
+          const efekti = activeCardEffects[pid];
+          if (efekti) {
+            // Tuplapisteet: laske remainingQuestions
+            if (typeof efekti.tuplapisteet_remainingQuestions === 'number') {
+              efekti.tuplapisteet_remainingQuestions = Math.max(0, efekti.tuplapisteet_remainingQuestions - 1);
+              console.log(`⏳ Tuplapisteet remaining for playerId=${pid}:`, efekti.tuplapisteet_remainingQuestions);
+              if (efekti.tuplapisteet_remainingQuestions <= 0) {
+                // Poista tuplapisteet kokonaan
+                efekti.tuplapisteet = 0;
+                delete efekti.tuplapisteet_remainingQuestions;
+              }
+            }
+            // Bonus: laske remainingQuestions
+            if (typeof efekti.bonus_remainingQuestions === 'number') {
+              efekti.bonus_remainingQuestions = Math.max(0, efekti.bonus_remainingQuestions - 1);
+              console.log(`⏳ Bonus remaining for playerId=${pid}:`, efekti.bonus_remainingQuestions);
+              if (efekti.bonus_remainingQuestions <= 0) {
+                efekti.bonus = 0;
+                delete efekti.bonus_remainingQuestions;
+              }
+            }
+            // Ajan puolitus: laske remainingQuestions
+            if (typeof efekti.ajan_puolitus_remainingQuestions === 'number') {
+              efekti.ajan_puolitus_remainingQuestions = Math.max(0, efekti.ajan_puolitus_remainingQuestions - 1);
+              console.log(`⏳ Ajan puolitus remaining for playerId=${pid}:`, efekti.ajan_puolitus_remainingQuestions);
+              if (efekti.ajan_puolitus_remainingQuestions <= 0) {
+                delete efekti.ajan_puolitus_remainingQuestions;
+              }
+            }
+
+            // Jos efektissä ei ole enää mitään, poista objekti
+            const hasAny = Object.keys(efekti).some(k => {
+              return (k !== 'tuplapisteet_remainingQuestions' && k !== 'bonus_remainingQuestions') && !!efekti[k];
+            });
+            if (!hasAny) {
+              delete activeCardEffects[pid];
+              console.log(`🗑️ Poistettu kaikki efektit pelaajalta ${pid}`);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ Virhe efektien päättelyssä seuraavaKysymys:', e);
+      }
+
+      aloitaUusiKysymys();
   }
 
   /**
@@ -638,6 +969,23 @@
     {@html GLASS_BACKGROUNDS.floatingParticles}
   </div>
 
+  <!-- Global notification modal: centered vertically (much lower) so it covers main question area.
+       z-48 keeps it below the target-picker overlay (z-50) but above in-game elements. Placed at top-level
+       to avoid stacking-context issues from inner cards (e.g. "Pelijärjestys"). -->
+  {#if modalVisible}
+    <!-- Bottom-anchored modal: fixed to bottom of viewport, full-width container, modal card sits above bottom edge -->
+    <div style="position:fixed; left:0; right:0; bottom:0; z-index:48; display:flex; align-items:flex-end; justify-content:center; pointer-events:none;">
+      <!-- Optional semi-transparent clickable backdrop behind card to dismiss (covers entire width but not full height) -->
+      <button type="button" aria-label="Sulje ilmoitus" on:click={hideModal} style="position:absolute; left:0; right:0; bottom:0; top:0; background:rgba(0,0,0,0.0); border:0; padding:0; margin:0; pointer-events:auto;"></button>
+
+      <div style="position:relative; pointer-events:auto; width:100%; max-width:960px; margin:0 24px 24px 24px;">
+        <div class="rounded-t-lg p-4 bg-black/95 text-white shadow-2xl text-center">
+          {modalMessage}
+        </div>
+      </div>
+    </div>
+  {/if}
+
   <!-- Main layout with sidebar structure -->
   <div class="{GLASS_BACKGROUNDS.contentLayer} min-h-screen">
     <div class="flex">
@@ -649,32 +997,163 @@
         <button 
           class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
           title="🎭 Kysymyksen vaihto – jos et halua vastata, vaihda kortti toiseen."
+          aria-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('kysymyksen_vaihto'))}
+          class:opacity-60={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('kysymyksen_vaihto'))}
+          class:card-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('kysymyksen_vaihto'))}
+          on:click={async () => { if (!canUseKortti()) return;
+            try {
+              const kortti = (erikoiskortit as any).find((k: any) => k.key === 'kysymyksen_vaihto');
+              if (!kortti) return showModal('Korttia ei loydy');
+              const nykyinenPelaaja = sekoitetutPelaajat[pelaajaIndex];
+              if (!nykyinenPelaaja || typeof nykyinenPelaaja.id === 'undefined') return showModal('Pelaaja ei tunnistettu');
+              const db = await getDB();
+              const kustannus = Number(kortti.kustannus || 0);
+              const nimi = nykyinenPelaaja.nimi;
+              const nykyisetPisteet = pelaajanPisteet[nimi] || 0;
+              if (isNaN(kustannus)) { showModal('Kortin kustannus ei ole kelvollinen'); return; }
+              if (nykyisetPisteet < kustannus) return showModal('Ei tarpeeksi pisteitä');
+              // Vähennä pisteitä ja tallenna käyttö
+              pelaajanPisteet[nimi] = nykyisetPisteet - kustannus;
+              const peliId = typeof nykyinenPelaaja.id !== 'undefined' ? (pelaajaPelit.get(nykyinenPelaaja.id) || null) : null;
+              await db.tallennaKortinKaytto({
+                peli_id: peliId,
+                kayttaja_id: nykyinenPelaaja.id,
+                kortti_key: kortti.key,
+                kustannus: kustannus,
+                parametrit: kortti.parametrit || {}
+              });
+              showModal('Kysymyksen vaihto aktivoitu');
+              // Remove the current question from the "asked" set so it can be reused later
+              try {
+                if (nykyinenKysymys && typeof nykyinenKysymys.id !== 'undefined') {
+                  const removed = kysytytKysymykset.delete(nykyinenKysymys.id);
+                  console.log('🔁 Kysymyksen vaihto: poistettu nykyinen kysymys kysytytKysymykset - removed=', removed, 'id=', nykyinenKysymys.id);
+                }
+              } catch (e) {
+                console.warn('⚠️ Virhe poistaessa nykyistä kysymystä kysytytKysymykset-setistä:', e);
+              }
+
+              // Start a fresh question for the same player without scoring the previous one
+              // Stop any running timer to avoid race conditions; aloitaUusiKysymys will restart it
+              if (ajastin) {
+                clearInterval(ajastin);
+                ajastin = null;
+              }
+              await aloitaUusiKysymys();
+            } catch (err) {
+              console.error('Kortin kaytto epäonnistui:', err);
+              showModal('Kortin käyttö epäonnistui');
+            }
+          }}
         >
           <div class="flex flex-col items-center">
             <span class="text-3xl mb-2">🎭</span>
-            <span class="text-blue-400 font-medium">Kysymyksen vaihto - 💎10</span>
+            <span class="text-blue-400 font-medium">Kysymyksen vaihto - 10</span>
           </div>
         </button>
         
-        <!-- Aikalisä -->
+        <!-- Bonus (moved to defense) -->
         <button 
           class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
-          title="🕑 Aikalisä – saat ylimääräisen hetken miettimiseen."
+          title="⭐ Bonus – jos vastaat oikein, saat heti toisen kysymyksen."
+          aria-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('bonus'))}
+          class:opacity-60={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('bonus'))}
+          class:card-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('bonus'))}
+          on:click={async () => { if (!canUseKortti()) return;
+            try {
+              const kortti = (erikoiskortit as any).find((k: any) => k.key === 'bonus');
+              if (!kortti) return showModal('Korttia ei loydy');
+              const nykyinenPelaaja = sekoitetutPelaajat[pelaajaIndex];
+              if (!nykyinenPelaaja || typeof nykyinenPelaaja.id === 'undefined') return showModal('Pelaaja ei tunnistettu');
+              const db = await getDB();
+              const kustannus = Number(kortti.kustannus || 0);
+              const nimi = nykyinenPelaaja.nimi;
+              const nykyisetPisteet = pelaajanPisteet[nimi] || 0;
+              if (isNaN(kustannus)) { showModal('Kortin kustannus ei ole kelvollinen'); return; }
+              if (nykyisetPisteet < kustannus) return showModal('Ei tarpeeksi pisteitä');
+              // Vähennä pisteitä ja tallenna käyttö
+              pelaajanPisteet[nimi] = nykyisetPisteet - kustannus;
+              await db.tallennaKortinKaytto({
+             peli_id: typeof nykyinenPelaaja.id !== 'undefined' ? (pelaajaPelit.get(nykyinenPelaaja.id) || null) : null,
+                kayttaja_id: nykyinenPelaaja.id,
+                kortti_key: kortti.key,
+                kustannus: kustannus,
+                parametrit: kortti.parametrit || {}
+              });
+              // Apply 'bonus' effect: mark activeCardEffects so next correct doesn't pass turn
+              const bid = Number(nykyinenPelaaja.id);
+              activeCardEffects[bid] = activeCardEffects[bid] || {};
+              activeCardEffects[bid].bonus = (activeCardEffects[bid].bonus || 0) + (kortti.parametrit?.lisaVuoro || 1);
+              // set lifetime so effect doesn't persist across multiple player's turns
+              activeCardEffects[bid].bonus_remainingQuestions = Number(kortti.parametrit?.kestoKysymyksina || 1);
+              showModal('Bonus aktivoitu — saat lisävuoron seuraavasta oikeasta vastauksesta');
+            } catch (err) {
+              console.error('Kortin kaytto epäonnistui:', err);
+              showModal('Kortin käyttö epäonnistui');
+            }
+          }}
         >
           <div class="flex flex-col items-center">
-            <span class="text-3xl mb-2">🕑</span>
-            <span class="text-cyan-400 font-medium">Aikalisä - 5💎</span>
+            <span class="text-3xl mb-2">⭐</span>
+            <span class="text-orange-400 font-medium">Bonus - 10</span>
           </div>
         </button>
         
-        <!-- Tuplapisteet -->
+        <!-- Tuplapisteet (nappi toimii alempana) -->
+        <!-- Tuplapisteet functionality -->
         <button 
           class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
           title="🎯 Tuplapisteet – seuraava oikea vastaus antaa 2× pisteet."
+          aria-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('tuplapisteet'))}
+          class:opacity-60={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('tuplapisteet'))}
+          class:card-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('tuplapisteet'))}
+          on:click={async () => { if (!canUseKortti()) return;
+            try {
+              const kortti = (erikoiskortit as any).find((k: any) => k.key === 'tuplapisteet');
+              if (!kortti) return alert('Korttia ei loydy');
+              const nykyinenPelaaja = sekoitetutPelaajat[pelaajaIndex];
+              if (!nykyinenPelaaja || typeof nykyinenPelaaja.id === 'undefined') return alert('Pelaaja ei tunnistettu');
+              const db = await getDB();
+              const kustannus = Number(kortti.kustannus || 0);
+              const nimi = nykyinenPelaaja.nimi;
+              const nykyisetPisteet = pelaajanPisteet[nimi] || 0;
+              if (isNaN(kustannus)) {
+                showModal('Kortin kustannus ei ole kelvollinen');
+                return;
+              }
+              if (nykyisetPisteet < kustannus) return showModal('Ei tarpeeksi pisteitä');
+
+              // Vähennä pisteitä paikallisesta tilasta ja tallenna käyttö
+              pelaajanPisteet[nimi] = nykyisetPisteet - kustannus;
+              await db.tallennaKortinKaytto({
+             peli_id: typeof nykyinenPelaaja.id !== 'undefined' ? (pelaajaPelit.get(nykyinenPelaaja.id) || null) : null,
+                kayttaja_id: nykyinenPelaaja.id,
+                kortti_key: kortti.key,
+                kustannus: kustannus,
+                parametrit: kortti.parametrit || {}
+              });
+
+              // Aktivoi efekteja pelaajalle (seuraava oikea vastaus tuplaa)
+              const pid = typeof nykyinenPelaaja.id !== 'undefined' ? Number(nykyinenPelaaja.id) : null;
+              if (pid === null) {
+                console.warn('Tuplapisteet: pelaaja id puuttuu, efektiä ei aktivoitu');
+              } else {
+                  activeCardEffects[pid] = activeCardEffects[pid] || {};
+                  // Track uses and remaining question-lifetime so effect won't persist to next round
+                  activeCardEffects[pid].tuplapisteet = (activeCardEffects[pid].tuplapisteet || 0) + 1;
+                  activeCardEffects[pid].tuplapisteet_remainingQuestions = Number(kortti.parametrit?.kestoKysymyksina || 1);
+                  console.log(`🔁 Tuplapisteet aktivoitu for playerId=${pid}. uses=${activeCardEffects[pid].tuplapisteet}, remainingQuestions=${activeCardEffects[pid].tuplapisteet_remainingQuestions}`);
+                  showModal('Tuplapisteet aktivoitu — seuraava oikea vastaus antaa kaksinkertaiset pisteet.');
+              }
+            } catch (err) {
+              console.error('Kortin kaytto epäonnistui:', err);
+              showModal('Kortin käyttö epäonnistui');
+            }
+          }}
         >
           <div class="flex flex-col items-center">
             <span class="text-3xl mb-2">🎯</span>
-            <span class="text-teal-400 font-medium">Tuplapisteet - 💎5</span>
+            <span class="text-teal-400 font-medium">Tuplapisteet - 5</span>
           </div>
         </button>
         
@@ -682,10 +1161,58 @@
         <button 
           class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
           title="🪄 Puolitus – poistaa kaksi väärää vastausta (50/50)."
+          aria-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('puolitus'))}
+          class:opacity-60={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('puolitus'))}
+          class:card-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('puolitus'))}
+          on:click={async () => { if (!canUseKortti()) return;
+            try {
+              const kortti = (erikoiskortit as any).find((k: any) => k.key === 'puolitus');
+              if (!kortti) return showModal('Korttia ei loydy');
+              const nykyinenPelaaja = sekoitetutPelaajat[pelaajaIndex];
+              if (!nykyinenPelaaja || typeof nykyinenPelaaja.id === 'undefined') return showModal('Pelaaja ei tunnistettu');
+              const db = await getDB();
+              const kustannus = Number(kortti.kustannus || 0);
+              const nimi = nykyinenPelaaja.nimi;
+              const nykyisetPisteet = pelaajanPisteet[nimi] || 0;
+              if (isNaN(kustannus)) { showModal('Kortin kustannus ei ole kelvollinen'); return; }
+              if (nykyisetPisteet < kustannus) return showModal('Ei tarpeeksi pisteitä');
+              // Deduct & persist
+              pelaajanPisteet[nimi] = nykyisetPisteet - kustannus;
+              await db.tallennaKortinKaytto({
+             peli_id: typeof nykyinenPelaaja.id !== 'undefined' ? (pelaajaPelit.get(nykyinenPelaaja.id) || null) : null,
+                kayttaja_id: nykyinenPelaaja.id,
+                kortti_key: kortti.key,
+                kustannus: kustannus,
+                parametrit: kortti.parametrit || {}
+              });
+              // Remove up to 2 wrong answers from current options
+              if (nykyinenKysymys) {
+                const oikea = nykyinenKysymys.oikea_vastaus;
+                const wrongs = vastausVaihtoehdot.filter(v => v !== oikea && v !== undefined);
+                // randomly remove up to 'poistettavat' (default 2)
+                const poistettavat = Number(kortti.parametrit?.poistettavat || 2);
+                let removed = 0;
+                let opts = [...vastausVaihtoehdot];
+                while (removed < poistettavat && wrongs.length > 0 && opts.length > 1) {
+                  const idx = Math.floor(Math.random() * wrongs.length);
+                  const val = wrongs.splice(idx,1)[0];
+                  const removeIndex = opts.indexOf(val);
+                  if (removeIndex >= 0) { opts.splice(removeIndex,1); removed++; }
+                }
+                vastausVaihtoehdot = opts;
+                showModal(`Puolitus aktivoitu – poistettiin ${removed} vaihtoehtoa`);
+              } else {
+                showModal('Puolitus aktivoitu');
+              }
+            } catch (err) {
+              console.error('Kortin kaytto epäonnistui:', err);
+              showModal('Kortin käyttö epäonnistui');
+            }
+          }}
         >
           <div class="flex flex-col items-center">
             <span class="text-3xl mb-2">🪄</span>
-            <span class="text-indigo-400 font-medium">Puolitus - 💎10</span>
+            <span class="text-indigo-400 font-medium">Puolitus - 10</span>
           </div>
         </button>
       </div>
@@ -703,13 +1230,15 @@
             </button>
 
             <h1 class="text-4xl font-bold {GLASS_COLORS.titleGradient}">
-              🎯 Kysymyssota
+              🎯 Kysymys-sota
             </h1>
 
             <div class="text-right">
               <div class="text-sm {GLASS_COLORS.textSecondary}">Kysymys</div>
               <div class="text-xl font-bold">{kysymysNumero}/{maxKysymykset}</div>
             </div>
+              <!-- modal handled globally above -->
+              <!-- target picker UI moved to app-level TargetPickerOverlay component -->
           </div>
         </div>
 
@@ -751,15 +1280,17 @@
               class:font-bold={pisteytys && saatuPisteet > 0}
               class:animate-pulse={pisteytys && saatuPisteet > 0}
             >
-              💎 {pelaajanPisteet[sekoitetutPelaajat[pelaajaIndex].nimi] || 0} pistettä
-            </div>
+                {pelaajanPisteet[sekoitetutPelaajat[pelaajaIndex].nimi] || 0} pistettä
+              </div>
+              <!-- Valuutta: pisteet käytössä pelissä -->
           </div>
         </div>
+          <!-- explicit point display removed -->
 
         <!-- Pelaajajärjestys (keskellä) -->
         <div class="flex-1 flex justify-center">
           <div class="{GLASS_STYLES.cardLight} p-3">
-            <div class="text-xs {GLASS_COLORS.textSecondary} text-center mb-2">
+            <div class="text-xs {GLASS_COLORS.textSecondary} text-center mb-2"></div>
               Pelijärjestys
             </div>
             <div class="flex items-center space-x-2">
@@ -838,9 +1369,8 @@
                 : ""}
             >
               <div class="text-xl font-bold text-primary-300">
-                {nykyinenKysymys.pistemaara_perus}
-              </div>
-              <div class="text-sm font-bold text-primary-400">💎</div>
+                  {nykyinenKysymys.pistemaara_perus}
+                </div>
             </div>
           </div>
           <div
@@ -954,7 +1484,7 @@
               {pisteytysViesti} +{saatuPisteet} pistettä
             </div>
             <div class="text-lg text-green-400 mt-2">
-              💎 Pisteitä: {pelaajanPisteet[
+              Pisteitä: {pelaajanPisteet[
                 sekoitetutPelaajat[pelaajaIndex].nimi
               ] || 0}
             </div>
@@ -966,14 +1496,13 @@
               Oikea vastaus: {nykyinenKysymys?.oikea_vastaus}
             </div>
             <div class="text-lg text-red-400 mt-1">
-              💎 Pisteet: {pelaajanPisteet[
+              Pisteet: {pelaajanPisteet[
                 sekoitetutPelaajat[pelaajaIndex].nimi
               ] || 0}
             </div>
           {/if}
         </div>
       {/if}
-    </div>
   {:else}
     <!-- Lopputulokset -->
     <div class="space-y-8">
@@ -1040,21 +1569,43 @@
         <button 
           class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
           title="📦 Pakota vaihto – anna oma kysymyksesi jollekin toiselle ja ota hänen kysymyksensä."
+          aria-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('pakota_vaihto'))}
+          class:opacity-60={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('pakota_vaihto'))}
+          class:card-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('pakota_vaihto'))}
+          on:click={() => openTargetSelection('pakota_vaihto')}
         >
           <div class="flex flex-col items-center">
             <span class="text-3xl mb-2">📦</span>
-            <span class="text-primary-400 font-medium">Pakota vaihto - 💎5</span>
+            <span class="text-primary-400 font-medium">Pakota vaihto - 5</span>
           </div>
         </button>
-        
+        <!-- Ajan puolitus (new attack card) -->
+        <button 
+          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
+          title="⏱️ Ajan puolitus – valitun pelaajan seuraava kysymys on vain 15s."
+          aria-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('ajan_puolitus'))}
+          class:opacity-60={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('ajan_puolitus'))}
+          class:card-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('ajan_puolitus'))}
+          on:click={() => openTargetSelection('ajan_puolitus')}
+        >
+          <div class="flex flex-col items-center">
+            <span class="text-3xl mb-2">⏱️</span>
+            <span class="text-red-400 font-medium">Ajan puolitus - 5</span>
+          </div>
+        </button>
+
         <!-- Nollaus -->
         <button 
           class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
           title="🌀 Nollaus – valitse pelaaja, jonka edellinen pistelisäys mitätöidään."
+          aria-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('nollaus'))}
+          class:opacity-60={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('nollaus'))}
+          class:card-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('nollaus'))}
+          on:click={() => openTargetSelection('nollaus')}
         >
           <div class="flex flex-col items-center">
             <span class="text-3xl mb-2">🌀</span>
-            <span class="text-purple-400 font-medium">Nollaus - 💎10</span>
+            <span class="text-purple-400 font-medium">Nollaus - 10</span>
           </div>
         </button>
         
@@ -1062,23 +1613,58 @@
         <button 
           class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
           title="🌪️ Sekoitus – kaikkien pelaajien seuraavat kysymykset sekoitetaan satunnaisesti."
+          aria-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('sekoitus'))}
+          class:opacity-60={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('sekoitus'))}
+          class:card-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('sekoitus'))}
+          on:click={async () => { if (!canUseKortti()) return;
+            try {
+              const kortti = (erikoiskortit as any).find((k: any) => k.key === 'sekoitus');
+              if (!kortti) return showModal('Korttia ei loydy');
+              const nykyinenPelaaja = sekoitetutPelaajat[pelaajaIndex];
+              if (!nykyinenPelaaja || typeof nykyinenPelaaja.id === 'undefined') return showModal('Pelaaja ei tunnistettu');
+              const db = await getDB();
+              const kustannus = Number(kortti.kustannus || 0);
+              const nimi = nykyinenPelaaja.nimi;
+              const nykyisetPisteet = pelaajanPisteet[nimi] || 0;
+              if (isNaN(kustannus)) { showModal('Kortin kustannus ei ole kelvollinen'); return; }
+              if (nykyisetPisteet < kustannus) return showModal('Ei tarpeeksi pisteitä');
+              // Vähennä pisteitä ja tallenna käyttö
+              pelaajanPisteet[nimi] = nykyisetPisteet - kustannus;
+              await db.tallennaKortinKaytto({
+                peli_id: pelaajaPelit.get(nykyinenPelaaja.id) || null,
+                kayttaja_id: nykyinenPelaaja.id,
+                kortti_key: kortti.key,
+                kustannus: kustannus,
+                parametrit: kortti.parametrit || {}
+              });
+              // Mark an effect that will make next question(s) for all players random.
+              const vaikutusKysymyksina = Number(kortti.parametrit?.vaikutusKysymyksina || 1);
+              // Apply per-player effect so expiration logic can clean it up later
+              sekoitetutPelaajat.forEach(p => {
+                if (typeof p.id === 'undefined') return;
+                const pid = Number(p.id);
+                activeCardEffects[pid] = activeCardEffects[pid] || {};
+                activeCardEffects[pid].sekoitus = (activeCardEffects[pid].sekoitus || 0) + 1;
+                activeCardEffects[pid].sekoitus_remainingQuestions = Math.max(
+                  activeCardEffects[pid].sekoitus_remainingQuestions || 0,
+                  vaikutusKysymyksina
+                );
+              });
+              console.log(`300 Sekoitus aktivoitu for all players: vaikutusKysymyksina=${vaikutusKysymyksina}`);
+              showModal('Sekoitus aktivoitu');
+            } catch (err) {
+              console.error('Kortin kaytto epäonnistui:', err);
+              showModal('Kortin käyttö epäonnistui');
+            }
+          }}
         >
           <div class="flex flex-col items-center">
             <span class="text-3xl mb-2">🌪️</span>
-            <span class="text-emerald-400 font-medium">Sekoitus - 💎5</span>
+            <span class="text-emerald-400 font-medium">Sekoitus - 5</span>
           </div>
         </button>
         
-        <!-- Bonus -->
-        <button 
-          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
-          title="⭐ Bonus – jos vastaat oikein, saat heti toisen kysymyksen."
-        >
-          <div class="flex flex-col items-center">
-            <span class="text-3xl mb-2">⭐</span>
-            <span class="text-orange-400 font-medium">Bonus - 💎10</span>
-          </div>
-        </button>
+        
       </div>
     </div>
   </div>
@@ -1092,5 +1678,14 @@
 
   .hover-scale:hover:not(:disabled) {
     transform: translateY(-2px) scale(1.02);
+  }
+
+  /* Disabled/insufficient-pisteet look for cards */
+  .card-disabled {
+    background: rgba(0,0,0,0.45) !important;
+    color: #ddd !important;
+    border-color: rgba(255,255,255,0.06) !important;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+    pointer-events: none;
   }
 </style>

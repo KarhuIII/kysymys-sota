@@ -5,6 +5,7 @@
   import AsetuksetSivu from './lib/components/AsetuksetSivu.svelte';
   import PeliIkkuna from './lib/components/PeliIkkuna.svelte';
   import AdminSivu from './lib/components/AdminSivu.svelte';
+  import TargetPickerOverlay from './lib/components/TargetPickerOverlay.svelte';
   import type { Kayttaja } from './lib/database/schema.js';
   import { AppBar, Switch, Modal } from '@skeletonlabs/skeleton-svelte';
   import { peliPalvelu } from './lib/database/gameService.js';
@@ -144,6 +145,7 @@
       peliLoppuiHandler = null;
     }
   });
+
 
   // ===============================================
   // TOIMINTOFUNKTIOT (Action Functions)
@@ -753,6 +755,8 @@
     </footer>
   </div>
 </main>
+  <!-- Global target-picker overlay (renders at the app root so it sits above other stacking contexts) -->
+  <TargetPickerOverlay />
 </div>
 
 <style>

@@ -30,9 +30,29 @@ export class KysymyssotaDB {
       request.onerror = () => reject(request.error);
     });
   }
+
+  /**
+   * Tallenna erikoiskortin kaytto tietokantaan
+   * @param usage - { peli_id, kayttaja_id, kortti_key, kustannus, parametrit, paivays }
+   */
+  public async tallennaKortinKaytto(usage: any): Promise<void> {
+    if (!this.db) throw new Error("Tietokanta ei ole alustettu");
+    const transaction = this.db.transaction(["card_usages"], "readwrite");
+    const store = transaction.objectStore("card_usages");
+    const rec = { ...usage, paivays: usage.paivays || new Date().toISOString() };
+    return new Promise((resolve, reject) => {
+      const req = store.add(rec);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  /**
+   * (Huom) Erilliset valuutta-apumenetelmät poistettu: valuutta käyttää pelin pisteitä.
+   */
   private db: IDBDatabase | null = null;
   private readonly DB_NAME = "KysymyssotaDB";
-  private readonly DB_VERSION = 1;
+  private readonly DB_VERSION = 2; // bumped to create card_usages store if missing
 
   /**
    * Tyhjentää kaikki taulut tietokannassa ja alustaa kysymykset uudelleen
@@ -163,6 +183,16 @@ export class KysymyssotaDB {
             autoIncrement: true,
           });
           vastauksetStore.createIndex("peli_id", "peli_id", { unique: false });
+        }
+        // Erikoiskorttien kaytto (card usages)
+        if (!db.objectStoreNames.contains("card_usages")) {
+          const usagesStore = db.createObjectStore("card_usages", {
+            keyPath: "id",
+            autoIncrement: true,
+          });
+          usagesStore.createIndex("peli_id", "peli_id", { unique: false });
+          usagesStore.createIndex("kayttaja_id", "kayttaja_id", { unique: false });
+          usagesStore.createIndex("kortti_key", "kortti_key", { unique: false });
         }
 
                 // Tilastot
@@ -354,6 +384,7 @@ export class KysymyssotaDB {
       vaikeustaso_min: vaikeustasoMin,
       vaikeustaso_max: vaikeustasoMax,
       pelaajan_vari: pelaajanVari,
+      // Aloituspisteet ja pisteet tallennetaan pelitapahtumissa, ei erillisessä kentässä
       pisteet_yhteensa: 0,
       luotu: new Date().toISOString(),
     };
