@@ -69,6 +69,19 @@
   let ajastin: NodeJS.Timeout | null = null;
   let kellon_vari = "#10b981"; // Vihreä
 
+  // Reactive clock visuals: glow and pulse depending on remaining time
+  $: clockBoxShadow = aika <= 10
+    ? `0 12px 40px ${kellon_vari}55, 0 2px 6px rgba(0,0,0,0.08) inset`
+    : aika <= 20
+    ? `0 8px 28px ${kellon_vari}44, 0 2px 6px rgba(0,0,0,0.06) inset`
+    : `0 4px 12px ${kellon_vari}22, 0 2px 6px rgba(0,0,0,0.04) inset`;
+
+  $: clockAnimation = aika <= 10 ? `pulse-fast 0.8s infinite ease-in-out` : aika <= 20 ? `pulse-slow 1.6s infinite ease-in-out` : 'none';
+
+  // Huom: yllä olevat reaktiiviset muuttujat muuttuvat automaattisesti kun `aika` tai
+  // `kellon_vari` päivittyvät. Ne ohjaavat kellon varjon ja animaation intensiteettiä
+  // (ei muuta pelilogiikkaa — vain visuaalinen palaute pelaajille).
+
   // Pelin tila
   let pelaajaIndex = 0;
   let kysymysNumero = 1;
@@ -90,6 +103,12 @@
     const p = sekoitetutPelaajat[pelaajaIndex];
     return p && typeof p.id !== 'undefined' ? p.id : undefined;
   }
+
+  /*
+    Huomautus: useimmat seuraavista util-funktioista ovat pieniä apureita UI- ja korttilogiikan
+    tukemiseksi. Ne eivät tee pysyviä muutoksia sovelluksen tilaan ellei niitä nimenomaisesti
+    kutsuta toiminnon yhteydessä (esim. kortin käyttö vähentää pisteitä ja tallentaa lokin DB:hen).
+  */
 
   // Estää kortin käytön kun pelaaja on jo vastannut nykyiseen kysymykseen (odotusaika / pisteytys)
   function canUseKortti(): boolean {
@@ -163,6 +182,11 @@
       }
     });
   }
+
+  // performPendingAttackOn: suorittaa odottavan hyökkäyksen valittua targetia kohtaan.
+  // Tämä funktio päivittää paikallisen tilan (pelaajan pisteet) ja tallentaa kortin
+  // käytön tietokantaan. Korttien varsinaiset peliefektit (esim. ajan puolitus) asetetaan
+  // `activeCardEffects`-objektiin, jota muut funktiot lukevat kysymyksen alkaessa.
 
   // Perform the pending attack card on selected target player
   async function performPendingAttackOn(target: Kayttaja) {
@@ -261,7 +285,7 @@
         pelaajanPisteet[pelaaja.nimi] = 0;
       });
 
-      // Nollaa kysytyt kysymykset uutta peliä varten
+  // Nollaa kysytyt kysymykset uutta peliä varten
       kysytytKysymykset.clear();
       console.log("🎮 Uusi peli aloitettu - kysytyt kysymykset nollattu");
 
@@ -278,6 +302,13 @@
       clearInterval(ajastin);
     }
   });
+
+  /*
+    Elinkaarimuodot (onMount/onDestroy) huolehtivat komponentin alustus- ja
+    siivoustoiminnoista. onMount lataa tarvittavat dataresurssit ja aloittaa
+    ensimmäisen kysymyksen, onDestroy varmistaa että ajastin siivotaan kun
+    komponentti poistetaan näkymästä.
+  */
 
   // ===============================================
   // PISTEYTYSVIESTIT (Scoring Messages)
@@ -365,6 +396,9 @@
    * Aloita uusi kysymys nykyiselle pelaajalle
    */
   async function aloitaUusiKysymys() {
+    // Tässä funktiossa haetaan seuraava kysymys tietokannasta, asetetaan vastausvaihtoehdot
+    // ja käynnistetään ajastin. Funktion sisällä huomioidaan myös pelaajakohtaiset
+    // erikoiskorttiefektit (esim. ajan puolitus), jotka voivat muuttaa alkavaa ajastusaikaa.
     loading = true;
     valittuVastaus = null;
     pisteytys = false;
@@ -549,6 +583,9 @@
    * Aloita ajastin
    */
   function aloitaAjastin(startSeconds?: number) {
+    // Aloittaa / käynnistää sekuntipohjaisen ajastuksen. Jos peli on pysäytetty,
+    // funktio ei tee mitään. Ajastin päivittää `aika`-muuttujaa joka sekunti ja
+    // asettaa kellon värin/arvot visuaalista palautetta varten (vihreä -> oranssi -> punainen).
     if (peliPysaytetty) return; // Älä aloita ajastinta jos peli on pysäytetty
 
     // If a startSeconds was provided, use it; otherwise default to 30
@@ -639,6 +676,11 @@
    * Tarkista vastaus ja anna pisteet
    */
   async function tarkistaVastaus(vastaus: string | null) {
+    // Funktio arvioi vastauksen oikeellisuuden, laskee pisteet (mukaan lukien
+    // mahdolliset erikoisefektien vaikutukset kuten tuplapisteet), tallentaa vastauksen
+    // tietokantaan ja hoitaa siirtymisen seuraavaan kysymykseen. Pisteytys on suojattu
+    // lipulla `pisteytys` jotta kaksinkertaiset kutsut (esim. timeout + click) eivät
+    // aiheuta kaksinkertaista palkintoa.
     // Prevent double-processing (calls from both click and timeout)
     if (pisteytys) {
       console.warn('tarkistaVastaus called but scoring already in progress');
@@ -1253,101 +1295,45 @@
         {:else if nykyinenKysymys}
           <!-- Game View -->
           <div class="space-y-4">
-      <!-- Nykyinen pelaaja, pelaajajärjestys ja ajastin -->
-      <div class="flex justify-between items-center">
-        <!-- Nykyinen pelaaja (vasen) -->
-        <div class="flex items-center space-x-4 flex-1">
-          <div
-            class="w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
-            style="background: linear-gradient(135deg, {haePelaajanVari(
-              sekoitetutPelaajat[pelaajaIndex]
-            )}, {haePelaajanVari(sekoitetutPelaajat[pelaajaIndex])}dd)"
+      <!-- Nykyinen pelaaja / ajastin (keskitetty) -->
+      <div class="flex justify-center items-center space-x-4">
+        <!-- All players compact badges next to clock -->
+        <div class="flex items-center space-x-2 px-2 py-1 rounded-md">
+          {#each sekoitetutPelaajat as pelaaja, idx}
+            {@const color = haePelaajanVari(pelaaja)}
+            <div class="flex items-center space-x-2 px-2 py-1 rounded-md transition-all duration-200"
+              style="background: linear-gradient(135deg, {color}22, {color}08); border: 2px solid {idx === pelaajaIndex ? color + 'aa' : 'transparent'}; box-shadow: {idx === pelaajaIndex ? '0 4px 14px ' + color + '55' : 'none'};">
+              <div class="w-7 h-7 rounded-sm flex items-center justify-center font-bold text-white text-sm" style="background: linear-gradient(135deg, {color}, {color}cc);">{pelaaja.nimi.charAt(0).toUpperCase()}</div>
+              <div class="text-xs font-semibold" style="color: {color}">{pelaaja.nimi}</div>
+              <div class="text-xs {GLASS_COLORS.textSecondary} ml-1">{pelaajanPisteet[pelaaja.nimi] || 0} 💎</div>
+            </div>
+          {/each}
+        </div>
+        <div class="text-center">
+          <button
+            class="{GLASS_STYLES.card} flex items-center justify-center w-14 h-14 rounded-md text-lg font-bold text-white transition-all duration-200 hover:scale-105 cursor-pointer relative clock-button"
+            class:pulse-fast={aika <= 10}
+            class:pulse-slow={aika <= 20 && aika > 10}
+            style="background: linear-gradient(135deg, {kellon_vari}25, {kellon_vari}12); border: 1px solid {kellon_vari}33; box-shadow: {clockBoxShadow}; backdrop-filter: blur(6px); --clock-glow: {kellon_vari}55; --clock-glow-mid: {kellon_vari}44; --clock-glow-soft: {kellon_vari}22;"
+            on:click={() =>
+              nykyinenKysymys && !pisteytys
+                ? peliPysaytetty
+                  ? jatkaPelia()
+                  : pysaytaPeli()
+                : null}
+            disabled={!nykyinenKysymys || pisteytys}
+            title={peliPysaytetty
+              ? "Klikkaa jatkaaksesi peliä"
+              : "Klikkaa pysäyttääksesi pelin"}
           >
-            <span class="text-lg font-bold text-white">
-              {sekoitetutPelaajat[pelaajaIndex].nimi.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div>
-            <div
-              class="text-lg font-bold"
-              style="color: {haePelaajanVari(sekoitetutPelaajat[pelaajaIndex])}"
-            >
-              {sekoitetutPelaajat[pelaajaIndex].nimi}
-            </div>
-            <div
-              class="text-sm {GLASS_COLORS.textSecondary} transition-all duration-500"
-              class:text-green-400={pisteytys && saatuPisteet > 0}
-              class:font-bold={pisteytys && saatuPisteet > 0}
-              class:animate-pulse={pisteytys && saatuPisteet > 0}
-            >
-                {pelaajanPisteet[sekoitetutPelaajat[pelaajaIndex].nimi] || 0} pistettä
+            {#if peliPysaytetty}
+              <div class="absolute inset-0 flex items-center justify-center text-base">
+                ▶️
               </div>
-              <!-- Valuutta: pisteet käytössä pelissä -->
-          </div>
-        </div>
-          <!-- explicit point display removed -->
-
-        <!-- Pelaajajärjestys (keskellä) -->
-        <div class="flex-1 flex justify-center">
-          <div class="{GLASS_STYLES.cardLight} p-3">
-            <div class="text-xs {GLASS_COLORS.textSecondary} text-center mb-2"></div>
-              Pelijärjestys
-            </div>
-            <div class="flex items-center space-x-2">
-              {#each sekoitetutPelaajat as pelaaja, index}
-                <div class="flex items-center">
-                  <div
-                    class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300"
-                    class:scale-125={index === pelaajaIndex}
-                    class:ring-2={index === pelaajaIndex}
-                    class:ring-white={index === pelaajaIndex}
-                    style="background: linear-gradient(135deg, {haePelaajanVari(
-                      pelaaja
-                    )}, {haePelaajanVari(pelaaja)}dd); color: white;"
-                  >
-                    {pelaaja.nimi.charAt(0).toUpperCase()}
-                  </div>
-                  {#if index < sekoitetutPelaajat.length - 1}
-                    <div class="{GLASS_COLORS.textSecondary} text-xs mx-1">→</div>
-                  {/if}
-                </div>
-              {/each}
-            </div>
-          </div>
-        </div>
-
-        <!-- Ajastin (oikea) -->
-        <div class="flex-1 flex justify-end">
-          <div class="text-center">
-            <button
-              class="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white shadow-2xl transition-all duration-300 hover:scale-110 cursor-pointer relative"
-              class:animate-pulse={putoaaAika}
-              style="background: linear-gradient(135deg, {kellon_vari}, {kellon_vari}dd); box-shadow: 0 0 20px {kellon_vari}66;"
-              on:click={() =>
-                nykyinenKysymys && !pisteytys
-                  ? peliPysaytetty
-                    ? jatkaPelia()
-                    : pysaytaPeli()
-                  : null}
-              disabled={!nykyinenKysymys || pisteytys}
-              title={peliPysaytetty
-                ? "Klikkaa jatkaaksesi peliä"
-                : "Klikkaa pysäyttääksesi pelin"}
-            >
-              {#if peliPysaytetty}
-                <div
-                  class="absolute inset-0 flex items-center justify-center text-xl"
-                >
-                  ▶️
-                </div>
-              {:else}
-                {formatoiAika(aika)}
-              {/if}
-            </button>
-            <div class="text-xs {GLASS_COLORS.textSecondary} mt-1">
-              {peliPysaytetty ? "Pysäytetty" : "sekuntia"}
-            </div>
-          </div>
+            {:else}
+              {formatoiAika(aika)}
+            {/if}
+          </button>
         </div>
       </div>
 
@@ -1502,7 +1488,8 @@
             </div>
           {/if}
         </div>
-      {/if}
+    {/if}
+    </div>
   {:else}
     <!-- Lopputulokset -->
     <div class="space-y-8">
@@ -1678,6 +1665,53 @@
 
   .hover-scale:hover:not(:disabled) {
     transform: translateY(-2px) scale(1.02);
+  }
+
+  /* Clock pulse animations */
+  @keyframes pulse-slow {
+    0% {
+      transform: scale(1);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.06), 0 0 0 0 var(--clock-glow-soft, rgba(0,0,0,0));
+    }
+    50% {
+      transform: scale(1.06);
+      box-shadow: 0 14px 36px rgba(0,0,0,0.12), 0 0 24px 4px var(--clock-glow-mid, rgba(0,0,0,0));
+    }
+    100% {
+      transform: scale(1);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.06), 0 0 0 0 var(--clock-glow-soft, rgba(0,0,0,0));
+    }
+  }
+
+  @keyframes pulse-fast {
+    0% {
+      transform: scale(1);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08), 0 0 0 0 var(--clock-glow-soft, rgba(0,0,0,0));
+    }
+    50% {
+      transform: scale(1.12);
+      box-shadow: 0 20px 48px rgba(0,0,0,0.18), 0 0 40px 8px var(--clock-glow, rgba(0,0,0,0));
+    }
+    100% {
+      transform: scale(1);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08), 0 0 0 0 var(--clock-glow-soft, rgba(0,0,0,0));
+    }
+  }
+
+  /* Helper class for clock to ensure smooth animation and better performance */
+  .clock-button {
+    will-change: transform, box-shadow;
+    transform-origin: center center;
+  }
+
+  /* Class-based animations so Svelte's scoped CSS keyframes are correctly applied
+     when toggling based on reactive state. These classes repeat infinitely. */
+  .pulse-slow {
+    animation: pulse-slow 1.6s infinite ease-in-out;
+  }
+
+  .pulse-fast {
+    animation: pulse-fast 0.8s infinite ease-in-out;
   }
 
   /* Disabled/insufficient-pisteet look for cards */
