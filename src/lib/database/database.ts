@@ -5,6 +5,7 @@ import type {
   Peli,
   PeliVastaus,
   Tilasto,
+  PeliTapahtuma,
 } from "./schema.js";
 
 // Importoi kysymykset JSON-tiedostoista
@@ -48,11 +49,129 @@ export class KysymysmestariDB {
   }
 
   /**
+   * Tallenna pelitapahtuma (kevyt tapahtumaloki)
+   * @param event - { peli_id?, kayttaja_id?, tyyppi, payload?, paivays? }
+   */
+  public async tallennaPelitapahtuma(event: any): Promise<number> {
+    if (!this.db) throw new Error("Tietokanta ei ole alustettu");
+    // Jos pelitapahtumat-store puuttuu (vanha DB-versio), yritä luoda se
+    if (!this.db.objectStoreNames.contains("pelitapahtumat")) {
+      console.warn("⚠️ pelitapahtumat-store puuttuu - päivitetään tietokanta versiopäivityksellä");
+      // Sulje nykyinen yhteys ja avaa indeksattuDB uudella versiolla, jotta saadaan store luotua
+      const currentVersion = this.db.version || (this.DB_VERSION || 1);
+      this.db.close();
+      try {
+        const openReq = indexedDB.open(this.DB_NAME, currentVersion + 1);
+        openReq.onupgradeneeded = (ev: any) => {
+          const db = (ev.target as IDBOpenDBRequest).result;
+          if (!db.objectStoreNames.contains("pelitapahtumat")) {
+            const eventsStore = db.createObjectStore("pelitapahtumat", {
+              keyPath: "id",
+              autoIncrement: true,
+            });
+            eventsStore.createIndex("peli_id", "peli_id", { unique: false });
+            eventsStore.createIndex("kayttaja_id", "kayttaja_id", { unique: false });
+            eventsStore.createIndex("tyyppi", "tyyppi", { unique: false });
+          }
+        };
+        await new Promise<void>((resolve, reject) => {
+          openReq.onsuccess = () => {
+            this.db = openReq.result;
+            resolve();
+          };
+          openReq.onerror = () => reject(openReq.error);
+        });
+      } catch (err) {
+        console.warn('⚠️ Virhe päivittäessä tietokantaa (attempt to create pelitapahtumat), yritetään avata ilman versiota:', err);
+        // Fallback: try opening without specifying a version and hope the store exists now
+        try {
+          const openReq2 = indexedDB.open(this.DB_NAME);
+          await new Promise<void>((resolve, reject) => {
+            openReq2.onsuccess = () => {
+              this.db = openReq2.result;
+              resolve();
+            };
+            openReq2.onerror = () => reject(openReq2.error);
+          });
+        } catch (err2) {
+          console.error('❌ Fallback avaus epäonnistui:', err2);
+          // Re-throw to let caller handle the error
+          throw err2;
+        }
+      }
+    }
+    const transaction = this.db.transaction(["pelitapahtumat"], "readwrite");
+    const store = transaction.objectStore("pelitapahtumat");
+    const rec = {
+      peli_id: typeof event.peli_id !== 'undefined' ? event.peli_id : null,
+      kayttaja_id: typeof event.kayttaja_id !== 'undefined' ? event.kayttaja_id : null,
+      tyyppi: event.tyyppi || 'muu',
+      payload: event.payload || null,
+      paivays: event.paivays || new Date().toISOString(),
+    };
+
+    return new Promise((resolve, reject) => {
+      const req = store.add(rec);
+      req.onsuccess = () => resolve(req.result as number);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  /**
+   * Hae pelitapahtumat, opt. suodata peli_id tai kayttaja_id avulla
+   */
+  public async haePelitapahtumat(opts?: { peli_id?: number; kayttaja_id?: number; tyyppi?: string }): Promise<any[]> {
+    if (!this.db) return [];
+    if (!this.db.objectStoreNames.contains("pelitapahtumat")) return [];
+    const transaction = this.db.transaction(["pelitapahtumat"], "readonly");
+    const store = transaction.objectStore("pelitapahtumat");
+
+    return new Promise((resolve, reject) => {
+      const results: any[] = [];
+      const req = store.openCursor();
+      req.onsuccess = (e: any) => {
+        const cursor = e.target.result;
+        if (cursor) {
+          const val = cursor.value;
+          if (opts) {
+            if (typeof opts.peli_id !== 'undefined' && val.peli_id !== opts.peli_id) { cursor.continue(); return; }
+            if (typeof opts.kayttaja_id !== 'undefined' && val.kayttaja_id !== opts.kayttaja_id) { cursor.continue(); return; }
+            if (typeof opts.tyyppi !== 'undefined' && val.tyyppi !== opts.tyyppi) { cursor.continue(); return; }
+          }
+          results.push(val);
+          cursor.continue();
+        } else {
+          resolve(results);
+        }
+      };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  /**
+   * Poista yksittäinen pelitapahtuma id:llä
+   */
+  public async poistaPelitapahtuma(id: number): Promise<void> {
+    if (!this.db) return;
+    if (!this.db.objectStoreNames.contains("pelitapahtumat")) return;
+    const transaction = this.db.transaction(["pelitapahtumat"], "readwrite");
+    const store = transaction.objectStore("pelitapahtumat");
+    return new Promise((resolve, reject) => {
+      const req = store.delete(id);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  /**
    * (Huom) Erilliset valuutta-apumenetelmät poistettu: valuutta käyttää pelin pisteitä.
    */
   private db: IDBDatabase | null = null;
   private readonly DB_NAME = "KysymysmestariDB";
-  private readonly DB_VERSION = 2; // bumped to create card_usages store if missing
+  private readonly DB_VERSION = 3; // bumped to add pelitapahtumat store
+  // Promise that resolves when DB initialization completes
+  private ready: Promise<void> | null = null;
+  private _resolveReady: (() => void) | null = null;
 
   /**
    * Tyhjentää kaikki taulut tietokannassa ja alustaa kysymykset uudelleen
@@ -62,20 +181,25 @@ export class KysymysmestariDB {
 
     console.log("🗑️ Tyhjennetään kaikki taulut...");
 
-    const transaction = this.db.transaction([
-      "kysymykset", 
-      "kayttajat", 
-      "pelit", 
-      "peli_vastaukset", 
-      "tilastot"
-    ], "readwrite");
+    // Laadi lista tauluista, joista halutaan tyhjentää. Jätä puuttuvat storet pois
+    const storesToClear = [
+      "kysymykset",
+      "kayttajat",
+      "pelit",
+      "peli_vastaukset",
+      "tilastot",
+    ];
+    if (this.db.objectStoreNames.contains("pelitapahtumat")) storesToClear.push("pelitapahtumat");
+
+    const transaction = this.db.transaction(storesToClear, "readwrite");
 
     // Tyhjennä kaikki taulut
     const kysymyksetStore = transaction.objectStore("kysymykset");
     const kayttajatStore = transaction.objectStore("kayttajat");
     const pelitStore = transaction.objectStore("pelit");
   const vastauksetStore = transaction.objectStore("peli_vastaukset");
-    const tilastotStore = transaction.objectStore("tilastot");
+  const tilastotStore = transaction.objectStore("tilastot");
+  const eventsStore = this.db.objectStoreNames.contains("pelitapahtumat") ? transaction.objectStore("pelitapahtumat") : null;
 
     await Promise.all([
       new Promise<void>((resolve, reject) => {
@@ -102,6 +226,12 @@ export class KysymysmestariDB {
         const req = tilastotStore.clear();
         req.onsuccess = () => resolve();
         req.onerror = () => reject(req.error);
+      }),
+      new Promise<void>((resolve, reject) => {
+        if (!eventsStore) { resolve(); return; }
+        const req = eventsStore.clear();
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
       })
     ]);
 
@@ -113,17 +243,28 @@ export class KysymysmestariDB {
   }
 
   constructor() {
+    // Initialize a ready promise so callers can await full initialization
+    this.ready = new Promise<void>((resolve) => { this._resolveReady = resolve; });
     this.alustaDB();
   }
 
   private async alustaDB(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+      let request: IDBOpenDBRequest;
+      try {
+        request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+      } catch (err) {
+        // Possible VersionError if existing DB has higher version. Fall back to open without version.
+        console.warn('⚠️ indexedDB.open failed with version ' + this.DB_VERSION + ', falling back to open without version:', err);
+        request = indexedDB.open(this.DB_NAME);
+      }
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         this.db = request.result;
         console.log("✅ Tietokanta avattu onnistuneesti");
+        // Mark ready
+        if (this._resolveReady) { this._resolveReady(); this._resolveReady = null; }
         resolve();
       };
 
@@ -193,6 +334,17 @@ export class KysymysmestariDB {
           usagesStore.createIndex("peli_id", "peli_id", { unique: false });
           usagesStore.createIndex("kayttaja_id", "kayttaja_id", { unique: false });
           usagesStore.createIndex("kortti_key", "kortti_key", { unique: false });
+        }
+
+        // Peli tapahtumahistoria (game event history)
+        if (!db.objectStoreNames.contains("pelitapahtumat")) {
+          const eventsStore = db.createObjectStore("pelitapahtumat", {
+            keyPath: "id",
+            autoIncrement: true,
+          });
+          eventsStore.createIndex("peli_id", "peli_id", { unique: false });
+          eventsStore.createIndex("kayttaja_id", "kayttaja_id", { unique: false });
+          eventsStore.createIndex("tyyppi", "tyyppi", { unique: false });
         }
 
                 // Tilastot
@@ -1401,7 +1553,16 @@ export const getDB = async (): Promise<KysymysmestariDB> => {
   if (!dbInstance) {
     dbInstance = new KysymysmestariDB();
     // Odota että tietokanta on alustettu
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Wait for the instance to signal readiness (onupgradeneeded/on success)
+    if (dbInstance && (dbInstance as any).ready) {
+      try {
+        await (dbInstance as any).ready;
+      } catch (e) {
+        // swallow
+      }
+    } else {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
   }
   return dbInstance;
 };

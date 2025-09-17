@@ -75,3 +75,18 @@ export interface Tilasto {
   keskimaarainen_vastausaika: number; // Keskimääräinen vastausaika ms
   paivitetty: string; // Milloin tilastot viimeksi päivitettiin
 }
+
+/**
+ * PeliTapahtuma (GameEvent) - Pelihin liittyvä tapahtumahistoriaa varten
+ * Tämä on kevytrakenteinen tapahtumaloki joka tallennetaan myöhempää analyysiä
+ * ja debugia varten. Tapahtumia ei vielä oteta käyttöön pelilogiikassa — tämä on
+ * pelkkä tallennusmekaniikka.
+ */
+export interface PeliTapahtuma {
+  id?: number;
+  peli_id?: number | null; // Viittaus peliin jos saatavilla
+  kayttaja_id?: number | null; // Viittaus pelaajaan jos saatavilla
+  tyyppi: string; // Tapahtumatyyppi (esim. 'aloita_peli','kysymys_naytetty','vastaus','kortti_kaytto')
+  payload?: any; // Vapaamuotoinen lisätieto (JSON-serialisoitava)
+  paivays: string; // ISO-aikaleima
+}

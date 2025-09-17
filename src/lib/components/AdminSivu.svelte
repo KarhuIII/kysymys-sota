@@ -177,6 +177,20 @@
         const db = await getDB();
         await db.poistaKayttaja(id);
         await paivitaPelaajaUI();
+        // Log player deletion (non-blocking)
+        try {
+          const dbLog = await getDB();
+            await dbLog.tallennaPelitapahtuma({
+            peli_id: null,
+            kayttaja_id: id,
+            tyyppi: 'poista_pelaaja',
+            payload: { id },
+            paivays: new Date().toISOString(),
+          });
+            window.dispatchEvent(new CustomEvent('pelitapahtuma-uusi'));
+        } catch (e) {
+          console.warn('Ei voitu tallennaPelitapahtuma (poista_pelaaja):', e);
+        }
       } catch (error) {
         console.error('Virhe pelaajan poistamisessa:', error);
         alert('Virhe pelaajan poistamisessa: ' + (error as Error).message);
@@ -237,7 +251,20 @@
       
       suljePelaajaModal();
       await paivitaPelaajaUI();
-      
+      // Log player create/update (non-blocking)
+      try {
+        const dbLog = await getDB();
+          await dbLog.tallennaPelitapahtuma({
+          peli_id: null,
+          kayttaja_id: valittuPelaaja?.id ?? null,
+          tyyppi: valittuPelaaja ? 'paivita_pelaaja' : 'uusi_pelaaja',
+          payload: { pelaaja: uusiPelaaja },
+          paivays: new Date().toISOString(),
+        });
+          window.dispatchEvent(new CustomEvent('pelitapahtuma-uusi'));
+      } catch (e) {
+        console.warn('Ei voitu tallennaPelitapahtuma (paivita/uusi pelaaja):', e);
+      }
     } catch (error) {
       console.error('❌ Virhe pelaajan tallentamisessa:', error);
       alert('Virhe pelaajan tallentamisessa!');
@@ -463,6 +490,21 @@
                 await paivitaPelaajaUI();
                 // Informoi muut komponentit muutoksesta
                 try { window.dispatchEvent(new CustomEvent('players-reset')); } catch(e) { /* ignore */ }
+                // Log the reset action (non-blocking)
+                try {
+                  const dbLog = await getDB();
+                  await dbLog.tallennaPelitapahtuma({
+                    peli_id: null,
+                    kayttaja_id: null,
+                    tyyppi: 'nollaa_pelaajat',
+                    payload: {},
+                    paivays: new Date().toISOString(),
+                  });
+                  // Notify other components that a new game event was written
+                  try { window.dispatchEvent(new CustomEvent('pelitapahtuma-uusi')); } catch(e) { /* ignore */ }
+                } catch (e) {
+                  console.warn('Ei voitu tallennaPelitapahtuma (nollaa_pelaajat):', e);
+                }
                 alert('Pelaajatietokanta nollattu.');
               } catch (err) {
                 console.error('Virhe pelaajien nollauksessa:', err);

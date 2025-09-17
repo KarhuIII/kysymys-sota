@@ -3,6 +3,7 @@
   import { getDB } from "../database/database.js";
   import type { Kayttaja, Kysymys } from "../database/schema.js";
   import { peliPalvelu } from "../database/gameService.js";
+  import erikoiskortit from '../data/erikoiskortit.json';
   import { 
     GLASS_STYLES, 
     GLASS_COLORS, 
@@ -29,11 +30,16 @@
   let pisteytys = false;
   let saatuPisteet = 0; // Viimeksi saadut pisteet animaatiota varten
   let pisteytysViesti = ""; // Satunnainen pisteytysviesti
-  // Modal / notification
+  // Modal state
   let modalVisible = false;
   let modalMessage = "";
   let modalTimeout: number | null = null;
 
+  // Pisteytysviestit (loaded from JSON)
+  let pisteytysViestit: { oikeat_vastaukset: string[]; vaarat_vastaukset: string[] } = {
+    oikeat_vastaukset: [],
+    vaarat_vastaukset: []
+  };
   function showModal(message: string, ms = 2500) {
     modalMessage = message;
     modalVisible = true;
@@ -44,25 +50,101 @@
     }, ms);
   }
 
+  /**
+   * Break a text into parts where numeric IDs (e.g., "25", "id25", "#25") are
+   * returned as separate parts so the template can render them inside a badge.
+   */
+  /**
+   * Break a text into parts where numeric IDs are returned as separate parts.
+   * If idToBox is provided, only that numeric id will be returned as type 'id'
+   * (others remain plain text). This avoids boxing unrelated numbers.
+   */
+  function tokenizeIds(text: string, idToBox: string | null = null) {
+    const parts: Array<any> = [];
+    if (!text) return [{ type: 'text', text: '' }];
+    const re = /(?:#|id)?\d+/gi;
+    let lastIndex = 0;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text)) !== null) {
+      const idx = m.index;
+      if (idx > lastIndex) {
+        parts.push({ type: 'text', text: text.slice(lastIndex, idx) });
+      }
+      const raw = m[0];
+      const digits = (raw.match(/\d+/) || [''])[0];
+      // Only mark as id if it matches idToBox (or if idToBox is null, box nothing)
+      if (idToBox !== null && String(digits) === String(idToBox)) {
+        parts.push({ type: 'id', id: digits });
+      } else {
+        // Keep original raw substring as text so surrounding punctuation is preserved
+        parts.push({ type: 'text', text: raw });
+      }
+      lastIndex = idx + raw.length;
+    }
+    if (lastIndex < text.length) {
+      parts.push({ type: 'text', text: text.slice(lastIndex) });
+    }
+    return parts.length > 0 ? parts : [{ type: 'text', text }];
+  }
+
+  // Helper to get tokens for an event (phrase -> token array)
+  function tokensForEvent(ev: any) {
+    try {
+      const phrase = eventPhrase(ev) || '';
+      // pick question id from payload (if present)
+      const qid = ev && ev.payload ? (ev.payload.kysymys_id ?? ev.payload.kysymysId ?? ev.payload.kysymys ?? null) : null;
+      return tokenizeIds(String(phrase), qid ? String(qid) : null);
+    } catch (e) {
+      return [{ type: 'text', text: eventPhrase(ev) }];
+    }
+  }
+
+  /**
+   * Return short badge labels for events that imply active card effects or bonuses.
+   * Used to show small pills in the history list (e.g., 'BONUS', 'TUPLA', '+VUORO').
+   */
+  function badgesForEvent(ev: any) {
+    const badges: string[] = [];
+    try {
+      if (!ev || !ev.tyyppi) return badges;
+      if (ev.tyyppi === 'kortti_kaytto' && ev.payload) {
+        const k = (ev.payload.kortti || ev.payload.kortti_key || ev.payload.korttiKey || '').toString();
+        const p = ev.payload.parametrit || ev.payload.param || {};
+        // Common bonus-like keys
+        if (/bonus|lisaVuoro|lisävuoro|lisa_vuoro/i.test(k) || p?.lisaVuoro || p?.bonus) badges.push('BONUS');
+        if (/tuplapisteet|tupla/i.test(k) || p?.tuplapisteet) badges.push('TUPLA');
+        if (/ajan_puolitus|puolitus/i.test(k) || p?.puolitusSekunteina) badges.push('+VUORO');
+        if (/all_in|allin|all-in/i.test(k)) badges.push('ALL-IN');
+      }
+      // If event itself is a burn/bonus consumption (e.g., vastaus where payload.pisteet increased by bonus)
+      if (ev.tyyppi === 'vastaus' && ev.payload && typeof ev.payload.pisteet === 'number') {
+        // heuristics: if points are higher than base (no reliable base here), skip — we only show kortti badges
+      }
+    } catch (e) {
+      // ignore
+    }
+    return badges;
+  }
+
   function hideModal() {
     modalVisible = false;
+    modalMessage = '';
     if (modalTimeout) {
-      window.clearTimeout(modalTimeout);
+      clearTimeout(modalTimeout);
       modalTimeout = null;
     }
   }
 
-    // Erikoiskortit (data)
-    import erikoiskortit from "../data/erikoiskortit.json";
+  // Missing declarations for variables used across the component
+  let maxKysymykset: number = 0;
+  // Tracks temporary effects applied by cards to players (per-player)
+  // Example shape: { [playerId]: { bonus: number, tuplapisteet: number, ... } }
+  let activeCardEffects: Record<number, any> = {};
+  let externalEventHandler: EventListener | null = null;
 
-    // In-memory aktiiviset erikoiskorttiefektit (pelaajaId -> efektit)
-    const activeCardEffects: Record<number, any> = {};
-
-  // Pisteytysviestit
-  let pisteytysViestit: { oikeat_vastaukset: string[]; vaarat_vastaukset: string[] } = {
-    oikeat_vastaukset: [],
-    vaarat_vastaukset: []
-  };
+  // Ensure modal helpers exist (defined above but make sure TypeScript picks up types)
+  // showModal / hideModal are already defined earlier; export type for clarity
+  type ModalTimeout = number | null;
 
   // Kello
   let aika = 30; // 30 sekuntia per kysymys
@@ -154,6 +236,19 @@
           kustannus: kustannus,
           parametrit: kortti.parametrit || {}
         });
+        try {
+          await db.tallennaPelitapahtuma({
+            peli_id: peliId,
+            kayttaja_id: nykyinenPelaaja.id,
+            tyyppi: 'kortti_kaytto',
+            payload: { kortti: kortti.key },
+            paivays: new Date().toISOString(),
+          });
+          try { window.dispatchEvent(new CustomEvent('pelitapahtuma-uusi')); } catch(e) {}
+          try { await lueViimeisetTapahtumat(); } catch (e) { /* ignore */ }
+        } catch (e) {
+          console.warn('Ei voitu tallennaPelitapahtuma (kortti_kaytto):', e);
+        }
       } catch (e) {
         console.warn('Kortin tallennus epäonnistui:', e);
       }
@@ -181,6 +276,7 @@
         showModal('Kortin käyttö epäonnistui');
       }
     });
+      /* logging already handled in the async save above; removed duplicate block */
   }
 
   // performPendingAttackOn: suorittaa odottavan hyökkäyksen valittua targetia kohtaan.
@@ -295,12 +391,25 @@
         pelaajanPisteet[p.nimi] = 0;
       });
     }
+    // Load recent events for the history card
+    try { await lueViimeisetTapahtumat(); } catch (e) { /* ignore */ }
+
+    // Listen for external notifications that a new event was recorded (e.g., from AdminSivu)
+      // Expose handler so onDestroy can remove the exact same function
+      externalEventHandler = () => { lueViimeisetTapahtumat().catch(() => {}); };
+      window.addEventListener('pelitapahtuma-uusi', externalEventHandler as EventListener);
   });
 
   onDestroy(() => {
     if (ajastin) {
       clearInterval(ajastin);
     }
+    try {
+      if (externalEventHandler) {
+        window.removeEventListener('pelitapahtuma-uusi', externalEventHandler as EventListener);
+        externalEventHandler = null;
+      }
+    } catch (e) { /* ignore */ }
   });
 
   /*
@@ -475,6 +584,25 @@
 
       if (kysymys) {
         nykyinenKysymys = kysymys;
+        try {
+          const dbLog = await getDB();
+          // Log that a question was shown to the player
+          try {
+            await dbLog.tallennaPelitapahtuma({
+              peli_id: nykyinenPelaaja?.id ? pelaajaPelit.get(nykyinenPelaaja.id) || null : null,
+              kayttaja_id: nykyinenPelaaja?.id ?? null,
+              tyyppi: 'kysymys_naytetty',
+              payload: { kysymys_id: kysymys.id, vaikeustaso: kysymys.vaikeustaso },
+              paivays: new Date().toISOString(),
+            });
+            try { window.dispatchEvent(new CustomEvent('pelitapahtuma-uusi')); } catch (e) {}
+            try { await lueViimeisetTapahtumat(); } catch (e) { /* ignore */ }
+          } catch (e) {
+            console.warn('Ei voitu tallennaPelitapahtuma (kysymys_naytetty):', e);
+          }
+        } catch (e) {
+          console.warn('Ei voitu tallennaPelitapahtuma (kysymys_naytetty):', e);
+        }
         // Merkitse aloitusaika vastausta varten
         kysymysAloitettu = Date.now();
 
@@ -749,6 +877,24 @@
           vastausaikaMs,
           nykyinenKysymys.kategoria
         );
+        // Log the answer event
+        try {
+          try {
+            await db.tallennaPelitapahtuma({
+              peli_id: peliId,
+              kayttaja_id: kayttajaId ?? null,
+              tyyppi: 'vastaus',
+              payload: { kysymys_id: nykyinenKysymys.id, oikein: oikea, annettu_vastaus: vastaus || '', vastausaika_ms: vastausaikaMs, pisteet: saatuPisteet },
+              paivays: new Date().toISOString(),
+            });
+            try { window.dispatchEvent(new CustomEvent('pelitapahtuma-uusi')); } catch (e) {}
+            try { await lueViimeisetTapahtumat(); } catch (e) { /* ignore */ }
+          } catch (e) {
+            console.warn('Ei voitu tallennaPelitapahtuma (vastaus):', e);
+          }
+        } catch (e) {
+          console.warn('Ei voitu tallennaPelitapahtuma (vastaus):', e);
+        }
         console.log('✅ Vastaus tallennettu tietokantaan:', { peliId, kysymysId: nykyinenKysymys.id, oikea, vastausaikaMs });
 
         // Kasvata pelaajan vastauslaskuria
@@ -908,6 +1054,22 @@
           // Päivitä peli ja pelaajan pisteet
           try {
             await db.lopetaPeli(peliId, pisteet, pelaajanKysymysCount[kayttajaId] || yhteensa);
+            try {
+              try {
+                await db.tallennaPelitapahtuma({
+                  peli_id: peliId,
+                  kayttaja_id: kayttajaId ?? null,
+                  tyyppi: 'lopeta_peli',
+                  payload: { pisteet, kysymysten_maara: pelaajanKysymysCount[kayttajaId] || yhteensa },
+                  paivays: new Date().toISOString(),
+                });
+                try { window.dispatchEvent(new CustomEvent('pelitapahtuma-uusi')); } catch (e) {}
+              } catch (err) {
+                console.warn('Ei voitu tallennaPelitapahtuma (lopeta_peli):', err);
+              }
+            } catch (err) {
+              console.warn('Ei voitu tallennaPelitapahtuma (lopeta_peli):', err);
+            }
           } catch (err) {
             console.warn('⚠️ lopetaPeli epäonnistui:', err);
           }
@@ -1000,6 +1162,134 @@
     }
     takaisinCallback();
   }
+
+  // Recent events for the scrollable history card
+  let recentEvents: any[] = [];
+
+  // Map event types to friendly labels
+  const eventLabel: Record<string, string> = {
+    'kysymys_naytetty': 'Kysymys näytetty',
+    'vastaus': 'Vastaus',
+    'kortti_kaytto': 'Kortin käyttö',
+    'lopeta_peli': 'Peli päättyi',
+    'muu': 'Tapahtuma'
+  };
+
+  // Resolve player name by kayttaja_id (or 'Järjestelmä')
+  function pelaajanNimiById(id: number | null | undefined): string {
+    if (typeof id === 'undefined' || id === null) return 'Järjestelmä';
+    const p = sekoitetutPelaajat.find(x => x.id === id);
+    if (p) return p.nimi;
+    // fallback: try incoming props 'pelaajat'
+    const p2 = pelaajat.find(x => x.id === id);
+    return p2 ? p2.nimi : `Pelaaja ${id}`;
+  }
+
+  // Badge text for small avatar: if name is like 'id17' or 'Pelaaja 17', show '#17', else show first letter
+  function badgeText(name: string): string {
+    if (!name) return 'J';
+    const trimmed = name.trim();
+    // match patterns like 'id17' or 'ID17' or 'Pelaaja 17'
+    const m1 = /^id(\d+)$/i.exec(trimmed);
+    if (m1) return `#${m1[1]}`;
+    const m2 = /^pelaaja\s*(\d+)$/i.exec(trimmed);
+    if (m2) return `#${m2[1]}`;
+    // otherwise return first char uppercase
+    return trimmed.charAt(0).toUpperCase();
+  }
+
+  // Heuristic to compute point delta from event payload
+  function pointsDeltaFromEvent(ev: any): number | null {
+    try {
+      if (!ev || !ev.tyyppi) return null;
+      if (ev.tyyppi === 'vastaus' && ev.payload) {
+        // payload may not contain points directly; try to infer
+        if (typeof ev.payload.oikein === 'boolean') {
+          return ev.payload.oikein ? (ev.payload.pisteet || null) : 0;
+        }
+        if (typeof ev.payload.pisteet === 'number') return ev.payload.pisteet;
+      }
+      if (ev.tyyppi === 'lopeta_peli' && ev.payload) {
+        return typeof ev.payload.pisteet === 'number' ? ev.payload.pisteet : null;
+      }
+      if (ev.tyyppi === 'kortti_kaytto' && ev.payload && typeof ev.payload.kustannus === 'number') {
+        return -Math.abs(ev.payload.kustannus);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Human readable phrase for an event, matching requested format
+  function eventPhrase(ev: any): string {
+    try {
+      const nimi = pelaajanNimiById(ev.kayttaja_id);
+      if (!ev || !ev.tyyppi) return `${nimi} teki jotain`;
+      if (ev.tyyppi === 'vastaus' && ev.payload) {
+  const qid = (ev.payload.kysymys_id ?? ev.payload.kysymysId ?? ev.payload.kysymys) || 'tuntematon';
+  const ans = (ev.payload.annettu_vastaus ?? ev.payload.vastaus ?? ev.payload.annettu) || '';
+        const pts = pointsDeltaFromEvent(ev);
+        const ptsText = pts !== null ? ` - ${pts} pist${pts === 1 ? 'e' : 'että'}` : '';
+        // Format exactly: "Matti vastasi kysymykseen ID - Annettu vastaus - 10 pistettä"
+        const pistetxt = pts !== null ? ` - ${pts} pistettä` : '';
+        return `${nimi} vastasi kysymykseen ${qid} - ${ans}${pistetxt}`;
+      }
+      if (ev.tyyppi === 'kortti_kaytto' && ev.payload) {
+        const kortti = ev.payload.kortti || ev.payload.kortti_key || ev.payload.korttiKey || 'kortti';
+        const targetId = ev.payload.target_kayttaja_id ?? ev.payload.kohde ?? ev.payload.kohde_kayttaja_id ?? null;
+        const targetNimi = targetId ? pelaajanNimiById(targetId) : null;
+        if (targetNimi) return `${nimi} käytti kortin ${kortti} pelaajaan ${targetNimi}`;
+        return `${nimi} käytti kortin ${kortti}`;
+      }
+      if (ev.tyyppi === 'kysymys_naytetty' && ev.payload) {
+  const qid = (ev.payload.kysymys_id ?? ev.payload.kysymysId ?? ev.payload.kysymys) || 'tuntematon';
+        return `${nimi} sai kysymyksen ${qid}`;
+      }
+      if (ev.tyyppi === 'lopeta_peli' && ev.payload) {
+        return `${nimi} peli päättyi`;
+      }
+      // Fallback
+      return `${nimi} — ${eventLabel[ev.tyyppi] || ev.tyyppi}`;
+    } catch (e) {
+      return 'Tapahtuma';
+    }
+  }
+
+  async function lueViimeisetTapahtumat(limit = 6) {
+    try {
+      const db = await getDB();
+      // Collect all peli_id values for players in this game and fetch events for all of them
+      const peliIds = new Set<number>();
+      for (const p of sekoitetutPelaajat) {
+        if (p && typeof p.id !== 'undefined') {
+          const pid = pelaajaPelit.get(p.id);
+          if (typeof pid !== 'undefined' && pid !== null) peliIds.add(pid);
+        }
+      }
+
+      let events: any[] = [];
+      if (peliIds.size > 0) {
+        // If multiple peliIds, fetch all events and filter client-side (haePelitapahtumat doesn't accept arrays)
+        const all = await db.haePelitapahtumat();
+        events = all.filter(e => e && (e.peli_id === null ? false : [...peliIds].includes(e.peli_id)));
+      } else {
+        // No peliIds available: try to fallback to current player's events or global
+        const currentPlayer = sekoitetutPelaajat[pelaajaIndex];
+        if (currentPlayer && typeof currentPlayer.id !== 'undefined') {
+          events = await db.haePelitapahtumat({ kayttaja_id: currentPlayer.id });
+        } else {
+          events = await db.haePelitapahtumat();
+        }
+      }
+      // Sort by paivays desc and take first `limit` items
+      events.sort((a, b) => (b.paivays || '').localeCompare(a.paivays || ''));
+      recentEvents = events.slice(0, limit);
+    } catch (err) {
+      console.warn('Ei voitu ladata pelitapahtumia:', err);
+      recentEvents = [];
+    }
+  }
 </script>
 
 <!-- =============================================== -->
@@ -1029,6 +1319,8 @@
       </div>
     </div>
   {/if}
+
+
 
   <!-- Main layout with sidebar structure -->
   <div class="{GLASS_BACKGROUNDS.contentLayer} min-h-screen">
@@ -1528,6 +1820,60 @@
         </div>
       </div>
 
+      <!-- Recent Events -->
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2">
+          <div class="md:col-span-2">
+            <div class="{GLASS_STYLES.card} p-4 w-full bg-opacity-90">
+              <div>
+                <div class="text-lg font-semibold {GLASS_COLORS.titleGradient} mb-2">Tapahtumahistoria</div>
+                <div class="overflow-y-auto" style="max-height: calc(5.5 * 3.2rem);"> <!-- approx 5-6 rows -->
+                  {#if recentEvents.length === 0}
+                    <div class="text-sm text-gray-300 py-2">Ei tapahtumia</div>
+                  {:else}
+                    <ul class="space-y-2">
+                      {#each recentEvents as ev}
+                        {@const nimi = pelaajanNimiById(ev.kayttaja_id)}
+                        {@const label = eventLabel[ev.tyyppi] || ev.tyyppi}
+                        {@const delta = pointsDeltaFromEvent(ev)}
+                        {@const qid = (ev.payload && (ev.payload.kysymys_id ?? ev.payload.kysymysId ?? ev.payload.kysymys)) || null}
+                        <li class="p-3 rounded-md bg-black/30 flex items-center justify-between">
+                          <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm bg-white/10">{badgeText(nimi)}</div>
+                            <div>
+                              <div class="font-medium flex items-center space-x-2">
+                                <div class="flex-1">
+                                  {#each tokensForEvent(ev) as t}
+                                    {#if t.type === 'text'}
+                                      {@html t.text}
+                                    {:else}
+                                      <span class="qid-badge">#{t.id}</span>
+                                    {/if}
+                                  {/each}
+                                </div>
+                                {#each badgesForEvent(ev) as b}
+                                  <div class="event-pill">{b}</div>
+                                {/each}
+                              </div>
+                              <!-- payload details removed to avoid raw JSON display; eventPhrase(ev) contains the human-readable summary -->
+                            </div>
+                          </div>
+                          <div class="text-sm ml-4 text-right">
+                            {#if delta !== null}
+                              <div class={delta >= 0 ? 'text-green-400 font-bold' : 'text-rose-400 font-bold'}>{delta >= 0 ? '+' + delta : String(delta)} pistettä</div>
+                            {:else}
+                              <div class="text-xs text-gray-400">{new Date(ev.paivays).toLocaleTimeString()}</div>
+                            {/if}
+                          </div>
+                        </li>
+                      {/each}
+                    </ul>
+                  {/if}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
       <!-- Pisteytysviesti -->
       {#if pisteytys}
         <div class="text-center py-4">
@@ -1836,5 +2182,32 @@
     border-color: rgba(255,255,255,0.06) !important;
     box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
     pointer-events: none;
+  }
+  
+  /* Small badge for question IDs in history */
+  .qid-badge{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.4rem; /* slightly larger than text */
+    height: 1.4rem;
+    margin-left: 0.25rem;
+    font-size: 0.65rem; /* smaller font for ID */
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace;
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.95);
+    border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .event-pill{
+    display:inline-block;
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.9);
+    padding: 0.15rem 0.45rem;
+    font-size: 0.65rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.06);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 </style>
