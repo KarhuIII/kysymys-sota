@@ -153,5 +153,43 @@
       "cooldownSekunneissa": 0
     },
     "huom": "Lisävuo ro toimii vain jos vastaus oli oikein; ei siirrä kysymyksiä muille."
+  },
+  {
+    "id": 9,
+    "key": "aikaa",
+    "nimi": "Lisää aikaa",
+    "emoji": "⭐",
+    "kustannus": 10,
+    "sivu": "puolustus",
+    "kuvaus": "saat 10 sekuntia lisää aikaa vastata seuraavaan kysymykseen.",
+    "tyyppi": "anna_lisaa_aikaa",
+    "kohde": "itse",
+    "parametrit": {
+      "lisaAikaa": 10
+    },
+    "kayttorajoitus": {
+      "perPeli": 2,
+      "cooldownSekunneissa": 0
+    },
+    "huom": "Lisäaika toimii vain seuraavaan kysymykseen; ei siirrä kysymyksiä muille."
+  },
+  {
+    "id": 10,
+    "key": "Allin",
+    "nimi": "All in",
+    "emoji": "⭐",
+    "kustannus": 20,
+    "sivu": "hyökkäys",
+    "kuvaus": "Saa saman verran pisteitä kuin johtavalla pelaajalla on, jos vastaat oikein. Menetät kaikki pisteesi, jos vastaus on väärin.",
+    "tyyppi": "all_in",
+    "kohde": "itse",
+    "parametrit": {
+      "allin": 1
+    },
+    "kayttorajoitus": {
+      "perPeli": 1,
+      "cooldownSekunneissa": 0
+    },
+    "huom": "All in toimii vain jos vastaus oli oikein; ei siirrä kysymyksiä muille."
   }
 ]

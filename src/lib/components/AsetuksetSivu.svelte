@@ -11,6 +11,7 @@
     GLASS_LAYOUT,
     glassUtils 
   } from '../styles/glass-morphism.js';
+  import { vaikeustasoDisplay, SELECTABLE_VAIKEUSTASOT } from "../constants/vaikeustasot";
 
   // ===============================================
   // PROPS (Props)
@@ -36,8 +37,8 @@
   let uusiVieras = {
     nimi: '',
     ika: undefined as number | undefined,
-    vaikeustaso_min: 'oppipoika' as "oppipoika" | "taitaja" | "mestari" | "kuningas" | "suurmestari",
-    vaikeustaso_max: 'taitaja' as "oppipoika" | "taitaja" | "mestari" | "kuningas" | "suurmestari",
+  vaikeustaso_min: 'oppipoika' as "oppipoika" | "taitaja" | "mestari" | "kuningas",
+  vaikeustaso_max: 'taitaja' as "oppipoika" | "taitaja" | "mestari" | "kuningas",
     pelaajan_vari: '#3b82f6'
   };
   
@@ -68,8 +69,22 @@
   // ELINKAARIFUNKTIOT (Lifecycle Functions)
   // ===============================================
   
-  onMount(async () => {
-    await lataaTiedot();
+  onMount(() => {
+    // Lataa aluksi tiedot (ei odoteta palautusta)
+    void lataaTiedot();
+
+    // Kuuntele tapahtumaa, jos pelaajat nollataan muualta sovellusta
+    const onPlayersReset = () => {
+      console.log('ℹ️ Pelaajat nollattu, ladataan tiedot uudelleen...');
+      void lataaTiedot();
+    };
+
+    window.addEventListener('players-reset', onPlayersReset as EventListener);
+
+    // Palauta siivousfunktio, joka poistetaan kun komponentti tuhoutuu
+    return () => {
+      window.removeEventListener('players-reset', onPlayersReset as EventListener);
+    };
   });
 
   async function lataaTiedot() {
@@ -273,7 +288,9 @@
                     <div class="flex-1 min-w-0">
                       <div class="font-medium text-sm">{pelaaja.nimi}</div>
                       <div class="text-xs text-surface-600-400">
-                        {pelaaja.vaikeustaso_min} - {pelaaja.vaikeustaso_max}
+                        {#if pelaaja.vaikeustaso_max}
+                          {vaikeustasoDisplay(pelaaja.vaikeustaso_max)}
+                        {/if}
                         {#if pelaaja.ika}, {pelaaja.ika}v{/if}
                       </div>
                     </div>
@@ -304,7 +321,9 @@
                 <div class="flex-1">
                   <span class="font-medium">{vieras.nimi}</span>
                   <span class="text-xs text-surface-600-400 ml-2">
-                    {vieras.vaikeustaso_min}-{vieras.vaikeustaso_max}
+                    {#if vieras.vaikeustaso_max}
+                      {vaikeustasoDisplay(vieras.vaikeustaso_max)}
+                    {/if}
                     {#if vieras.ika}, {vieras.ika}v{/if}
                   </span>
                 </div>
@@ -435,22 +454,18 @@
           <label class="label">
             <span>Min taso</span>
             <select class="select" bind:value={uusiVieras.vaikeustaso_min}>
-              <option value="oppipoika">Oppipoika</option>
-              <option value="taitaja">Taitaja</option>
-              <option value="mestari">Mestari</option>
-              <option value="kuningas">Kuningas</option>
-              <option value="suurmestari">Suurmestari</option>
+              {#each SELECTABLE_VAIKEUSTASOT as taso}
+                <option value={taso}>{vaikeustasoDisplay(taso)}</option>
+              {/each}
             </select>
           </label>
 
           <label class="label">
             <span>Max taso</span>
             <select class="select" bind:value={uusiVieras.vaikeustaso_max}>
-              <option value="oppipoika">Oppipoika</option>
-              <option value="taitaja">Taitaja</option>
-              <option value="mestari">Mestari</option>
-              <option value="kuningas">Kuningas</option>
-              <option value="suurmestari">Suurmestari</option>
+              {#each SELECTABLE_VAIKEUSTASOT as taso}
+                <option value={taso}>{vaikeustasoDisplay(taso)}</option>
+              {/each}
             </select>
           </label>
         </div>

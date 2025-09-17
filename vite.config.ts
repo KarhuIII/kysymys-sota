@@ -8,4 +8,7 @@ export default defineConfig({
     tailwindcss(),
     svelte(), // <-- Must come after Tailwind
   ],
+  define: {
+    __PROJECT_PATH__: `"${process.cwd()}/"`,
+  },
 });

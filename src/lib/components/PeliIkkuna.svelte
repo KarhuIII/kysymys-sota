@@ -367,29 +367,37 @@
   /**
    * Valitse sopiva vaikeustaso pelaajan asetuksista
    */
+  import { SELECTABLE_VAIKEUSTASOT, vaikeustasoDisplay } from "../constants/vaikeustasot";
+  import type { SelectableVaikeustaso } from "../constants/vaikeustasot";
+
   function valitsePelaajanVaikeustaso(
     pelaaja: Kayttaja
-  ): "oppipoika" | "taitaja" | "mestari" | "kuningas" | "suurmestari" {
-    const vaikeuastasot: ("oppipoika" | "taitaja" | "mestari" | "kuningas" | "suurmestari")[] = [];
+  ): SelectableVaikeustaso {
+    const vaikeuastasot: SelectableVaikeustaso[] = [];
 
     // Määritä käytettävissä olevat vaikeuastasot pelaajan asetusten mukaan
     const minTaso = pelaaja.vaikeustaso_min || "oppipoika";
     const maxTaso = pelaaja.vaikeustaso_max || "taitaja";
 
-    const tasot = ["oppipoika", "taitaja", "mestari", "kuningas", "suurmestari"] as const;
-    const minIndex = tasot.indexOf(minTaso);
-    const maxIndex = tasot.indexOf(maxTaso);
+    const tasot = SELECTABLE_VAIKEUSTASOT;
+    const minIndex = tasot.indexOf(minTaso as SelectableVaikeustaso);
+    const maxIndex = tasot.indexOf(maxTaso as SelectableVaikeustaso);
 
-    // Lisää kaikki tasot min ja max väliltä
-    for (let i = minIndex; i <= maxIndex; i++) {
-      vaikeuastasot.push(tasot[i]);
+    // Jos pelaajan asetuksissa on määritelty tasot jotka eivät kuulu SELECTABLE (esim. suurmestari),
+    // clampataan ne validille alueelle
+    const safeMin = Math.max(0, minIndex === -1 ? 0 : minIndex);
+    const safeMax = Math.min(tasot.length - 1, maxIndex === -1 ? tasot.length - 1 : maxIndex);
+
+    // Lisää kaikki tasot safeMin ja safeMax väliltä
+    for (let i = safeMin; i <= safeMax; i++) {
+      vaikeuastasot.push(tasot[i] as SelectableVaikeustaso);
     }
 
     // Valitse satunnainen taso sallittujen joukosta
     const valittu =
       vaikeuastasot[Math.floor(Math.random() * vaikeuastasot.length)];
 
-    return valittu;
+    return valittu as SelectableVaikeustaso;
   }
 
   /**
@@ -413,7 +421,11 @@
         return;
       }
 
-      console.log(`👤 Nykyinen pelaaja: ${nykyinenPelaaja.nimi} (min: ${nykyinenPelaaja.vaikeustaso_min || 'oppipoika'}, max: ${nykyinenPelaaja.vaikeustaso_max || 'taitaja'})`);
+      console.log(
+        `👤 Nykyinen pelaaja: ${nykyinenPelaaja.nimi} (` +
+          `min: ${vaikeustasoDisplay(nykyinenPelaaja.vaikeustaso_min || 'oppipoika')}, ` +
+          `max: ${vaikeustasoDisplay(nykyinenPelaaja.vaikeustaso_max || 'taitaja')})`
+      );
 
       // Valitse sopiva vaikeustaso tälle pelaajalle
       const valittuVaikeustaso = valitsePelaajanVaikeustaso(nykyinenPelaaja);
@@ -943,24 +955,14 @@
     return pelaaja.pelaajan_vari || "#3b82f6";
   }
 
+  import { vaikeustasoLabel, vaikeustasoIcon } from "../constants/vaikeustasot";
+
   /**
-   * Muunna vaikeustaso tähtimerkiksi
+   * Backwards-compatible wrapper used by templates that previously expected an icon-only
+   * representation for vaikeustaso. Now uses the central mapping.
    */
   function vaikeustasoTahtina(vaikeustaso: string): string {
-    switch (vaikeustaso) {
-      case "oppipoika":
-        return "🪵";
-      case "taitaja":
-        return "🎨";
-      case "mestari":
-        return "⚔️";
-      case "kuningas":
-        return "👑";
-      case "suurmestari":
-        return "🌌";
-      default:
-        return "🪵";
-    }
+    return vaikeustasoIcon(vaikeustaso);
   }
 
   /**
@@ -1257,6 +1259,70 @@
             <span class="text-indigo-400 font-medium">Puolitus - 10</span>
           </div>
         </button>
+        
+        <!-- Lisää aikaa (uusi kortti id=9) -->
+        <button 
+          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
+          title="⏳ Lisää aikaa – saat 10 sekuntia lisää seuraavaan kysymykseen."
+          aria-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('aikaa'))}
+          class:opacity-60={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('aikaa'))}
+          class:card-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('aikaa'))}
+          on:click={async () => { if (!canUseKortti()) return;
+            try {
+              const kortti = (erikoiskortit as any).find((k: any) => k.key === 'aikaa');
+              if (!kortti) return showModal('Korttia ei loydy');
+              const nykyinenPelaaja = sekoitetutPelaajat[pelaajaIndex];
+              if (!nykyinenPelaaja || typeof nykyinenPelaaja.id === 'undefined') return showModal('Pelaaja ei tunnistettu');
+              const db = await getDB();
+              const kustannus = Number(kortti.kustannus || 0);
+              const nimi = nykyinenPelaaja.nimi;
+              const nykyisetPisteet = pelaajanPisteet[nimi] || 0;
+              if (isNaN(kustannus)) { showModal('Kortin kustannus ei ole kelvollinen'); return; }
+              if (nykyisetPisteet < kustannus) return showModal('Ei tarpeeksi pisteitä');
+              // Vähennä pisteitä ja tallenna käyttö
+              pelaajanPisteet[nimi] = nykyisetPisteet - kustannus;
+              await db.tallennaKortinKaytto({
+                peli_id: typeof nykyinenPelaaja.id !== 'undefined' ? (pelaajaPelit.get(nykyinenPelaaja.id) || null) : null,
+                kayttaja_id: nykyinenPelaaja.id,
+                kortti_key: kortti.key,
+                kustannus: kustannus,
+                parametrit: kortti.parametrit || {}
+              });
+
+              const pid = typeof nykyinenPelaaja.id !== 'undefined' ? Number(nykyinenPelaaja.id) : null;
+              // Compute configured addition (fallback to 10s)
+              const configured = Number(kortti.parametrit?.lisaAikaa || 10);
+              // Immediately add to current timer
+              try {
+                // clamp added seconds to avoid runaway values (max add 120s)
+                const toAdd = Math.max(0, Math.min(120, configured));
+                aika = Math.max(0, aika + toAdd);
+                // update clock color if needed
+                if (aika > 20) kellon_vari = '#10b981';
+              } catch (e) {
+                console.warn('Lisäaika: ei voitu päivittää ajastinta suoraan', e);
+              }
+
+              if (pid !== null) {
+                activeCardEffects[pid] = activeCardEffects[pid] || {};
+                // Keep a small marker for next question as well (optional)
+                activeCardEffects[pid].lisaa_aikaa = configured;
+                activeCardEffects[pid].lisaa_aikaa_remainingQuestions = 1;
+                showModal(`Lisäaika aktivoitu — +${configured}s tähän kysymykseen`);
+              } else {
+                showModal(`Lisäaika aktivoitu — +${configured}s`);
+              }
+            } catch (err) {
+              console.error('Kortin kaytto epäonnistui:', err);
+              showModal('Kortin käyttö epäonnistui');
+            }
+          }}
+        >
+          <div class="flex flex-col items-center">
+            <span class="text-3xl mb-2">⏳</span>
+            <span class="text-yellow-300 font-medium">Lisää aikaa - 10</span>
+          </div>
+        </button>
       </div>
 
       <!-- Main Game Area -->
@@ -1272,7 +1338,7 @@
             </button>
 
             <h1 class="text-4xl font-bold {GLASS_COLORS.titleGradient}">
-              🎯 Kysymys-sota
+              🎯 Kysymysmestari
             </h1>
 
             <div class="text-right">
@@ -1648,6 +1714,55 @@
           <div class="flex flex-col items-center">
             <span class="text-3xl mb-2">🌪️</span>
             <span class="text-emerald-400 font-medium">Sekoitus - 5</span>
+          </div>
+        </button>
+        
+        <!-- All in (uusi kortti id=10) -->
+        <button 
+          class="{GLASS_STYLES.card} p-4 w-full transition-all duration-300 cursor-pointer hover:shadow-lg hover:scale-[1.02] shadow-inner scale-95"
+          title="💥 All in – jos vastaat oikein, saat saman verran pisteitä kuin johtajalla; väärin menee kaikki pisteesi."
+          aria-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('Allin'))}
+          class:opacity-60={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('Allin'))}
+          class:card-disabled={!pelaajallaOnRiittavasti(nykyinenPelaajaId(), kortinKustannus('Allin'))}
+          on:click={async () => { if (!canUseKortti()) return;
+            try {
+              const kortti = (erikoiskortit as any).find((k: any) => k.key === 'Allin' || k.key === 'allin');
+              if (!kortti) return showModal('Korttia ei loydy');
+              const nykyinenPelaaja = sekoitetutPelaajat[pelaajaIndex];
+              if (!nykyinenPelaaja || typeof nykyinenPelaaja.id === 'undefined') return showModal('Pelaaja ei tunnistettu');
+              const db = await getDB();
+              const kustannus = Number(kortti.kustannus || 0);
+              const nimi = nykyinenPelaaja.nimi;
+              const nykyisetPisteet = pelaajanPisteet[nimi] || 0;
+              if (isNaN(kustannus)) { showModal('Kortin kustannus ei ole kelvollinen'); return; }
+              if (nykyisetPisteet < kustannus) return showModal('Ei tarpeeksi pisteitä');
+              // Vähennä pisteitä ja tallenna käyttö
+              pelaajanPisteet[nimi] = nykyisetPisteet - kustannus;
+              await db.tallennaKortinKaytto({
+                peli_id: typeof nykyinenPelaaja.id !== 'undefined' ? (pelaajaPelit.get(nykyinenPelaaja.id) || null) : null,
+                kayttaja_id: nykyinenPelaaja.id,
+                kortti_key: kortti.key,
+                kustannus: kustannus,
+                parametrit: kortti.parametrit || {}
+              });
+
+              const pid = typeof nykyinenPelaaja.id !== 'undefined' ? Number(nykyinenPelaaja.id) : null;
+              if (pid !== null) {
+                activeCardEffects[pid] = activeCardEffects[pid] || {};
+                // Mark the all-in effect; actual score application should be handled when scoring answers
+                activeCardEffects[pid].all_in = true;
+                activeCardEffects[pid].all_in_param = kortti.parametrit || {};
+              }
+              showModal('All in aktivoitu — riski suuri, palkinto suuri');
+            } catch (err) {
+              console.error('Kortin kaytto epäonnistui:', err);
+              showModal('Kortin käyttö epäonnistui');
+            }
+          }}
+        >
+          <div class="flex flex-col items-center">
+            <span class="text-3xl mb-2">💥</span>
+            <span class="text-rose-400 font-medium">All in - 20</span>
           </div>
         </button>
         

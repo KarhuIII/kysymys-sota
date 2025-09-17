@@ -65,7 +65,7 @@
     "vaarat_vastaukset": [
       "Kola Superdeep, 12 262 m",
       "Savuka, 3 000 m",
-      "TauTona, 3 900 m"
+      "TauTona, 3 976 m"
     ],
     "kategoria": "Maantieto",
     "vaikeustaso": "kuningas",
@@ -84,7 +84,7 @@
     "pistemaara_perus": 25
   },
   {
-    "kysymys": "Mikä oli tarkka lämpötila Kelvin-asteina ensimmäisessä kvanttitietokoneen kokeessa vuonna 2019?",
+    "kysymys": "Mikä oli lämpötila Kelvin-asteina ensimmäisessä kvanttitietokoneen kokeessa vuonna 2019?",
     "oikea_vastaus": "15 mK",
     "vaarat_vastaukset": [
       "20 mK",
@@ -108,12 +108,12 @@
     "pistemaara_perus": 10
   },
   {
-    "kysymys": "Mikä oli tarkka väestömäärä Roomassa vuonna 117 jKr.?",
+    "kysymys": "Mikä oli väestömäärä Roomassa vuonna 117 jKr.?",
     "oikea_vastaus": "1 600 000",
     "vaarat_vastaukset": [
       "1 200 000",
       "2 000 000",
-      "1 000 000"
+      "1 200 000"
     ],
     "kategoria": "Historia",
     "vaikeustaso": "kuningas",
@@ -121,7 +121,7 @@
   },
   {
     "kysymys": "Mikä on tarkka pituus ensimmäisen tunnetun DNA-molekyylin sekvenssissä, joka julkaistiin 1953?",
-    "oikea_vastaus": "5 000 emäsparia",
+    "oikea_vastaus": "5 000",
     "vaarat_vastaukset": [
       "3 000",
       "7 000",
@@ -137,7 +137,7 @@
     "vaarat_vastaukset": [
       "1 miljoona",
       "100 miljoonaa",
-      "500 000"
+      "12 miljoonaa"
     ],
     "kategoria": "Biologia",
     "vaikeustaso": "kuningas",
@@ -156,8 +156,8 @@
     "pistemaara_perus": 10
   },
   {
-    "kysymys": "Mikä on tarkka paino kilogrammoina Maapallon kokonaisilmakehälle?",
-    "oikea_vastaus": "5,15 x 10^18 kg",
+    "kysymys": "Mikä on tarkka paino Maapallon kokonaisilmakehälle kilogrammoina?",
+    "oikea_vastaus": "5,15 x 10^18",
     "vaarat_vastaukset": [
       "1 x 10^18",
       "5,0 x 10^17",
@@ -168,20 +168,20 @@
     "pistemaara_perus": 25
   },
   {
-    "kysymys": "Kuinka monta perhosta lajin Monarch (Danaus plexippus) muuttomatkalla 2020-luvulla arvioitiin olevan?",
+    "kysymys": "Kuinka monta yksilöä perhoslajin Monarch (Danaus plexippus) arvioitiin olevan muuttomatkalla 2020-luvulla?",
     "oikea_vastaus": "200 miljoonaa",
     "vaarat_vastaukset": [
       "100 miljoonaa",
-      "500 miljoonaa",
-      "1 miljardi"
+      "220 miljoonaa",
+      "150 miljoonaa"
     ],
     "kategoria": "Biologia",
     "vaikeustaso": "kuningas",
     "pistemaara_perus": 10
   },
   {
-    "kysymys": "Mikä oli tarkka pituus ensimmäisen sukellusveneen, joka saavutti merenpohjan Marianan haudassa, vuonna 1960?",
-    "oikea_vastaus": "7 metriä",
+    "kysymys": "Mikä oli tarkka pituus ensimmäisen sukellusveneelle, joka saavutti merenpohjan Marianan haudassa, vuonna 1960?",
+    "oikea_vastaus": "7 m",
     "vaarat_vastaukset": [
       "10 m",
       "5 m",
@@ -192,12 +192,12 @@
     "pistemaara_perus": 25
   },
   {
-    "kysymys": "Mikä on tarkka aika UTC, jolloin Apollo 11 laskeutui Kuun pinnalle?",
-    "oikea_vastaus": "20. heinäkuuta 1969 klo 20:17 UTC",
+    "kysymys": "Mikä on tarkka aika, jolloin Apollo 11 laskeutui Kuun pinnalle?",
+    "oikea_vastaus": "20. heinäkuuta 1969 klo 20:17",
     "vaarat_vastaukset": [
-      "19. heinäkuuta 1969",
-      "21. heinäkuuta 1969",
-      "20. heinäkuuta 1969 klo 21:00 UTC"
+      "19. heinäkuuta 1969 klo 13:45",
+      "21. heinäkuuta 1969 klo 22:27",
+      "20. heinäkuuta 1969 klo 11:08"
     ],
     "kategoria": "Historia",
     "vaikeustaso": "kuningas",
@@ -228,7 +228,7 @@
     "pistemaara_perus": 10
   },
   {
-    "kysymys": "Mikä oli tarkka syvyys metriä, johon Kola Superdeep Borehole kaivettiin?",
+    "kysymys": "Mihin syvyyteen Kola Superdeep Borehole kaivettiin?",
     "oikea_vastaus": "12 262 m",
     "vaarat_vastaukset": [
       "10 021 m",
@@ -243,8 +243,8 @@
     "kysymys": "Mikä on tarkka halkaisija kilometreinä Jupiterin planeetalla?",
     "oikea_vastaus": "139 820 km",
     "vaarat_vastaukset": [
-      "142 000 km",
-      "137 500 km",
+      "142 360 km",
+      "137 530 km",
       "140 750 km"
     ],
     "kategoria": "Avaruus",
@@ -252,10 +252,10 @@
     "pistemaara_perus": 25
   },
   {
-    "kysymys": "Kuinka monta tunnettuja lintuja on maailmassa (lajin tarkkuus) vuonna 2025?",
+    "kysymys": "Kuinka monta lintulajia tunnettiin maailmassa vuonna 2025?",
     "oikea_vastaus": "10 700",
     "vaarat_vastaukset": [
-      "10 000",
+      "10 400",
       "11 000",
       "10 300"
     ],
@@ -267,9 +267,9 @@
     "kysymys": "Mikä on tarkka etäisyys kilometreinä Maasta Kuuhun keskimäärin?",
     "oikea_vastaus": "384 400 km",
     "vaarat_vastaukset": [
-      "386 000 km",
-      "380 000 km",
-      "395 000 km"
+      "386 100 km",
+      "380 300 km",
+      "395 900 km"
     ],
     "kategoria": "Avaruus",
     "vaikeustaso": "kuningas",
@@ -279,28 +279,28 @@
     "kysymys": "Mikä on tarkka määrä sydämenlyöntejä minuutissa terveellä aikuisella levossa (keskiarvo)?",
     "oikea_vastaus": "72",
     "vaarat_vastaukset": [
-      "60",
-      "80",
-      "90"
+      "67",
+      "62",
+      "74"
     ],
     "kategoria": "Biologia",
     "vaikeustaso": "kuningas",
     "pistemaara_perus": 10
   },
   {
-    "kysymys": "Kuinka monta yksilöä Arktisen jääkarhikannan arvioitiin olevan vuonna 2020?",
+    "kysymys": "Kuinka monta yksilöä Arktisen jääkarhukannan arvioitiin olevan vuonna 2020?",
     "oikea_vastaus": "26 000",
     "vaarat_vastaukset": [
-      "20 000",
-      "30 000",
-      "35 000"
+      "23 000",
+      "31 000",
+      "19 000"
     ],
     "kategoria": "Biologia",
     "vaikeustaso": "kuningas",
     "pistemaara_perus": 10
   },
   {
-    "kysymys": "Mikä oli tarkka päivämäärä ensimmäiselle PCR-kokeelle (Polymerase Chain Reaction)?",
+    "kysymys": "Minä päivänä suoritettiin ensimmäinen PCR-koe (Polymerase Chain Reaction)?",
     "oikea_vastaus": "16. kesäkuuta 1983",
     "vaarat_vastaukset": [
       "1. tammikuuta 1983",
@@ -324,8 +324,8 @@
     "pistemaara_perus": 25
   },
   {
-    "kysymys": "Mikä on tarkka määrä tunnettuja makean veden kalaa maailmassa (laji tasolla)?",
-    "oikea_vastaus": "16 000 lajia",
+    "kysymys": "Kuinka monta makean veden kalalajia maailmassa on?",
+    "oikea_vastaus": "16 000",
     "vaarat_vastaukset": [
       "15 000",
       "20 000",
@@ -336,12 +336,12 @@
     "pistemaara_perus": 10
   },
   {
-    "kysymys": "Mikä on tarkka pituus kilometreinä Euroopan pisimmällä joella Volgalla?",
+    "kysymys": "Kuinka pitkä Euroopan pisin joki, Volga, on?",
     "oikea_vastaus": "3 531 km",
     "vaarat_vastaukset": [
-      "3 400 km",
-      "3 600 km",
-      "3 500 km"
+      "3 464 km",
+      "3 623 km",
+      "3 590 km"
     ],
     "kategoria": "Maantieto",
     "vaikeustaso": "kuningas",
@@ -349,11 +349,11 @@
   },
   {
     "kysymys": "Mikä oli tarkka paino grammoina ensimmäisellä ihmisen tekemällä satelliitilla Sputnik 1?",
-    "oikea_vastaus": "83,6 kg",
+    "oikea_vastaus": "83600 g",
     "vaarat_vastaukset": [
-      "80 kg",
-      "85 kg",
-      "90 kg"
+      "80405 g",
+      "85030 g",
+      "91200 g"
     ],
     "kategoria": "Avaruus",
     "vaikeustaso": "kuningas",
@@ -364,7 +364,7 @@
     "oikea_vastaus": "3, 2 pumppaa verta kiduksiin ja 1 koko kehoon",
     "vaarat_vastaukset": [
       "2, molemmat pumppaavat verta koko kehoon",
-      "3, kaikki pumppaavat verta kehoon",
+      "3, 12 pumppaa verta kiduksiin ja 2 koko kehoon",
       "1, pumppaa verta kehoon"
     ],
     "kategoria": "Biologia",
@@ -444,7 +444,7 @@
     "pistemaara_perus": 10
   },
   {
-    "kysymys": "Mikä joukkue voitti miesten jalkapallon olympiakultaa Rio 2016?",
+    "kysymys": "Mikä joukkue voitti miesten jalkapallon olympiakultaa Riossa 2016?",
     "oikea_vastaus": "Brasilia",
     "vaarat_vastaukset": [
       "Saksa",
@@ -468,18 +468,6 @@
     "pistemaara_perus": 25
   },
   {
-    "kysymys": "Kuinka monta eri pelipaikkaa on jalkapallossa?",
-    "oikea_vastaus": "11",
-    "vaarat_vastaukset": [
-      "10",
-      "12",
-      "9"
-    ],
-    "kategoria": "Urheilu",
-    "vaikeustaso": "kuningas",
-    "pistemaara_perus": 10
-  },
-  {
     "kysymys": "Mikä maa on voittanut eniten naisten jalkapallon MM-kisoja?",
     "oikea_vastaus": "Yhdysvallat",
     "vaarat_vastaukset": [
@@ -492,7 +480,7 @@
     "pistemaara_perus": 10
   },
   {
-    "kysymys": "Mikä oli ensimmäinen planeetta, johon Voyager 2 vieraili?",
+    "kysymys": "Mikä oli ensimmäinen planeetta, jolla Voyager 2 vieraili?",
     "oikea_vastaus": "Jupiter",
     "vaarat_vastaukset": [
       "Saturnus",
@@ -505,11 +493,11 @@
   },
   {
     "kysymys": "Kuka on kaikkien aikojen paras maalintekijä jalkapallon MM-kisoissa?",
-    "oikea_vastaus": "Miroslav Klose (16 maalia)",
+    "oikea_vastaus": "Miroslav Klose",
     "vaarat_vastaukset": [
-      "Ronaldo (15 maalia)",
-      "Gerd Müller (14 maalia)",
-      "Pelé (12 maalia)"
+      "Ronaldo",
+      "Gerd Müller",
+      "Pelé"
     ],
     "kategoria": "Urheilu",
     "vaikeustaso": "kuningas",

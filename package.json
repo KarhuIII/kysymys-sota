@@ -1,5 +1,5 @@
 {
-  "name": "kysymyssota",
+  "name": "kysymysmestari",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,6 +10,7 @@
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json"
   },
   "devDependencies": {
+    "@locator/runtime": "^0.4.4",
     "@skeletonlabs/skeleton": "^3.2.0",
     "@skeletonlabs/skeleton-svelte": "^1.5.1",
     "@sveltejs/vite-plugin-svelte": "^6.1.1",

@@ -1,4 +1,4 @@
-// Kysymyssota - Tietokantaschema ja TypeScript-rajapinnat
+// Kysymysmestari - Tietokantaschema ja TypeScript-rajapinnat
 // TypeScript-rajapinnat tietokannan entiteeteille
 
 /**

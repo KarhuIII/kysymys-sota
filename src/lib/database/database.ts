@@ -1,4 +1,4 @@
-// Kysymyssota - IndexedDB selainpohjainen tietokanta
+// Kysymysmestari - IndexedDB selainpohjainen tietokanta
 import type {
   Kayttaja,
   Kysymys,
@@ -14,7 +14,7 @@ import mestariKysymykset from "../data/kysymykset-mestari.json";
 import kuningasKysymykset from "../data/kysymykset-kuningas.json";
 import suurmestariKysymykset from "../data/kysymykset-suurmestari.json";
 
-export class KysymyssotaDB {
+export class KysymysmestariDB {
   /**
    * Tallenna tilastotietue tietokantaan
    * @param tilastoObj - Tilastotiedot
@@ -51,7 +51,7 @@ export class KysymyssotaDB {
    * (Huom) Erilliset valuutta-apumenetelmät poistettu: valuutta käyttää pelin pisteitä.
    */
   private db: IDBDatabase | null = null;
-  private readonly DB_NAME = "KysymyssotaDB";
+  private readonly DB_NAME = "KysymysmestariDB";
   private readonly DB_VERSION = 2; // bumped to create card_usages store if missing
 
   /**
@@ -1360,6 +1360,30 @@ export class KysymyssotaDB {
       };
     });
   }
+
+  /**
+   * Tyhjennä kaikki pelaajat (vain "kayttajat"-store). Käytetään adminin nollaus-toimintoon.
+   */
+  public async tyhjennaKayttajat(): Promise<void> {
+    if (!this.db) return;
+
+    console.log("🧹 Tyhjennetään pelaajat tietokannasta...");
+
+    const transaction = this.db.transaction(["kayttajat"], "readwrite");
+    const store = transaction.objectStore("kayttajat");
+
+    return new Promise((resolve, reject) => {
+      const req = store.clear();
+      req.onsuccess = () => {
+        console.log("✅ Kaikki pelaajat poistettu tietokannasta");
+        resolve();
+      };
+      req.onerror = () => {
+        console.error("❌ Virhe pelaajien tyhjennyksessä:", req.error);
+        reject(req.error);
+      };
+    });
+  }
 }
 
 // ===============================================
@@ -1367,15 +1391,15 @@ export class KysymyssotaDB {
 // ===============================================
 
 // Singleton instance - odottaa alusitusta
-let dbInstance: KysymyssotaDB | null = null;
+let dbInstance: KysymysmestariDB | null = null;
 
 /**
  * Hae tai luo tietokanta-instanssi
  * @returns Tietokanta-instanssi
  */
-export const getDB = async (): Promise<KysymyssotaDB> => {
+export const getDB = async (): Promise<KysymysmestariDB> => {
   if (!dbInstance) {
-    dbInstance = new KysymyssotaDB();
+    dbInstance = new KysymysmestariDB();
     // Odota että tietokanta on alustettu
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
@@ -1395,7 +1419,7 @@ export const tyhjennaJaAlustaUudelleen = async (): Promise<void> => {
   
   // Poista tietokanta kokonaan
   return new Promise<void>((resolve, reject) => {
-    const deleteRequest = indexedDB.deleteDatabase("KysymyssotaDB");
+  const deleteRequest = indexedDB.deleteDatabase("KysymysmestariDB");
     
     deleteRequest.onsuccess = async () => {
       console.log("✅ Tietokanta poistettu");

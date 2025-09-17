@@ -1,0 +1,53 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"chat.agent.maxRequests": 300,
+		"chat.tools.terminal.autoApprove": {
+			"rm": false,
+			"rmdir": false,
+			"del": false,
+			"kill": false,
+			"curl": false,
+			"wget": false,
+			"eval": false,
+			"chmod": false,
+			"chown": false,
+			"/^Remove-Item\\b/i": false,
+			"ls": true,
+			"dir": true,
+			"pwd": true,
+			"cd": true,
+			"echo": true,
+			"cat": true,
+			"type": true,
+			"head": true,
+			"tail": true,
+			"grep": true,
+			"find": true,
+			"where": true,
+			"which": true,
+			"git status": true,
+			"git log": true,
+			"git diff": true,
+			"git branch": true,
+			"npm list": true,
+			"npm info": true,
+			"npm view": true,
+			"node --version": true,
+			"npm --version": true,
+			"Get-Location": true,
+			"Get-ChildItem": true,
+			"Get-Content": true,
+			"Test-Path": true,
+			"Get-Date": true,
+			"Get-Process": true,
+			"/^git\\s+(status|log|diff|branch|show)\\b/i": true,
+			"/^npm\\s+(list|info|view|--version)\\b/i": true,
+			"/^node\\s+--version\\b/i": true
+		}
+	}
+}

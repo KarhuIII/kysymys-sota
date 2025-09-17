@@ -10,6 +10,7 @@
     GLASS_LAYOUT,
     glassUtils 
   } from '../styles/glass-morphism.js';
+  import { vaikeustasoLabel, vaikeustasoIcon as mapVaikeustasoIcon, vaikeustasoDisplay, SELECTABLE_VAIKEUSTASOT } from "../constants/vaikeustasot";
 
   // ===============================================
   // PROPS & NAVIGATION
@@ -296,14 +297,7 @@
   });
 
   function vaikeustasoIcon(vaikeustaso: string): string {
-    switch (vaikeustaso) {
-      case 'oppipoika': return '🪵';
-      case 'taitaja': return '🎨';
-      case 'mestari': return '⚔️';
-      case 'kuningas': return '👑';
-      case 'suurmestari': return '🌌';
-      default: return '🪵';
-    }
+    return mapVaikeustasoIcon(vaikeustaso);
   }
 
   function formatDate(date: string): string {
@@ -457,6 +451,29 @@
           👤 Lisää pelaaja
         </button>
         <button 
+          class="px-6 py-4 bg-error-500/80 text-white rounded-xl backdrop-blur-sm transition-all duration-300 
+                 hover:scale-[1.02] hover:shadow-lg border border-white/30"
+          on:click={async () => {
+            if (confirm('Haluatko varmasti nollata kaikki pelaajat? Tämä poistaa kaikki pelaajatilit pysyvästi.')) {
+              try {
+                const db = await getDB();
+                await db.tyhjennaKayttajat();
+                // Poista myös valitut asetukset paikallisesta tallennuksesta, jotta asetussivu päivittyy oikein
+                try { localStorage.removeItem('peliasetukset'); } catch(e) { /* ignore */ }
+                await paivitaPelaajaUI();
+                // Informoi muut komponentit muutoksesta
+                try { window.dispatchEvent(new CustomEvent('players-reset')); } catch(e) { /* ignore */ }
+                alert('Pelaajatietokanta nollattu.');
+              } catch (err) {
+                console.error('Virhe pelaajien nollauksessa:', err);
+                alert('Pelaajien nollaus epäonnistui: ' + (err as Error).message);
+              }
+            }
+          }}
+        >
+          🔄 Nollaa pelaajat
+        </button>
+        <button 
           class="px-6 py-4 bg-warning-500/80 text-white rounded-xl backdrop-blur-sm transition-all duration-300 
                  hover:scale-[1.02] hover:shadow-lg border border-white/30"
           on:click={paivitaKysymyksetUI}
@@ -506,11 +523,9 @@
           bind:value={valittuVaikeustaso}
         >
           <option value="">Kaikki vaikeudet</option>
-          <option value="oppipoika">🪵 Oppipoika</option>
-          <option value="taitaja">🎨 Taitaja</option>
-          <option value="mestari">⚔️ Mestari</option>
-          <option value="kuningas">👑 Kuningas</option>
-          <option value="suurmestari">🌌 Suurmestari</option>
+          {#each SELECTABLE_VAIKEUSTASOT as taso}
+            <option value={taso}>{vaikeustasoDisplay(taso)}</option>
+          {/each}
         </select>
       </div>
     </div>
@@ -628,8 +643,8 @@
               <span class="text-sm">-</span>
               <span class="text-lg">{vaikeustasoIcon(pelaaja.vaikeustaso_max || 'taitaja')}</span>
             </div>
-            <div class="text-sm text-surface-600 dark:text-surface-400">
-              {pelaaja.vaikeustaso_min || 'oppipoika'} → {pelaaja.vaikeustaso_max || 'taitaja'}
+              <div class="text-sm text-surface-600 dark:text-surface-400">
+              {vaikeustasoLabel(pelaaja.vaikeustaso_min || 'oppipoika')} → {vaikeustasoLabel(pelaaja.vaikeustaso_max || 'taitaja')}
             </div>
           </div>
           
@@ -720,11 +735,11 @@
       <div class="bg-white/90 dark:bg-surface-900/90 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 dark:border-white/10 p-6">
         <h3 class="text-lg font-semibold mb-4 text-center">🎯 Vaikeustasot</h3>
         <div class="space-y-2">
-          {#each ['oppipoika', 'taitaja', 'mestari', 'kuningas', 'suurmestari'] as taso}
+          {#each SELECTABLE_VAIKEUSTASOT as taso}
             <div class="flex justify-between items-center py-2 px-3 bg-white/50 dark:bg-surface-800/50 rounded-lg">
               <span class="flex items-center gap-2">
                 <span class="text-lg">{vaikeustasoIcon(taso)}</span>
-                <span class="font-medium capitalize">{taso}</span>
+                <span class="font-medium">{vaikeustasoLabel(taso)}</span>
               </span>
               <span class="font-bold text-primary-500">{kysymykset.filter(k => k.vaikeustaso === taso).length}</span>
             </div>
@@ -820,33 +835,29 @@
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label for="pelaaja-min-vaikeus" class="block text-sm font-medium mb-2">Min vaikeustaso</label>
-              <select 
+                <select 
                 id="pelaaja-min-vaikeus"
                 class="w-full px-4 py-3 bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 
                        focus:ring-2 focus:ring-primary-500 focus:outline-none transition-all duration-300"
                 bind:value={uusiPelaaja.vaikeustaso_min}
               >
-                <option value="oppipoika">🪵 Oppipoika</option>
-                <option value="taitaja">🎨 Taitaja</option>
-                <option value="mestari">⚔️ Mestari</option>
-                <option value="kuningas">👑 Kuningas</option>
-                <option value="suurmestari">🌌 Suurmestari</option>
+                {#each SELECTABLE_VAIKEUSTASOT as taso}
+                  <option value={taso}>{vaikeustasoDisplay(taso)}</option>
+                {/each}
               </select>
             </div>
             
             <div>
               <label for="pelaaja-max-vaikeus" class="block text-sm font-medium mb-2">Max vaikeustaso</label>
-              <select 
+                <select 
                 id="pelaaja-max-vaikeus"
                 class="w-full px-4 py-3 bg-white/50 dark:bg-surface-800/50 backdrop-blur-sm rounded-xl border border-white/30 
                        focus:ring-2 focus:ring-primary-500 focus:outline-none transition-all duration-300"
                 bind:value={uusiPelaaja.vaikeustaso_max}
               >
-                <option value="oppipoika">🪵 Oppipoika</option>
-                <option value="taitaja">🎨 Taitaja</option>
-                <option value="mestari">⚔️ Mestari</option>
-                <option value="kuningas">👑 Kuningas</option>
-                <option value="suurmestari">🌌 Suurmestari</option>
+                {#each SELECTABLE_VAIKEUSTASOT as taso}
+                  <option value={taso}>{vaikeustasoDisplay(taso)}</option>
+                {/each}
               </select>
             </div>
           </div>

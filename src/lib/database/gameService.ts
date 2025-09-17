@@ -1,4 +1,4 @@
-// Kysymyssota Game Service
+// Kysymysmestari Game Service
 // Pelitoimintojen hallinta ja logiikka
 
 import { getDB } from "./database.js";
