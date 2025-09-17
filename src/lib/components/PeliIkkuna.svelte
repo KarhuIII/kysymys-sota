@@ -50,6 +50,25 @@
     }, ms);
   }
 
+  // Quick-bonus flash shown over the clock when a quick-answer bonus is applied
+  let quickBonusFlash: string | null = null;
+  let quickBonusTimeout: number | null = null;
+  let quickBonusPos: { x: number; y: number } | null = null;
+  let lastMousePos: { x: number; y: number } = { x: 0, y: 0 };
+  let mouseMoveHandler: ((e: MouseEvent) => void) | null = null;
+  function flashQuickBonus(text: string, ms = 1200) {
+    quickBonusFlash = text;
+    // default pos to last known mouse position
+    quickBonusPos = lastMousePos ? { ...lastMousePos } : null;
+    try { if (quickBonusTimeout) window.clearTimeout(quickBonusTimeout); } catch (e) {}
+    // window.setTimeout returns number in browser
+    quickBonusTimeout = window.setTimeout(() => {
+      quickBonusFlash = null;
+      quickBonusPos = null;
+      quickBonusTimeout = null;
+    }, ms) as unknown as number;
+  }
+
   /**
    * Break a text into parts where numeric IDs (e.g., "25", "id25", "#25") are
    * returned as separate parts so the template can render them inside a badge.
@@ -176,6 +195,8 @@
   // DB / peliseuranta
   let pelaajaPelit: Map<number, number> = new Map(); // kayttajaId -> peliId
   let pelaajanKysymysCount: Record<number, number> = {};
+  // Track consecutive correct answers per player for streak bonuses
+  let consecutiveCorrect: Record<number, number> = {};
   let kysymysAloitettu = 0;
   // Pelaajan pisteet lasketaan pelin aikana (käytetään valuuttana erikoiskortteihin)
   // Pelaajan pisteet näkyvät jo `pelaajanPisteet`-objektissa (nimi -> pisteet)
@@ -394,6 +415,12 @@
     // Load recent events for the history card
     try { await lueViimeisetTapahtumat(); } catch (e) { /* ignore */ }
 
+    // Track mouse position for quick-bonus flash placement
+    mouseMoveHandler = (e: MouseEvent) => {
+      try { lastMousePos = { x: e.clientX, y: e.clientY }; } catch(e) {}
+    };
+    window.addEventListener('mousemove', mouseMoveHandler);
+
     // Listen for external notifications that a new event was recorded (e.g., from AdminSivu)
       // Expose handler so onDestroy can remove the exact same function
       externalEventHandler = () => { lueViimeisetTapahtumat().catch(() => {}); };
@@ -410,6 +437,12 @@
         externalEventHandler = null;
       }
     } catch (e) { /* ignore */ }
+    try {
+      if (mouseMoveHandler) {
+        window.removeEventListener('mousemove', mouseMoveHandler);
+        mouseMoveHandler = null;
+      }
+    } catch(e) { /* ignore */ }
   });
 
   /*
@@ -841,6 +874,13 @@
   if (oikea && nykyinenKysymys) {
       // Käytä kysymyksen omia pisteitä
       let pisteet = nykyinenKysymys.pistemaara_perus;
+      // Quick-answer bonus: +5 points if answered under 5 seconds
+      const quickAnswerBonus = (vastausaikaMs > 0 && vastausaikaMs <= 2500) ? 5 : 0;
+      if (quickAnswerBonus > 0) {
+        console.log(`⚡ Quick answer bonus applied: +${quickAnswerBonus} (vastausaikaMs=${vastausaikaMs})`);
+        // show a small flash over the clock
+        flashQuickBonus(`+${quickAnswerBonus}💎`);
+      }
       // Tarkista onko pelaajalla aktiivisia erikoiskorttiefektejä (esim. tuplapisteet)
       if (nykyinenPelaaja && typeof nykyinenPelaaja.id !== 'undefined') {
         const pid = Number(nykyinenPelaaja.id);
@@ -856,9 +896,32 @@
   // Debug: log before changing points to detect unexpected increments
   const playerName = (nykyinenPelaaja && nykyinenPelaaja.nimi) ? nykyinenPelaaja.nimi : 'tuntematon';
   const beforePoints = pelaajanPisteet[playerName] || 0;
-  console.log('🏷️ Awarding points:', { player: playerName, before: beforePoints, add: pisteet, efekt: activeCardEffects[nykyinenPelaaja?.id ?? -1] });
-  pelaajanPisteet[playerName] = beforePoints + pisteet;
-  saatuPisteet = pisteet; // Tallenna animaatiota varten
+  // Add quick-answer bonus to final awarded points
+  let finalAward = pisteet + (typeof quickAnswerBonus !== 'undefined' ? quickAnswerBonus : 0);
+  // Streak: track consecutive correct answers for the current player and award +50 on 3-in-a-row
+  try {
+    if (nykyinenPelaaja && typeof nykyinenPelaaja.id !== 'undefined') {
+      const pid = Number(nykyinenPelaaja.id);
+      consecutiveCorrect[pid] = (consecutiveCorrect[pid] || 0) + 1;
+      console.log(`🔁 consecutiveCorrect[${pid}] = ${consecutiveCorrect[pid]}`);
+      if (consecutiveCorrect[pid] >= 3) {
+        // Award streak bonus
+        const streakBonus = 50;
+        finalAward += streakBonus;
+        // show a prominent combo flash with localized label
+        flashQuickBonus(`KOMBO ${streakBonus}💎`);
+        // also show modal notification
+        showModal(`Kolme kertaa peräkkäin oikein! +${streakBonus}💎`, 3000);
+        // Reset the streak counter for that player
+        consecutiveCorrect[pid] = 0;
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ Virhe streak-laskennassa:', e);
+  }
+  console.log('🏷️ Awarding points:', { player: playerName, before: beforePoints, add: finalAward, base: pisteet, quickBonus: quickAnswerBonus, efekt: activeCardEffects[nykyinenPelaaja?.id ?? -1] });
+  pelaajanPisteet[playerName] = beforePoints + finalAward;
+  saatuPisteet = finalAward; // Tallenna animaatiota varten
   console.log('✅ Points after award:', { player: playerName, after: pelaajanPisteet[playerName] });
     } else {
       saatuPisteet = 0; // Ei pisteitä väärästä vastauksesta
@@ -880,11 +943,14 @@
         // Log the answer event
         try {
           try {
+            // include streak info in payload if present
+            const pid = kayttajaId;
+            const streak = (pid !== undefined && pid !== null) ? (consecutiveCorrect[pid] || 0) : 0;
             await db.tallennaPelitapahtuma({
               peli_id: peliId,
               kayttaja_id: kayttajaId ?? null,
               tyyppi: 'vastaus',
-              payload: { kysymys_id: nykyinenKysymys.id, oikein: oikea, annettu_vastaus: vastaus || '', vastausaika_ms: vastausaikaMs, pisteet: saatuPisteet },
+              payload: { kysymys_id: nykyinenKysymys.id, oikein: oikea, annettu_vastaus: vastaus || '', vastausaika_ms: vastausaikaMs, pisteet: saatuPisteet, streak_after: streak },
               paivays: new Date().toISOString(),
             });
             try { window.dispatchEvent(new CustomEvent('pelitapahtuma-uusi')); } catch (e) {}
@@ -1692,6 +1758,7 @@
               {formatoiAika(aika)}
             {/if}
           </button>
+          <!-- inline clock flash removed; quick flash rendered at cursor as fixed element -->
         </div>
       </div>
 
@@ -2118,6 +2185,11 @@
   </div>
 </div>
 
+{#if quickBonusFlash && quickBonusPos}
+  <!-- Offset flash slightly left of cursor so it's not directly under the pointer -->
+  <div class="quick-bonus-flash" style="position:fixed; left: {quickBonusPos.x}px; top: {quickBonusPos.y - 36}px; transform: translate(-50%, -140%);">{quickBonusFlash}</div>
+{/if}
+
 <style>
   /* Glass morphism yhteensopivat siirtymät */
   .hover-scale {
@@ -2165,6 +2237,21 @@
     transform-origin: center center;
   }
 
+  /* prettier hover for clock: subtle lift, stronger glow, smooth transition */
+  .clock-button {
+    transition: transform 180ms cubic-bezier(.2,.9,.2,1), box-shadow 180ms ease, border-color 180ms ease, background-color 180ms ease;
+    cursor: pointer;
+  }
+  .clock-button:hover:not(:disabled) {
+    transform: translateY(-6px) scale(1.06);
+    box-shadow: 0 18px 46px rgba(16,185,129,0.18), 0 6px 18px rgba(0,0,0,0.25);
+    filter: saturate(1.06);
+  }
+  .clock-button:active:not(:disabled) {
+    transform: translateY(-2px) scale(0.99);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+  }
+
   /* Class-based animations so Svelte's scoped CSS keyframes are correctly applied
      when toggling based on reactive state. These classes repeat infinitely. */
   .pulse-slow {
@@ -2173,6 +2260,37 @@
 
   .pulse-fast {
     animation: pulse-fast 0.8s infinite ease-in-out;
+  }
+
+  .quick-bonus-flash{
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: -1.6rem;
+    background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04));
+    color: #fff;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 1rem;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+    animation: quick-bonus-pop 1.0s ease-out both;
+    z-index: 60;
+  }
+
+  /* make the flash respond to hovering the clock (lift a bit and glow) */
+  .clock-button:hover + .quick-bonus-flash,
+  .quick-bonus-flash:hover {
+    transform: translateX(-50%) translateY(-14px) scale(1.02);
+    box-shadow: 0 22px 40px rgba(0,0,0,0.45), 0 6px 18px rgba(34,197,94,0.12);
+    opacity: 1;
+  }
+
+  @keyframes quick-bonus-pop {
+    0% { transform: translateX(-50%) translateY(6px) scale(0.9); opacity: 0; }
+    30% { transform: translateX(-50%) translateY(-2px) scale(1.06); opacity: 1; }
+    70% { transform: translateX(-50%) translateY(-6px) scale(1.02); opacity: 0.95; }
+    100% { transform: translateX(-50%) translateY(-10px) scale(1); opacity: 0; }
   }
 
   /* Disabled/insufficient-pisteet look for cards */

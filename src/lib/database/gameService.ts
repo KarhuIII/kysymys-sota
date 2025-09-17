@@ -187,7 +187,7 @@ export class PeliPalvelu {
       kysymys.oikea_vastaus.toLowerCase().trim();
     const vastausaika = Date.now() - peli.kysymysAloitettu;
 
-    // Laske pisteet (nopeampi vastaus = enemmän pisteitä)
+  // Laske pisteet (nopeampi vastaus = enemmän pisteitä)
     // Käytetään kysymyksen peruspisteitä ja lisätään nopeusbonus
     let pisteet = 0;
     if (oikein) {
@@ -205,10 +205,13 @@ export class PeliPalvelu {
                 : 50); // suurmestari
 
       // Bonuspisteet nopeudesta (max 10 sekuntia)
-      const nopeusBonusKerroin = Math.max(0, (10000 - vastausaika) / 10000);
-      const nopeusBonus = Math.round(perusPisteet * 0.5 * nopeusBonusKerroin);
+  const nopeusBonusKerroin = Math.max(0, (10000 - vastausaika) / 10000);
+  const nopeusBonus = Math.round(perusPisteet * 0.5 * nopeusBonusKerroin);
 
-      pisteet = perusPisteet + nopeusBonus;
+  // Quick-answer fixed bonus: +5 if answered within 5 seconds
+  const quickAnswerBonus = vastausaika > 0 && vastausaika <= 5000 ? 5 : 0;
+
+  pisteet = perusPisteet + nopeusBonus + quickAnswerBonus;
 
       // Ikäkerroin: nuoremmille helpompi, vanhemmille haastavampi
       if (peli.kayttaja.ika) {
