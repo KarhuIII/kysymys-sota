@@ -366,7 +366,7 @@
         <div class="container mx-auto flex justify-between items-center p-4">
           <h1 class="text-xl font-semibold {GLASS_COLORS.titleGradient}">
             <button class="text-xl font-bold" on:click={() => navigoi('etusivu')}>
-              🎯 Kysymysmestari
+              <span class="flex items-center space-x-2"><span>🎯 Kysymysmestari</span><span class="text-[10px] font-semibold inline-block px-2 py-0.5 rounded-full bg-red-600 text-white">alpha</span></span>
             </button>
           </h1>
           
@@ -489,7 +489,7 @@
                   <div class="w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-full flex items-center justify-center shadow-lg mx-auto">
                     <span class="text-2xl">🧠</span>
                   </div>
-                  <h2 class="text-3xl font-bold">Tervetuloa Kysymysmestariin!</h2>
+                  <h2 class="text-3xl font-bold">Tervetuloa <span class="inline-flex items-center">Kysymysmestariin!</span></h2>
                   <p class="text-lg opacity-80">Hauska tietokilpailu koko perheelle</p>
                   <div class="flex gap-3 justify-center items-center">
                     <button class="{glassUtils.button('primary')} text-lg px-8 py-3" on:click={() => navigoi('asetukset')}>
@@ -749,7 +749,7 @@
           Tehty ❤️:llä <span class="text-primary-500 font-semibold"> - Pienille ja suurille tietovisailijoille</span>
         </div>
         <div class="text-xs text-surface-500-500">
-          © 2025 Kysymysmestari
+          © 2025 <span class="inline-flex items-center">Kysymysmestari</span>
         </div>
       </div>
     </footer>

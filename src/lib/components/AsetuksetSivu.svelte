@@ -52,6 +52,8 @@
   // Peliasetukset
   let kierrosMaara = 10;
   const kierrosMaaraVaihtoehdot = [5, 10, 15, 20, 25, 30];
+  // Lukuaika (seconds) before the clock starts (0..5)
+  let lukuaikaSekunteina: number = 0;
   
   // Pelaajan värien lista
   const pelaajaVarit = [
@@ -106,6 +108,7 @@
           valitutPelaajat = new Set(asetukset.valitutPelaajat || tallennetutPelaajat.map(p => p.id!));
           valitutKategoriat = new Set(asetukset.valitutKategoriat || Object.keys(saatavilla_kategoriat));
           kierrosMaara = asetukset.kierrosMaara || 10;
+          lukuaikaSekunteina = typeof asetukset.lukuaikaSekunteina === 'number' ? asetukset.lukuaikaSekunteina : (asetukset.lukuaika || 0);
         } catch (e) {
           // Jos tallennetut asetukset ovat viallisia, käytä oletuksia
           asetaOletukset();
@@ -133,7 +136,8 @@
     const asetukset = {
       valitutPelaajat: Array.from(valitutPelaajat),
       valitutKategoriat: Array.from(valitutKategoriat),
-      kierrosMaara
+      kierrosMaara,
+      lukuaikaSekunteina
     };
     localStorage.setItem('peliasetukset', JSON.stringify(asetukset));
   }
@@ -400,6 +404,18 @@
             </div>
           {/each}
         </div>
+      </div>
+
+      <!-- Lukuaika (read time) -->
+      <div class="mt-4">
+        <div class="mb-2">
+          <span class="text-lg font-medium">Lukuaika ennen kellon käynnistymistä</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <input type="range" min="0" max="5" step="1" bind:value={lukuaikaSekunteina} on:change={tallennaAsetukset} />
+          <div class="text-sm">{lukuaikaSekunteina} s</div>
+        </div>
+        <div class="text-xs text-surface-600-400 mt-1">Aseta kuinka monta sekuntia lukuaikaa pelaajille annetaan ennen kuin kysymyksen ajastin alkaa (0 = heti).</div>
       </div>
     </div>
 

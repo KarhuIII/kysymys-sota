@@ -1,3 +1,12 @@
+<!-- PELI IKKUNA — KÄYTTÖLIITTYMÄN MUISTIINPANOJA -->
+<!--
+  Tämä komponentti on käyttöliittymän osa — ei authoritative-pistelaskenta.
+  - Kaikki piste- ja tilamuutokset tehdään palvelussa (`PeliPalvelu`).
+  - Komponentin tehtävä on näyttää palvelun palauttamat arvot ja tallentaa
+    tapahtumat DB:hen käyttäen yhteistä helperia (`tallennaPelitapahtumaJaEmit`).
+  - Älä kopioi pistelaskua tänne — ota kaikki arvot palvelun vastauksesta.
+-->
+
 <script lang="ts">
   import { onMount, onDestroy } from "svelte";
   import { getDB } from "../database/database.js";
@@ -50,24 +59,9 @@
     }, ms);
   }
 
-  // Quick-bonus flash shown over the clock when a quick-answer bonus is applied
-  let quickBonusFlash: string | null = null;
-  let quickBonusTimeout: number | null = null;
-  let quickBonusPos: { x: number; y: number } | null = null;
+  // Mouse tracking helper (used for positioning other overlays)
   let lastMousePos: { x: number; y: number } = { x: 0, y: 0 };
   let mouseMoveHandler: ((e: MouseEvent) => void) | null = null;
-  function flashQuickBonus(text: string, ms = 1200) {
-    quickBonusFlash = text;
-    // default pos to last known mouse position
-    quickBonusPos = lastMousePos ? { ...lastMousePos } : null;
-    try { if (quickBonusTimeout) window.clearTimeout(quickBonusTimeout); } catch (e) {}
-    // window.setTimeout returns number in browser
-    quickBonusTimeout = window.setTimeout(() => {
-      quickBonusFlash = null;
-      quickBonusPos = null;
-      quickBonusTimeout = null;
-    }, ms) as unknown as number;
-  }
 
   /**
    * Break a text into parts where numeric IDs (e.g., "25", "id25", "#25") are
@@ -186,6 +180,11 @@
   // Pelin tila
   let pelaajaIndex = 0;
   let kysymysNumero = 1;
+  // Special-suurmestari selection (UI-level): pick one round and one player who will
+  // receive a 'suurmestari' question on that round. This is chosen once per game.
+  let specialSuurmestariRound: number | null = null;
+  let specialSuurmestariPlayerIndex: number | null = null;
+  let specialSuurmestariAssigned: boolean = false;
   $: maxKysymykset = kierrosMaara;
   let pelaajanPisteet: { [key: string]: number } = {};
   let sekoitetutPelaajat: Kayttaja[] = []; // Satunnaisessa järjestyksessä pelaajat
@@ -198,6 +197,11 @@
   // Track consecutive correct answers per player for streak bonuses
   let consecutiveCorrect: Record<number, number> = {};
   let kysymysAloitettu = 0;
+  let lukuaikaSekunteina = 0;
+  let lukuaikaTimeout: number | null = null;
+  // Remaining read-time shown before the real question timer starts
+  let readTimeRemaining: number | null = null;
+  let readTimeInterval: number | null = null;
   // Pelaajan pisteet lasketaan pelin aikana (käytetään valuuttana erikoiskortteihin)
   // Pelaajan pisteet näkyvät jo `pelaajanPisteet`-objektissa (nimi -> pisteet)
 
@@ -206,6 +210,10 @@
     const p = sekoitetutPelaajat[pelaajaIndex];
     return p && typeof p.id !== 'undefined' ? p.id : undefined;
   }
+
+  // NOTE: Timeline UI above question uses Tailwind/utility classes and existing color tokens.
+  // If you want finer control over the dots (sizes, colors, spacing), add styles here or
+  // use the GLASS_* style tokens for consistent theming.
 
   /*
     Huomautus: useimmat seuraavista util-funktioista ovat pieniä apureita UI- ja korttilogiikan
@@ -217,6 +225,10 @@
   function canUseKortti(): boolean {
     if (valittuVastaus !== null || pisteytys) {
       showModal('Et voi käyttää kortteja sen jälkeen kun olet vastannut.');
+      return false;
+    }
+    if (readTimeRemaining !== null) {
+      showModal('Kortteja ei voi käyttää lukuaikana. Odota lukuaika loppuun.');
       return false;
     }
     return true;
@@ -258,15 +270,18 @@
           parametrit: kortti.parametrit || {}
         });
         try {
-          await db.tallennaPelitapahtuma({
-            peli_id: peliId,
-            kayttaja_id: nykyinenPelaaja.id,
-            tyyppi: 'kortti_kaytto',
-            payload: { kortti: kortti.key },
-            paivays: new Date().toISOString(),
-          });
-          try { window.dispatchEvent(new CustomEvent('pelitapahtuma-uusi')); } catch(e) {}
-          try { await lueViimeisetTapahtumat(); } catch (e) { /* ignore */ }
+          try {
+            await db.tallennaPelitapahtumaJaEmit({
+              peli_id: peliId,
+              kayttaja_id: nykyinenPelaaja.id,
+              tyyppi: 'kortti_kaytto',
+              payload: { kortti: kortti.key },
+              paivays: new Date().toISOString(),
+            });
+            try { await lueViimeisetTapahtumat(); } catch (e) { /* ignore */ }
+          } catch (e) {
+            console.warn('Ei voitu tallennaPelitapahtuma (kortti_kaytto):', e);
+          }
         } catch (e) {
           console.warn('Ei voitu tallennaPelitapahtuma (kortti_kaytto):', e);
         }
@@ -393,6 +408,18 @@
     // Lataa pisteytysviestit
     await lataaPisteytysViestit();
 
+    // Load read-time setting from localStorage (peliasetukset.lukuaikaSekunteina)
+    try {
+      const raw = localStorage.getItem('peliasetukset');
+      if (raw) {
+        const parsed = JSON.parse(raw || '{}');
+        lukuaikaSekunteina = Number(parsed.lukuaikaSekunteina || parsed.lukuaika || 0) || 0;
+        console.log('ℹ️ Lukuaika asetettu:', lukuaikaSekunteina);
+      }
+    } catch (e) {
+      console.warn('⚠️ Ei voitu lukea peliasetuksia (lukuaika):', e);
+    }
+
     if (pelaajat.length > 0) {
       // Sekoita pelaajat satunnaiseen järjestykseen
       sekoitetutPelaajat = sekoitaArray([...pelaajat]);
@@ -405,6 +432,20 @@
   // Nollaa kysytyt kysymykset uutta peliä varten
       kysytytKysymykset.clear();
       console.log("🎮 Uusi peli aloitettu - kysytyt kysymykset nollattu");
+
+      // Choose one random round and one random player to receive a 'suurmestari' question.
+      // This is a UI-level selection: it will override the valittuVaikeustaso for that single turn.
+      try {
+        specialSuurmestariRound = Math.floor(Math.random() * maxKysymykset) + 1; // 1..maxKysymykset
+        specialSuurmestariPlayerIndex = Math.floor(Math.random() * sekoitetutPelaajat.length);
+        specialSuurmestariAssigned = false;
+        const selectedPlayerName = sekoitetutPelaajat[specialSuurmestariPlayerIndex].nimi;
+        console.log('🔮 Special suurmestari selected:', { round: specialSuurmestariRound, playerIndex: specialSuurmestariPlayerIndex, playerName: selectedPlayerName });
+      } catch (e) {
+        specialSuurmestariRound = null;
+        specialSuurmestariPlayerIndex = null;
+        specialSuurmestariAssigned = false;
+      }
 
       await aloitaUusiKysymys();
       // Aloitustila: pelaajan pisteet nollataan komponentin sisäisesti
@@ -420,6 +461,7 @@
       try { lastMousePos = { x: e.clientX, y: e.clientY }; } catch(e) {}
     };
     window.addEventListener('mousemove', mouseMoveHandler);
+
 
     // Listen for external notifications that a new event was recorded (e.g., from AdminSivu)
       // Expose handler so onDestroy can remove the exact same function
@@ -443,6 +485,12 @@
         mouseMoveHandler = null;
       }
     } catch(e) { /* ignore */ }
+    try {
+      if (lukuaikaTimeout) { clearTimeout(lukuaikaTimeout as any); lukuaikaTimeout = null; }
+    } catch(e) {}
+    try {
+      if (readTimeInterval) { clearInterval(readTimeInterval as any); readTimeInterval = null; }
+    } catch(e) {}
   });
 
   /*
@@ -570,65 +618,79 @@
       );
 
       // Valitse sopiva vaikeustaso tälle pelaajalle
-      const valittuVaikeustaso = valitsePelaajanVaikeustaso(nykyinenPelaaja);
+      let valittuVaikeustaso = valitsePelaajanVaikeustaso(nykyinenPelaaja);
+      // If we previously selected a special 'suurmestari' round+player, override here once
+      if (!specialSuurmestariAssigned && specialSuurmestariRound !== null && specialSuurmestariPlayerIndex !== null) {
+        if (kysymysNumero === specialSuurmestariRound && pelaajaIndex === specialSuurmestariPlayerIndex) {
+          // Log the application with player name and round so it's easy to trace in console
+          try {
+            const applyingPlayerName = sekoitetutPelaajat[pelaajaIndex]?.nimi ?? 'Unknown';
+            console.log('✨ Applying special SUURMESTARI for', applyingPlayerName, 'on round', kysymysNumero, '(playerIndex', pelaajaIndex, ', chosenPlayerIndex', specialSuurmestariPlayerIndex, ')');
+          } catch (e) {
+            console.log('✨ Applying special SUURMESTARI on round', kysymysNumero, '(playerIndex', pelaajaIndex, ')');
+          }
+          valittuVaikeustaso = 'suurmestari' as any;
+          specialSuurmestariAssigned = true;
+        }
+      }
       console.log(`🎲 Valittu vaikeustaso: ${valittuVaikeustaso}`);
 
       // Hae kysymys suoraan tietokannasta pelaajan vaikeustasolle
       const db = await getDB();
 
-      // Varmista että pelaajalle on luotu peli tietokantaan
+      // Varmista että pelaajalle on luotu peli PeliPalvelun kautta (server-side)
       if (nykyinenPelaaja.id !== undefined && !pelaajaPelit.has(nykyinenPelaaja.id)) {
         try {
-          const uusiPeliId = await db.aloitaPeli(nykyinenPelaaja.id);
+          // Use authoritative service so that active games are tracked centrally
+          const uusiPeli = await peliPalvelu.aloitaPeli(nykyinenPelaaja.nimi, maxKysymykset, kategoria, valittuVaikeustaso, nykyinenPelaaja.ika, nykyinenPelaaja.vaikeustaso_min, nykyinenPelaaja.vaikeustaso_max);
+          const uusiPeliId = uusiPeli.peliId;
           pelaajaPelit.set(nykyinenPelaaja.id, uusiPeliId);
           pelaajanKysymysCount[nykyinenPelaaja.id] = 0;
-          console.log('🎮 Luotu peli pelaajalle', nykyinenPelaaja.nimi, 'peliId=', uusiPeliId);
+          console.log('🎮 Luotu peli pelaajalle (server):', nykyinenPelaaja.nimi, 'peliId=', uusiPeliId);
         } catch (err) {
-          console.warn('⚠️ Pelin luonti epäonnistui tietokantaan:', err);
+          console.warn('⚠️ Pelin luonti epäonnistui PeliPalveluun:', err);
+          // Fallback: yritä luoda DB:hen suoraan jos service epäonnistuu
+          try {
+            const uusiPeliId = await db.aloitaPeli(nykyinenPelaaja.id);
+            pelaajaPelit.set(nykyinenPelaaja.id, uusiPeliId);
+            pelaajanKysymysCount[nykyinenPelaaja.id] = 0;
+            console.log('🎮 Luotu peli pelaajalle (fallback DB):', nykyinenPelaaja.nimi, 'peliId=', uusiPeliId);
+          } catch (err2) {
+            console.warn('⚠️ Pelin luonti epäonnistui myös DB-fallbackilla:', err2);
+          }
         }
       }
 
-      // Yritä löytää kysymys jota ei ole vielä kysytty
-      let kysymys: Kysymys | undefined = undefined;
-      let yritykset = 0;
-      const maxYritykset = 20; // Estää ikuisen silmukan
-
-      do {
-        kysymys = await db.haeSatunnainenKysymys(
-          kategoria, // kategoria-suodatus
-          valittuVaikeustaso // pelaajan tason mukainen kysymys
-        );
-        yritykset++;
-
-        // Jos löydettiin uusi kysymys tai yritetty tarpeeksi
-        if (
-          !kysymys ||
-          !kysytytKysymykset.has(kysymys.id!) ||
-          yritykset >= maxYritykset
-        ) {
-          break;
+      // Ask the authoritative service for the next question so UI and service are in sync
+      const peliIdForPlayer = nykyinenPelaaja?.id !== undefined ? pelaajaPelit.get(nykyinenPelaaja.id) || null : null;
+      let peliTilanne: any = null;
+      try {
+        if (peliIdForPlayer !== null) {
+          peliTilanne = await peliPalvelu.haeSeuraavaKysymys(peliIdForPlayer, kategoria, valittuVaikeustaso);
         }
-      } while (yritykset < maxYritykset);
-
-      console.log(`🔍 Kysymyshaku valmis: yrityksiä ${yritykset}, kysymys löytyi: ${!!kysymys}`);
-      if (kysymys) {
-        console.log(`📋 Kysymys: "${kysymys.kysymys?.substring(0, 50)}..." (ID: ${kysymys.id}, vaikeustaso: ${kysymys.vaikeustaso})`);
+      } catch (e) {
+        console.warn('⚠️ peliPalvelu.haeSeuraavaKysymys epäonnistui, fallback db-haulle:', e);
       }
 
-      if (kysymys) {
+      if (peliTilanne && peliTilanne.nykyinenKysymys) {
+        const kysymys = peliTilanne.nykyinenKysymys as Kysymys;
         nykyinenKysymys = kysymys;
+        vastausVaihtoehdot = peliTilanne.vastausvaihtoehdot || generoiVastausVaihtoehdot(kysymys);
+        kysymysAloitettu = peliTilanne.kysymysAloitettu || Date.now();
+        console.log(`🔍 Kysymyshaku (service) valmis: kysymys löytyi: ${!!kysymys}`);
+        console.log(`📋 Kysymys: "${String(kysymys.kysymys).substring(0,50)}..." (ID: ${kysymys.id}, vaikeustaso: ${kysymys.vaikeustaso})`);
+
+        // Log that a question was shown to the player
         try {
           const dbLog = await getDB();
-          // Log that a question was shown to the player
           try {
-            await dbLog.tallennaPelitapahtuma({
-              peli_id: nykyinenPelaaja?.id ? pelaajaPelit.get(nykyinenPelaaja.id) || null : null,
+            await dbLog.tallennaPelitapahtumaJaEmit({
+              peli_id: peliIdForPlayer,
               kayttaja_id: nykyinenPelaaja?.id ?? null,
               tyyppi: 'kysymys_naytetty',
               payload: { kysymys_id: kysymys.id, vaikeustaso: kysymys.vaikeustaso },
               paivays: new Date().toISOString(),
             });
-            try { window.dispatchEvent(new CustomEvent('pelitapahtuma-uusi')); } catch (e) {}
             try { await lueViimeisetTapahtumat(); } catch (e) { /* ignore */ }
           } catch (e) {
             console.warn('Ei voitu tallennaPelitapahtuma (kysymys_naytetty):', e);
@@ -636,22 +698,8 @@
         } catch (e) {
           console.warn('Ei voitu tallennaPelitapahtuma (kysymys_naytetty):', e);
         }
-        // Merkitse aloitusaika vastausta varten
-        kysymysAloitettu = Date.now();
 
-        // Merkitse kysymys kysytyksi
-        if (kysymys.id) {
-          kysytytKysymykset.add(kysymys.id);
-          console.log(`🎯 Kysytty kysymys ${kysymys.id}: "${kysymys.kysymys}"`);
-          console.log(
-            `📝 Kysyttyjä kysymyksiä yhteensä: ${kysytytKysymykset.size}`
-          );
-        }
-
-        // Generoi 4 vaihtoehtoa (1 oikea + 3 väärää)
-        vastausVaihtoehdot = generoiVastausVaihtoehdot(nykyinenKysymys);
-
-        // Aloita ajastin: käytä local startSeconds jotta edellisen pelaajan jäljellä oleva 'aika' ei vuoda
+        // Start timer and mark question as asked
         let startSeconds = 30;
         try {
           const nykyinen = sekoitetutPelaajat[pelaajaIndex];
@@ -659,14 +707,11 @@
             const pid = Number(nykyinen.id);
             const efekti = activeCardEffects[pid];
             if (efekti && typeof efekti.ajan_puolitus === 'number') {
-              // Apply reduced time for this player's question
               startSeconds = Number(efekti.ajan_puolitus) || 15;
-              // Consume lifetime
               if (typeof efekti.ajan_puolitus_remainingQuestions === 'number') {
                 efekti.ajan_puolitus_remainingQuestions = Math.max(0, efekti.ajan_puolitus_remainingQuestions - 1);
                 if (efekti.ajan_puolitus_remainingQuestions <= 0) delete efekti.ajan_puolitus_remainingQuestions;
               }
-              // Remove the direct effect value so it doesn't apply again
               delete efekti.ajan_puolitus;
               const hasAny = Object.keys(efekti).some(k => !!efekti[k]);
               if (!hasAny) delete activeCardEffects[pid];
@@ -677,24 +722,73 @@
           console.warn('⚠️ Virhe ajan_puolitus effectin soveltamisessa:', e);
         }
 
-        // Start timer with the computed local startSeconds
-        aloitaAjastin(startSeconds);
-      } else {
-        // Jos ei löydy kysymyksiä, siirry seuraavaan
-        console.warn(
-          `❌ Ei löytynyt uutta kysymystä vaikeustasolle: ${valittuVaikeustaso}`
-        );
-        console.warn(
-          `📝 Kysyttyjä kysymyksiä: ${kysytytKysymykset.size}, Yrityksiä: ${yritykset}`
-        );
+        if (lukuaikaSekunteina > 0) {
+          readTimeRemaining = lukuaikaSekunteina;
+          try { if (readTimeInterval) clearInterval(readTimeInterval as any); } catch(e) {}
+          readTimeInterval = window.setInterval(() => {
+            if (readTimeRemaining !== null && readTimeRemaining > 0) {
+              readTimeRemaining = Math.max(0, +(readTimeRemaining - 0.25).toFixed(2));
+            }
+          }, 250) as unknown as number;
 
-        // Jos kysymyksiä on kysytty paljon, voidaan nollata lista
-        if (kysytytKysymykset.size > 15) {
-          console.log("🔄 Nollataan kysytyt kysymykset - kysymykset loppuivat");
-          kysytytKysymykset.clear();
+          lukuaikaTimeout = window.setTimeout(() => {
+            try { if (readTimeInterval) clearInterval(readTimeInterval as any); } catch(e) {}
+            readTimeInterval = null;
+            readTimeRemaining = null;
+
+            kysymysAloitettu = Date.now();
+            aloitaAjastin(startSeconds);
+            lukuaikaTimeout = null;
+          }, lukuaikaSekunteina * 1000) as unknown as number;
+        } else {
+          kysymysAloitettu = Date.now();
+          aloitaAjastin(startSeconds);
         }
 
-        seuraavaKysymys();
+        if (kysymys.id) {
+          kysytytKysymykset.add(kysymys.id);
+          console.log(`🎯 Kysytty kysymys ${kysymys.id}: "${kysymys.kysymys}"`);
+          console.log(`📝 Kysyttyjä kysymyksiä yhteensä: ${kysytytKysymykset.size}`);
+        }
+
+        // Ensure answer options are set
+        if (!vastausVaihtoehdot || vastausVaihtoehdot.length === 0) {
+          vastausVaihtoehdot = generoiVastausVaihtoehdot(nykyinenKysymys);
+        }
+      } else {
+        // Fallback to original DB-based fetch if service didn't return a question
+        let kysymys: Kysymys | undefined = undefined;
+        let yritykset = 0;
+        const maxYritykset = 20; // Estää ikuisen silmukan
+
+        do {
+          kysymys = await db.haeSatunnainenKysymys(
+            kategoria, // kategoria-suodatus
+            valittuVaikeustaso // pelaajan tason mukainen kysymys
+          );
+          yritykset++;
+
+          if (
+            !kysymys ||
+            !kysytytKysymykset.has(kysymys.id!) ||
+            yritykset >= maxYritykset
+          ) {
+            break;
+          }
+        } while (yritykset < maxYritykset);
+
+        console.log(`🔍 Kysymyshaku valmis (fallback): yrityksiä ${yritykset}, kysymys löytyi: ${!!kysymys}`);
+        if (kysymys) {
+          nykyinenKysymys = kysymys;
+          vastausVaihtoehdot = generoiVastausVaihtoehdot(nykyinenKysymys);
+        } else {
+          console.warn(`❌ Ei löytynyt uutta kysymystä vaikeustasolle: ${valittuVaikeustaso}`);
+          if (kysytytKysymykset.size > 15) {
+            console.log("🔄 Nollataan kysytyt kysymykset - kysymykset loppuivat");
+            kysytytKysymykset.clear();
+          }
+          seuraavaKysymys();
+        }
       }
     } catch (error) {
       console.error("Virhe kysymyksen latauksessa:", error);
@@ -871,107 +965,126 @@
 
     const vastausaikaMs = kysymysAloitettu ? Date.now() - kysymysAloitettu : 0;
 
-  if (oikea && nykyinenKysymys) {
-      // Käytä kysymyksen omia pisteitä
-      let pisteet = nykyinenKysymys.pistemaara_perus;
-      // Quick-answer bonus: +5 points if answered under 5 seconds
-      const quickAnswerBonus = (vastausaikaMs > 0 && vastausaikaMs <= 2500) ? 5 : 0;
-      if (quickAnswerBonus > 0) {
-        console.log(`⚡ Quick answer bonus applied: +${quickAnswerBonus} (vastausaikaMs=${vastausaikaMs})`);
-        // show a small flash over the clock
-        flashQuickBonus(`+${quickAnswerBonus}💎`);
-      }
-      // Tarkista onko pelaajalla aktiivisia erikoiskorttiefektejä (esim. tuplapisteet)
-      if (nykyinenPelaaja && typeof nykyinenPelaaja.id !== 'undefined') {
-        const pid = Number(nykyinenPelaaja.id);
-        const efekti = activeCardEffects[pid];
-        if (efekti && typeof efekti.tuplapisteet === 'number' && efekti.tuplapisteet > 0) {
-          console.log(`🔍 Tuplapisteet before consumption for playerId=${pid}:`, efekti.tuplapisteet);
-          pisteet = pisteet * 2;
-          // Kuluta yksi tuplapisteen käyttö safely
-          efekti.tuplapisteet = Math.max(0, efekti.tuplapisteet - 1);
-          console.log(`🔍 Tuplapisteet after consumption for playerId=${pid}:`, efekti.tuplapisteet);
-        }
-      }
-  // Debug: log before changing points to detect unexpected increments
-  const playerName = (nykyinenPelaaja && nykyinenPelaaja.nimi) ? nykyinenPelaaja.nimi : 'tuntematon';
-  const beforePoints = pelaajanPisteet[playerName] || 0;
-  // Add quick-answer bonus to final awarded points
-  let finalAward = pisteet + (typeof quickAnswerBonus !== 'undefined' ? quickAnswerBonus : 0);
-  // Streak: track consecutive correct answers for the current player and award +50 on 3-in-a-row
+  // Call server-side authoritative scoring
+  // Prepare a breakdown holder so we can persist breakdown details even if the
+  // service result variable goes out of scope later.
+  let serviceBreakdown: any = {};
+  let serviceResult: any = null;
   try {
-    if (nykyinenPelaaja && typeof nykyinenPelaaja.id !== 'undefined') {
-      const pid = Number(nykyinenPelaaja.id);
-      consecutiveCorrect[pid] = (consecutiveCorrect[pid] || 0) + 1;
-      console.log(`🔁 consecutiveCorrect[${pid}] = ${consecutiveCorrect[pid]}`);
-      if (consecutiveCorrect[pid] >= 3) {
-        // Award streak bonus
-        const streakBonus = 50;
-        finalAward += streakBonus;
-        // show a prominent combo flash with localized label
-        flashQuickBonus(`KOMBO ${streakBonus}💎`);
-        // also show modal notification
-        showModal(`Kolme kertaa peräkkäin oikein! +${streakBonus}💎`, 3000);
-        // Reset the streak counter for that player
-        consecutiveCorrect[pid] = 0;
-      }
-    }
-  } catch (e) {
-    console.warn('⚠️ Virhe streak-laskennassa:', e);
-  }
-  console.log('🏷️ Awarding points:', { player: playerName, before: beforePoints, add: finalAward, base: pisteet, quickBonus: quickAnswerBonus, efekt: activeCardEffects[nykyinenPelaaja?.id ?? -1] });
-  pelaajanPisteet[playerName] = beforePoints + finalAward;
-  saatuPisteet = finalAward; // Tallenna animaatiota varten
-  console.log('✅ Points after award:', { player: playerName, after: pelaajanPisteet[playerName] });
-    } else {
-      saatuPisteet = 0; // Ei pisteitä väärästä vastauksesta
-    }
+    const kayttajaId = nykyinenPelaaja?.id ?? null;
+    const peliId = kayttajaId !== null ? (pelaajaPelit.get(kayttajaId) || null) : null;
+    serviceResult = await peliPalvelu.vastaaKysymykseen(peliId, vastaus || '');
+    if (serviceResult) {
+      const playerName = (nykyinenPelaaja && nykyinenPelaaja.nimi) ? nykyinenPelaaja.nimi : 'tuntematon';
+      const beforePoints = pelaajanPisteet[playerName] || 0;
+  // DEBUG: log service result and before-points
+  console.log('DEBUG vastaaKysymykseen serviceResult ->', { playerName, serviceResult, beforePoints });
+  // DEBUG: also log as JSON and explicit pisteet to avoid collapsed object views in some consoles
+  try { console.log('DEBUG serviceResult JSON ->', JSON.stringify(serviceResult)); } catch(e) { console.log('DEBUG serviceResult (no JSON):', serviceResult); }
+  console.log('DEBUG serviceResult.pisteet ->', (serviceResult && typeof serviceResult.pisteet !== 'undefined') ? serviceResult.pisteet : 'undefined');
+      /* PISTEIDEN PÄIVITYS / REAKTIIVISUUS
+        Huom: Svelte ei aina havaitse syvään muutetun objektin kenttien päivityksiä.
+        Jos päivität objektin sisäisiä kenttiä (esim. pelaajanPisteet.total += x),
+        tee lopuksi shallow-copy reaktiviisuuden pakottamiseksi:
+          pelaajanPisteet = { ...pelaajanPisteet }
+        Ilman tätä UI ei välttämättä päivity.
+      */
+      pelaajanPisteet[playerName] = beforePoints + (serviceResult.pisteet || 0);
+      // Trigger Svelte reactivity for nested object mutation
+      pelaajanPisteet = { ...pelaajanPisteet };
+      // DEBUG: confirm new value
+      console.log('DEBUG pelaajanPisteet after update ->', { playerName, afterPoints: pelaajanPisteet[playerName] });
+      saatuPisteet = serviceResult.pisteet || 0;
 
-    // Tallenna vastaus tietokantaan, jos peli-id löytyy
+      /* PISTE-ERITTELYN NÄYTTÖ
+        Näytä käyttäjälle vain arvot, jotka palvelu palauttaa (perusPisteet, speedBonus, ageKerroin, streak).
+        - quickBonus on poistettu ja korvattu nopeusbonuksella (speedBonus).
+        - Ikäkerroin näkyy vain jos palvelu on sen soveltanut (tässä suunnitelmassa vain 'suurmestari').
+        - Historiaan tallennetaan sama erittely, jotta pelihistoriat vastaavat UI:ta.
+      */
+      // populate breakdown object for persistence into event payload
+      try {
+        const sr: any = serviceResult as any;
+        serviceBreakdown = {
+          perusPisteet: typeof sr.perusPisteet === 'number' ? sr.perusPisteet : undefined,
+          speedBonus: typeof sr.speedBonus === 'number' ? sr.speedBonus : (typeof sr.nopeusBonus === 'number' ? sr.nopeusBonus : undefined),
+          ageKerroin: typeof sr.ageKerroin === 'number' ? sr.ageKerroin : undefined,
+          streakAfter: typeof sr.streakAfter === 'number' ? sr.streakAfter : (typeof sr.streak_after === 'number' ? sr.streak_after : undefined),
+          streakBonus: typeof sr.streakBonus === 'number' ? sr.streakBonus : undefined,
+        };
+      } catch (e) { serviceBreakdown = {}; }
+      if (serviceResult.streakBonus && serviceResult.streakBonus > 0) {
+        showModal(`Kolme kertaa peräkkäin oikein! +${serviceResult.streakBonus}💎`, 3000);
+      }
+      // No UI flash: we'll persist the detailed breakdown in the history event payload.
+      // Refresh client-side history
+      try { await lueViimeisetTapahtumat(); } catch(e) {}
+    } else {
+      // service returned null -> treat as no points
+      saatuPisteet = 0;
+    }
+  } catch (err) {
+    console.error('Error calling server-side scoring:', err);
+    // Fallback to client-side no-points
+    saatuPisteet = 0;
+  }
+
+    // Tallenna vastaus tietokantaan vain, jos palvelin ei käsitellyt sitä (fallback)
+    // Huom: `peliPalvelu.vastaaKysymykseen` tallentaa vastauksen ja pelitapahtuman palvelinpuolella.
+    // Vältämme päällekkäiset tallennukset ja tuplalokit clientissa.
     try {
-      const kayttajaId = nykyinenPelaaja.id;
-      const peliId = kayttajaId !== undefined ? pelaajaPelit.get(kayttajaId) : undefined;
-      if (peliId && nykyinenKysymys && nykyinenKysymys.id) {
-        await db.tallennaPeliVastaus(
-          peliId,
-          nykyinenKysymys.id,
-          vastaus || '',
-          oikea,
-          vastausaikaMs,
-          nykyinenKysymys.kategoria
-        );
-        // Log the answer event
-        try {
+      if (!serviceResult) {
+        const kayttajaId = nykyinenPelaaja.id;
+        const peliId = kayttajaId !== undefined ? pelaajaPelit.get(kayttajaId) : undefined;
+        if (peliId && nykyinenKysymys && nykyinenKysymys.id) {
+          await db.tallennaPeliVastaus(
+            peliId,
+            nykyinenKysymys.id,
+            vastaus || '',
+            oikea,
+            vastausaikaMs,
+            nykyinenKysymys.kategoria
+          );
+          // include fallback event save
           try {
-            // include streak info in payload if present
             const pid = kayttajaId;
             const streak = (pid !== undefined && pid !== null) ? (consecutiveCorrect[pid] || 0) : 0;
-            await db.tallennaPelitapahtuma({
+            await db.tallennaPelitapahtumaJaEmit({
               peli_id: peliId,
               kayttaja_id: kayttajaId ?? null,
               tyyppi: 'vastaus',
-              payload: { kysymys_id: nykyinenKysymys.id, oikein: oikea, annettu_vastaus: vastaus || '', vastausaika_ms: vastausaikaMs, pisteet: saatuPisteet, streak_after: streak },
+              payload: {
+                kysymys_id: nykyinenKysymys.id,
+                oikein: oikea,
+                annettu_vastaus: vastaus || '',
+                vastausaika_ms: vastausaikaMs,
+                pisteet: saatuPisteet,
+                perusPisteet: typeof serviceBreakdown.perusPisteet === 'number' ? serviceBreakdown.perusPisteet : undefined,
+                speedBonus: typeof serviceBreakdown.speedBonus === 'number' ? serviceBreakdown.speedBonus : undefined,
+                ageKerroin: typeof serviceBreakdown.ageKerroin === 'number' ? serviceBreakdown.ageKerroin : undefined,
+                streakBonus: typeof serviceBreakdown.streakBonus === 'number' ? serviceBreakdown.streakBonus : undefined,
+                streak_after: typeof serviceBreakdown.streakAfter === 'number' ? serviceBreakdown.streakAfter : streak
+              },
               paivays: new Date().toISOString(),
             });
-            try { window.dispatchEvent(new CustomEvent('pelitapahtuma-uusi')); } catch (e) {}
             try { await lueViimeisetTapahtumat(); } catch (e) { /* ignore */ }
           } catch (e) {
-            console.warn('Ei voitu tallennaPelitapahtuma (vastaus):', e);
+            console.warn('Ei voitu tallennaPelitapahtuma (vastaus - fallback):', e);
           }
-        } catch (e) {
-          console.warn('Ei voitu tallennaPelitapahtuma (vastaus):', e);
-        }
-        console.log('✅ Vastaus tallennettu tietokantaan:', { peliId, kysymysId: nykyinenKysymys.id, oikea, vastausaikaMs });
 
-        // Kasvata pelaajan vastauslaskuria
-        if (kayttajaId !== undefined) {
-          pelaajanKysymysCount[kayttajaId] = (pelaajanKysymysCount[kayttajaId] || 0) + 1;
+          // Kasvata pelaajan vastauslaskuria
+          if (kayttajaId !== undefined) {
+            pelaajanKysymysCount[kayttajaId] = (pelaajanKysymysCount[kayttajaId] || 0) + 1;
+          }
+        } else {
+          console.warn('⚠️ (fallback) PeliId tai kysymys puuttuu, vastausta ei tallennettu');
         }
       } else {
-        console.warn('⚠️ PeliId tai kysymys puuttuu, vastausta ei tallennettu');
+        // serviceResult existed => server handled persistence and events; refresh client history
+        try { await lueViimeisetTapahtumat(); } catch (e) { /* ignore */ }
       }
     } catch (err) {
-      console.error('❌ Vastausta tallennettaessa tapahtui virhe:', err);
+      console.error('❌ Vastausta tallennettaessa tapahtui virhe (fallback):', err);
     }
 
     // Näytä tulos hetki ja päätä pitääkö pelaaja saada lisävuoro (Bonus)
@@ -1121,18 +1234,13 @@
           try {
             await db.lopetaPeli(peliId, pisteet, pelaajanKysymysCount[kayttajaId] || yhteensa);
             try {
-              try {
-                await db.tallennaPelitapahtuma({
-                  peli_id: peliId,
-                  kayttaja_id: kayttajaId ?? null,
-                  tyyppi: 'lopeta_peli',
-                  payload: { pisteet, kysymysten_maara: pelaajanKysymysCount[kayttajaId] || yhteensa },
-                  paivays: new Date().toISOString(),
-                });
-                try { window.dispatchEvent(new CustomEvent('pelitapahtuma-uusi')); } catch (e) {}
-              } catch (err) {
-                console.warn('Ei voitu tallennaPelitapahtuma (lopeta_peli):', err);
-              }
+              await db.tallennaPelitapahtumaJaEmit({
+                peli_id: peliId,
+                kayttaja_id: kayttajaId ?? null,
+                tyyppi: 'lopeta_peli',
+                payload: { pisteet, kysymysten_maara: pelaajanKysymysCount[kayttajaId] || yhteensa },
+                paivays: new Date().toISOString(),
+              });
             } catch (err) {
               console.warn('Ei voitu tallennaPelitapahtuma (lopeta_peli):', err);
             }
@@ -1391,8 +1499,8 @@
   <!-- Main layout with sidebar structure -->
   <div class="{GLASS_BACKGROUNDS.contentLayer} min-h-screen">
     <div class="flex">
-      <!-- Left Sidebar - Defensive Cards -->
-      <div class="w-72 p-4 space-y-4">
+  <!-- Left Sidebar - Defensive Cards -->
+  <div class="w-72 p-4 space-y-4" class:readtime-active={readTimeRemaining !== null}>
         <h3 class="text-lg font-bold text-center mb-4 {GLASS_COLORS.titleGradient}">🛡️ Puolustuskortit</h3>
         
         <!-- Kysymyksen vaihto -->
@@ -1695,8 +1803,8 @@
               ← Takaisin
             </button>
 
-            <h1 class="text-4xl font-bold {GLASS_COLORS.titleGradient}">
-              🎯 Kysymysmestari
+            <h1 class="text-4xl font-bold {GLASS_COLORS.titleGradient} flex items-center space-x-3">
+              <span>🎯 Kysymysmestari</span>
             </h1>
 
             <div class="text-right">
@@ -1738,6 +1846,7 @@
             class="{GLASS_STYLES.card} flex items-center justify-center w-14 h-14 rounded-md text-lg font-bold text-white transition-all duration-200 hover:scale-105 cursor-pointer relative clock-button"
             class:pulse-fast={aika <= 10}
             class:pulse-slow={aika <= 20 && aika > 10}
+            class:readtime-flash={readTimeRemaining !== null}
             style="background: linear-gradient(135deg, {kellon_vari}25, {kellon_vari}12); border: 1px solid {kellon_vari}33; box-shadow: {clockBoxShadow}; backdrop-filter: blur(6px); --clock-glow: {kellon_vari}55; --clock-glow-mid: {kellon_vari}44; --clock-glow-soft: {kellon_vari}22;"
             on:click={() =>
               nykyinenKysymys && !pisteytys
@@ -1755,10 +1864,31 @@
                 ▶️
               </div>
             {:else}
-              {formatoiAika(aika)}
+              {#if readTimeRemaining !== null}
+                {formatoiAika(Math.ceil(readTimeRemaining))}
+              {:else}
+                {formatoiAika(aika)}
+              {/if}
             {/if}
           </button>
           <!-- inline clock flash removed; quick flash rendered at cursor as fixed element -->
+        </div>
+      </div>
+      <!-- Timeline: visual progress indicator (UI only) -->
+      <div class="flex justify-center my-3">
+        <div class="flex items-center space-x-2">
+          {#each Array(maxKysymykset).fill(0) as _, i}
+            {@const index = i + 1}
+            <div
+              class="w-3 h-3 rounded-full transition-all duration-200"
+              title={"Kysymys " + index}
+              class:bg-primary-500={index === kysymysNumero}
+              class:bg-primary-300={index < kysymysNumero}
+              class:bg-gray-300={index > kysymysNumero}
+              aria-hidden="true"
+              style={index === specialSuurmestariRound ? 'background: linear-gradient(135deg, #7c3aed, #8b5cf6); box-shadow: 0 6px 14px #7c3aed55;' : ''}
+            ></div>
+          {/each}
         </div>
       </div>
 
@@ -1849,7 +1979,7 @@
               class:opacity-50={pisteytys && vastaus !== nykyinenKysymys?.oikea_vastaus && vastaus !== valittuVastaus}
               class:scale-[1.02]={valittuVastaus === vastaus}
               style="border-color: {matalaKontrasti}; background: linear-gradient(135deg, {matalaKontrasti} 0%, rgba(255,255,255,0.1) 100%);"
-              disabled={peliPysaytetty || valittuVastaus !== null || pisteytys}
+              disabled={peliPysaytetty || valittuVastaus !== null || pisteytys || readTimeRemaining !== null}
               on:click={() => valitseVastaus(vastaus)}
             >
               <div class="flex items-center space-x-4">
@@ -1873,7 +2003,7 @@
                   {kirjain}
                 </div>
                 <div class="flex-1 text-lg">
-                  {vastaus}
+                    <span class:opacity-60={readTimeRemaining !== null} class:text-gray-400={readTimeRemaining !== null}>{vastaus}</span>
                 </div>
 
                 {#if pisteytys && vastaus === nykyinenKysymys?.oikea_vastaus}
@@ -2185,12 +2315,22 @@
   </div>
 </div>
 
-{#if quickBonusFlash && quickBonusPos}
-  <!-- Offset flash slightly left of cursor so it's not directly under the pointer -->
-  <div class="quick-bonus-flash" style="position:fixed; left: {quickBonusPos.x}px; top: {quickBonusPos.y - 36}px; transform: translate(-50%, -140%);">{quickBonusFlash}</div>
-{/if}
+<!-- quick-bonus flash removed; breakdowns are saved into history instead -->
+
 
 <style>
+  /* Dim/tonal change for card buttons during read-time */
+  .readtime-active button {
+    filter: brightness(0.7) saturate(0.9);
+    opacity: 0.9;
+    transition: filter 120ms ease, opacity 120ms ease;
+  }
+  /* Make already-disabled cards look more muted */
+  .readtime-active .card-disabled {
+    opacity: 0.45 !important;
+    filter: grayscale(0.2) brightness(0.6) !important;
+  }
+
   /* Glass morphism yhteensopivat siirtymät */
   .hover-scale {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2252,6 +2392,18 @@
     box-shadow: 0 8px 20px rgba(0,0,0,0.18);
   }
 
+  /* Read-time white flash animation for the clock */
+  @keyframes readtime-flash {
+    0% { background-color: rgba(255,255,255,0.12); box-shadow: 0 8px 18px rgba(255,255,255,0.06); }
+    50% { background-color: rgba(255,255,255,0.9); box-shadow: 0 20px 46px rgba(255,255,255,0.18); }
+    100% { background-color: rgba(255,255,255,0.12); box-shadow: 0 8px 18px rgba(255,255,255,0.06); }
+  }
+  .readtime-flash {
+    animation: readtime-flash 1s ease-in-out infinite;
+    color: #000 !important;
+    mix-blend-mode: screen;
+  }
+
   /* Class-based animations so Svelte's scoped CSS keyframes are correctly applied
      when toggling based on reactive state. These classes repeat infinitely. */
   .pulse-slow {
@@ -2262,36 +2414,7 @@
     animation: pulse-fast 0.8s infinite ease-in-out;
   }
 
-  .quick-bonus-flash{
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    top: -1.6rem;
-    background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.04));
-    color: #fff;
-    padding: 0.25rem 0.6rem;
-    border-radius: 999px;
-    font-weight: 700;
-    font-size: 1rem;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.45);
-    animation: quick-bonus-pop 1.0s ease-out both;
-    z-index: 60;
-  }
-
-  /* make the flash respond to hovering the clock (lift a bit and glow) */
-  .clock-button:hover + .quick-bonus-flash,
-  .quick-bonus-flash:hover {
-    transform: translateX(-50%) translateY(-14px) scale(1.02);
-    box-shadow: 0 22px 40px rgba(0,0,0,0.45), 0 6px 18px rgba(34,197,94,0.12);
-    opacity: 1;
-  }
-
-  @keyframes quick-bonus-pop {
-    0% { transform: translateX(-50%) translateY(6px) scale(0.9); opacity: 0; }
-    30% { transform: translateX(-50%) translateY(-2px) scale(1.06); opacity: 1; }
-    70% { transform: translateX(-50%) translateY(-6px) scale(1.02); opacity: 0.95; }
-    100% { transform: translateX(-50%) translateY(-10px) scale(1); opacity: 0; }
-  }
+  /* breakdown flash removed: breakdowns are now persisted into event history */
 
   /* Disabled/insufficient-pisteet look for cards */
   .card-disabled {

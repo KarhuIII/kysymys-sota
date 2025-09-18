@@ -1,3 +1,10 @@
+// GAME SERVICE — PELILOGIIKKA (LYHYESTI)
+// Tämä moduuli on pelin authoritative-palvelu sovelluksen sisällä.
+// - Kaikki pistelaskut ja tilamuutokset tehdään täällä (esim. vastaaKysymykseen).
+// - UI saa takaisin päivitetyt pisteet ja pistemäärän erittelyn (perus, nopeus, ikäkerroin, streak).
+// - Tallenna / emit -toiminnot tehdään DB-helperin kautta, jotta historia ja UI pysyvät synkronoituna.
+// Muuta: Älä duplikoi pisteiden logiikkaa UI:ssa — UI saa palvelulta valmiit arvot.
+
 // Kysymysmestari Game Service
 // Pelitoimintojen hallinta ja logiikka
 
@@ -41,6 +48,10 @@ export interface PeliTulos {
 export class PeliPalvelu {
   // Aktiivisten pelien tallennuspaikka (Map: peliId -> PeliTilanne)
   private aktiivisetPelit: Map<number, PeliTilanne> = new Map();
+  // Track consecutive correct answers per peliId (for streak bonuses)
+  // Keep optional in-memory cache as fallback (not required)
+  // Streaks are persisted in DB via 'streaks' store
+  private streaks: Map<number, number> = new Map();
   // Tietokanta-instanssi (alustetaan tarpeen mukaan)
   private db: any = null;
   // Yksinkertainen event-käsittelijä leaderboardin päivitystä varten
@@ -170,15 +181,36 @@ export class PeliPalvelu {
    * @returns Vastauksen tulos (oikein/väärin, pisteet, oikea vastaus)
    */
   public async vastaaKysymykseen(
-    peliId: number,
+    peliId: number | null,
     vastaus: string,
   ): Promise<{
     oikein: boolean;
     oikeaVastaus: string;
     pisteet: number;
+    perusPisteet?: number;
+    speedBonus?: number;
+    quickBonus?: number;
+    ageKerroin?: number;
+    streakAfter?: number;
+    streakBonus?: number;
   } | null> {
     const db = await this.varmistaTietokanta();
-    const peli = this.aktiivisetPelit.get(peliId);
+    if (peliId === null) {
+      // No peliId: cannot compute streaks or use activePelit; attempt to find question by other means
+      console.warn('vastaaKysymykseen called without peliId; falling back to minimal persistence');
+      // Attempt to save minimal answer record if possible (DB helper may accept nulls)
+      // We don't have the question context here, so return minimal result
+      try {
+        // DB cannot be updated without question context; return no-points response
+      } catch (e) {}
+      return {
+        oikein: false,
+        oikeaVastaus: '',
+        pisteet: 0
+      };
+    }
+
+    const peli = this.aktiivisetPelit.get(peliId as number);
     if (!peli || !peli.nykyinenKysymys || !peli.kysymysAloitettu) return null;
 
     const kysymys = peli.nykyinenKysymys;
@@ -188,11 +220,17 @@ export class PeliPalvelu {
     const vastausaika = Date.now() - peli.kysymysAloitettu;
 
   // Laske pisteet (nopeampi vastaus = enemmän pisteitä)
-    // Käytetään kysymyksen peruspisteitä ja lisätään nopeusbonus
-    let pisteet = 0;
+  // Käytetään kysymyksen peruspisteitä ja lisätään nopeusbonus
+  let pisteet = 0;
+    let streakAfter = 0;
+    let streakBonus = 0;
+    // breakdown vars
+  let perusPisteet: number = 0;
+  let nopeusBonus: number = 0;
+  let ikaKerroin: number = 1.0;
     if (oikein) {
       // Käytä kysymyksen omaa pistemaara_perus-arvoa
-      const perusPisteet =
+      perusPisteet =
         kysymys.pistemaara_perus ||
         (kysymys.vaikeustaso === "oppipoika"
           ? 10
@@ -205,24 +243,67 @@ export class PeliPalvelu {
                 : 50); // suurmestari
 
       // Bonuspisteet nopeudesta (max 10 sekuntia)
-  const nopeusBonusKerroin = Math.max(0, (10000 - vastausaika) / 10000);
-  const nopeusBonus = Math.round(perusPisteet * 0.5 * nopeusBonusKerroin);
+      // Laske nopeusbonus: 0..10 pistettä riippuen vastausajasta (0s => 10, 10s => 0)
+      try {
+        const secondsTaken = Math.max(0, Math.floor((vastausaika || 0) / 1000));
+        nopeusBonus = Math.max(0, Math.round(10 - Math.min(10, secondsTaken)));
+      } catch (e) {
+        nopeusBonus = 0;
+      }
 
-  // Quick-answer fixed bonus: +5 if answered within 5 seconds
-  const quickAnswerBonus = vastausaika > 0 && vastausaika <= 5000 ? 5 : 0;
+      // Pisteet: peruspisteet + nopeusbonus (quick-bonus poistettu)
+      pisteet = perusPisteet + nopeusBonus;
 
-  pisteet = perusPisteet + nopeusBonus + quickAnswerBonus;
-
-      // Ikäkerroin: nuoremmille helpompi, vanhemmille haastavampi
-      if (peli.kayttaja.ika) {
-        const ikaKerroin =
-          peli.kayttaja.ika < 12 ? 1.2 : peli.kayttaja.ika > 50 ? 0.8 : 1.0;
+      // Ikäkerroin: sovelletaan AINOASTAAN silloin kun kysymys on 'suurmestari' tasoa.
+      // Käytämme eksplisiittistä tarkistusta kysymyksen vaikeustasosta, jotta ikäkerroin
+      // ei vaikuta tavallisiin perus- tai keskitasoihin.
+      if (typeof peli.kayttaja.ika === 'number' && kysymys.vaikeustaso === 'suurmestari') {
+        ikaKerroin = peli.kayttaja.ika < 12 ? 1.2 : peli.kayttaja.ika > 50 ? 0.8 : 1.0;
         pisteet = Math.round(pisteet * ikaKerroin);
       }
 
       peli.pisteet += pisteet;
-    }
 
+      // Update streaks (persisted in DB)
+      try {
+        const prev = (await db.haeStreakByPeliId(peliId)) || 0;
+        const next = prev + 1;
+        streakAfter = next;
+        if (next >= 3) {
+          // award combo and reset
+          streakBonus = 50;
+          pisteet += streakBonus;
+          await db.paivitaStreak(peliId, 0);
+          this.streaks.set(peliId, 0);
+        } else {
+          await db.paivitaStreak(peliId, next);
+          this.streaks.set(peliId, next);
+        }
+      } catch (e) {
+        console.warn('streak update failed (db):', e);
+        // Fallback to in-memory
+        const prev = this.streaks.get(peliId) || 0;
+        const next = prev + 1;
+        streakAfter = next;
+        if (next >= 3) {
+          streakBonus = 50;
+          pisteet += streakBonus;
+          this.streaks.set(peliId, 0);
+        } else {
+          this.streaks.set(peliId, next);
+        }
+      }
+    }
+    else {
+      // reset streak on wrong answer (persist)
+      try {
+        await db.paivitaStreak(peliId, 0);
+        this.streaks.set(peliId, 0);
+      } catch (e) {
+        console.warn('streak reset failed (db):', e);
+        try { this.streaks.set(peliId, 0); } catch(e) {}
+      }
+    }
     // Tallenna vastaus tietokantaan
     await db.tallennaPeliVastaus(
       peliId,
@@ -232,19 +313,52 @@ export class PeliPalvelu {
       vastausaika,
       kysymys.kategoria
     );
-    console.log('📝 Vastaus tallennettu:', {
+      console.log('📝 Vastaus tallennettu (server):', {
       peliId,
       kysymysId: kysymys.id,
       annettuVastaus: vastaus,
       oikein,
       vastausaikaMs: vastausaika,
-      kategoria: kysymys.kategoria
+      kategoria: kysymys.kategoria,
+      pisteet,
+        // quickAnswerBonus removed
+      streakAfter,
+      streakBonus
     });
+
+    // Save pelitapahtuma with enriched payload
+      try {
+      await db.tallennaPelitapahtumaJaEmit({
+        peli_id: peliId,
+        kayttaja_id: peli.kayttaja?.id ?? null,
+        tyyppi: 'vastaus',
+        payload: {
+          kysymys_id: kysymys.id,
+          oikein,
+          annettu_vastaus: vastaus || '',
+          vastausaika_ms: vastausaika,
+          pisteet,
+          // quick_bonus removed
+          streak_after: streakAfter,
+          streak_bonus: streakBonus
+        },
+        paivays: new Date().toISOString(),
+      });
+      
+    } catch (e) {
+      console.warn('Ei voitu tallennaPelitapahtuma (vastaus - server):', e);
+    }
 
     return {
       oikein,
       oikeaVastaus: kysymys.oikea_vastaus,
       pisteet,
+      perusPisteet: perusPisteet,
+      speedBonus: nopeusBonus,
+      // quickBonus removed from response
+      ageKerroin: ikaKerroin,
+      streakAfter,
+      streakBonus
     };
   }
 
@@ -303,6 +417,13 @@ export class PeliPalvelu {
 
     // Poista aktiivisista peleistä
     this.aktiivisetPelit.delete(peliId);
+
+    // Poista tallennettu streak-tieto pelille
+    try {
+      await db.poistaStreak(peliId);
+    } catch (e) {
+      console.warn('streak deletion failed (db):', e);
+    }
 
     // Emit event that game ended and leaderboard may need refresh
     try {

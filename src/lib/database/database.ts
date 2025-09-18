@@ -118,6 +118,24 @@ export class KysymysmestariDB {
   }
 
   /**
+   * Convenience helper: save event and emit global 'pelitapahtuma-uusi'
+   * Returns the inserted event id or throws on error
+   */
+  public async tallennaPelitapahtumaJaEmit(event: any): Promise<number> {
+    const id = await this.tallennaPelitapahtuma(event);
+    try {
+      // emit global event for UI listeners
+      if (typeof window !== 'undefined' && window.dispatchEvent) {
+        window.dispatchEvent(new CustomEvent('pelitapahtuma-uusi'));
+      }
+    } catch (e) {
+      // swallow - emission is optional
+      console.warn('emit failed for pelitapahtuma-uusi', e);
+    }
+    return id;
+  }
+
+  /**
    * Hae pelitapahtumat, opt. suodata peli_id tai kayttaja_id avulla
    */
   public async haePelitapahtumat(opts?: { peli_id?: number; kayttaja_id?: number; tyyppi?: string }): Promise<any[]> {
@@ -169,6 +187,8 @@ export class KysymysmestariDB {
   private db: IDBDatabase | null = null;
   private readonly DB_NAME = "KysymysmestariDB";
   private readonly DB_VERSION = 3; // bumped to add pelitapahtumat store
+  // bump to 4 to add persistent 'streaks' store
+  private readonly DB_VERSION_STREAKS = 4;
   // Promise that resolves when DB initialization completes
   private ready: Promise<void> | null = null;
   private _resolveReady: (() => void) | null = null;
@@ -252,7 +272,9 @@ export class KysymysmestariDB {
     return new Promise((resolve, reject) => {
       let request: IDBOpenDBRequest;
       try {
-        request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+        // Use DB_VERSION_STREAKS to allow adding the new 'streaks' store
+        const versionToUse = Math.max(this.DB_VERSION, this.DB_VERSION_STREAKS);
+        request = indexedDB.open(this.DB_NAME, versionToUse);
       } catch (err) {
         // Possible VersionError if existing DB has higher version. Fall back to open without version.
         console.warn('⚠️ indexedDB.open failed with version ' + this.DB_VERSION + ', falling back to open without version:', err);
@@ -345,6 +367,14 @@ export class KysymysmestariDB {
           eventsStore.createIndex("peli_id", "peli_id", { unique: false });
           eventsStore.createIndex("kayttaja_id", "kayttaja_id", { unique: false });
           eventsStore.createIndex("tyyppi", "tyyppi", { unique: false });
+        }
+
+        // Persistent streaks store: track current consecutive correct answers per peli_id
+        if (!db.objectStoreNames.contains("streaks")) {
+          const streaksStore = db.createObjectStore("streaks", {
+            keyPath: "peli_id",
+          });
+          streaksStore.createIndex("peli_id", "peli_id", { unique: true });
         }
 
                 // Tilastot
@@ -1449,6 +1479,66 @@ export class KysymysmestariDB {
         console.error("❌ Virhe peli_vastausten haussa:", request.error);
         reject(request.error);
       };
+    });
+  }
+
+  /**
+   * Hae streak (peräkkäisten oikeiden määrä) peliä kohden
+   * Tallennetaan objektina { peli_id: number, streak: number }
+   */
+  public async haeStreakByPeliId(peliId: number): Promise<number> {
+    if (!this.db) return 0;
+    if (!this.db.objectStoreNames.contains("streaks")) return 0;
+
+    const transaction = this.db.transaction(["streaks"], "readonly");
+    const store = transaction.objectStore("streaks");
+
+    return new Promise((resolve, reject) => {
+      const req = store.get(peliId);
+      req.onsuccess = () => {
+        const rec = req.result;
+        if (!rec) return resolve(0);
+        resolve(rec.streak || 0);
+      };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  /**
+   * Päivitä tai luo streak-tietue peliä kohden
+   * @param peliId
+   * @param streak
+   */
+  public async paivitaStreak(peliId: number, streak: number): Promise<void> {
+    if (!this.db) return;
+    if (!this.db.objectStoreNames.contains("streaks")) return;
+
+    const transaction = this.db.transaction(["streaks"], "readwrite");
+    const store = transaction.objectStore("streaks");
+
+    const rec = { peli_id: peliId, streak };
+    return new Promise((resolve, reject) => {
+      const req = store.put(rec);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  /**
+   * Poista streak-tietue peliltä
+   * @param peliId
+   */
+  public async poistaStreak(peliId: number): Promise<void> {
+    if (!this.db) return;
+    if (!this.db.objectStoreNames.contains("streaks")) return;
+
+    const transaction = this.db.transaction(["streaks"], "readwrite");
+    const store = transaction.objectStore("streaks");
+
+    return new Promise((resolve, reject) => {
+      const req = store.delete(peliId);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
     });
   }
 
