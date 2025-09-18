@@ -3,7 +3,7 @@
   import viteLogo from '/vite.svg';
   import Counter from './lib/Counter.svelte';
   import AsetuksetSivu from './lib/components/AsetuksetSivu.svelte';
-  import PeliIkkuna from './lib/components/PeliIkkuna.svelte';
+  import PeliIkkuna from './features/game/components/PeliIkkuna.svelte';
   import AdminSivu from './lib/components/AdminSivu.svelte';
   import TargetPickerOverlay from './lib/components/TargetPickerOverlay.svelte';
   import AppHeader from './lib/components/AppHeader.svelte';
