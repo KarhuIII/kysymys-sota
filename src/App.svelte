@@ -6,6 +6,7 @@
   import PeliIkkuna from './lib/components/PeliIkkuna.svelte';
   import AdminSivu from './lib/components/AdminSivu.svelte';
   import TargetPickerOverlay from './lib/components/TargetPickerOverlay.svelte';
+  import AppHeader from './lib/components/AppHeader.svelte';
   import type { Kayttaja } from './lib/database/schema.js';
   import { AppBar, Switch, Modal } from '@skeletonlabs/skeleton-svelte';
   import { peliPalvelu } from './lib/database/gameService.js';
@@ -361,44 +362,8 @@
 
   <main class="{GLASS_BACKGROUNDS.contentLayer}">
     <div class="grid grid-rows-[auto_1fr_auto] min-h-screen">
-      <!-- Header -->
-      <header class="{GLASS_STYLES.card} sticky top-0 z-10 m-2 rounded-xl">
-        <div class="container mx-auto flex justify-between items-center p-4">
-          <h1 class="text-xl font-semibold {GLASS_COLORS.titleGradient}">
-            <button class="text-xl font-bold" on:click={() => navigoi('etusivu')}>
-              <span class="flex items-center space-x-2"><span>🎯 Kysymysmestari</span><span class="text-[10px] font-semibold inline-block px-2 py-0.5 rounded-full bg-red-600 text-white">alpha</span></span>
-            </button>
-          </h1>
-          
-          <!-- Navigointipainikkeet -->
-          <nav class="flex gap-2">
-            <button 
-              class="{glassUtils.button(nykyinenSivu === 'etusivu' ? 'primary' : 'ghost')}"
-              on:click={() => navigoi('etusivu')}
-            >
-              🏠 Etusivu
-            </button>
-            <button 
-              class="{glassUtils.button(nykyinenSivu === 'asetukset' ? 'primary' : 'ghost')}"
-              on:click={() => navigoi('asetukset')}
-            >
-              ⚙️ Asetukset
-            </button>
-            <button 
-              class="{glassUtils.button(nykyinenSivu === 'tilastot' ? 'primary' : 'ghost')}"
-              on:click={() => navigoi('tilastot')}
-            >
-              📊 Tilastot
-            </button>
-            <button 
-              class="{glassUtils.button(nykyinenSivu === 'admin' ? 'primary' : 'ghost')}"
-              on:click={() => navigoi('admin')}
-            >
-              🛠️ Admin
-            </button>
-          </nav>
-        </div>
-      </header>
+      <!-- Header (extracted to AppHeader component) -->
+      <AppHeader {nykyinenSivu} on:navigate={(e) => navigoi(e.detail)} />
 
     <!-- Sisältöalue -->
     <div class="flex-1">
@@ -749,7 +714,7 @@
           Tehty ❤️:llä <span class="text-primary-500 font-semibold"> - Pienille ja suurille tietovisailijoille</span>
         </div>
         <div class="text-xs text-surface-500-500">
-          © 2025 <span class="inline-flex items-center">Kysymysmestari</span>
+          © 2025 <span class="inline-flex items-center">Kysymysmestariö </span>
         </div>
       </div>
     </footer>
